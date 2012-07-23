@@ -15,6 +15,7 @@ import org.json.JSONObject;
 import de.suse.conferenceclient.app.HTTPWrapper;
 import de.suse.conferenceclient.models.Conference;
 import de.suse.conferenceclient.models.Room;
+import de.suse.conferenceclient.models.Speaker;
 import android.os.AsyncTask;
 
 /**
@@ -44,7 +45,6 @@ public class CacheConferenceTask extends AsyncTask<Void, Void, Void> {
 		String tracksUrl = url + "/tracks.json";
 		String venueUrl = url + "/venue.json";
 		HashMap<String, String> eventTypesMap = new HashMap<String, String>();
-		HashMap<String, Room> roomsMap = new HashMap<String, Room>();
 		
 		try {
 			JSONObject eventTypesReply = HTTPWrapper.get(eventTypesUrl);
@@ -56,17 +56,12 @@ public class CacheConferenceTask extends AsyncTask<Void, Void, Void> {
 			}
 			
 			JSONObject roomsReply = HTTPWrapper.get(roomsUrl);
-			JSONArray rooms = roomsReply.getJSONArray("rooms");
-			int roomsLen = roomsReply.length();
-			for (int i = 0; i < roomsLen; i++) {
-				JSONObject room = rooms.getJSONObject(i);
-				Room newRoom = new Room();
-				newRoom.setGuid(room.getString("guid"));
-				newRoom.setName(room.getString("name"));
-				newRoom.setDescription(room.getString("description"));
-				roomsMap.put(newRoom.getGuid(), newRoom);
-			}
-					
+			HashMap<String, Room> roomsMap = Room.parseJSON(roomsReply);
+			
+			JSONObject speakerReply = HTTPWrapper.get(speakersUrl);
+			HashMap<String, Speaker> speakerMap = Speaker.parseJSON(speakerReply);
+			
+			
 			
 		} catch (IllegalStateException e) {
 			// TODO Auto-generated catch block

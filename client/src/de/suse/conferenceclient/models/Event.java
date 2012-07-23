@@ -6,6 +6,8 @@ package de.suse.conferenceclient.models;
 import java.util.Date;
 import java.util.List;
 
+import org.json.JSONObject;
+
 /**
  * @author Matt Barringer <mbarringer@suse.de>
  *

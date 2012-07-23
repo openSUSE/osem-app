@@ -3,6 +3,12 @@
  */
 package de.suse.conferenceclient.models;
 
+import java.util.HashMap;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * @author Matt Barringer <mbarringer@suse.de>
  *
@@ -43,5 +49,21 @@ public class Speaker {
 	}
 	public void setPhotoGuid(String photoGuid) {
 		mPhotoGuid = photoGuid;
+	}
+	
+	public static HashMap<String, Speaker> parseJSON(JSONObject json) throws JSONException {
+		HashMap<String, Speaker> speakerMap = new HashMap<String, Speaker>();
+		JSONArray speakers = json.getJSONArray("speakers");
+		int speakersLen = speakers.length();
+		for (int i = 0; i < speakersLen; i++) {
+			JSONObject speaker = speakers.getJSONObject(i);
+			Speaker newSpeaker= new Speaker();
+			newSpeaker.setGuid(speaker.getString("guid"));
+			newSpeaker.setName(speaker.getString("name"));
+			newSpeaker.setCompany(speaker.getString("company"));
+			newSpeaker.setBiography(speaker.getString("biography"));
+			speakerMap.put(newSpeaker.getGuid(), newSpeaker);
+		}
+		return speakerMap;
 	}
 }
