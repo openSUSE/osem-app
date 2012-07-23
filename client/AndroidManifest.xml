@@ -6,8 +6,10 @@
     <uses-sdk
         android:minSdkVersion="8"
         android:targetSdkVersion="15" />
-
+    <uses-permission android:name="android.permission.INTERNET"/>
+    
     <application
+        android:name=".SUSEConferences"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
