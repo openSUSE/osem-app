@@ -1,0 +1,9 @@
+<resources>
+
+    <string name="app_name">SUSE Conferences</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_home">SUSE Conferences</string>
+    <string name="mySchedule">My Schedule</string>
+    <string name="whatsOn">What\'s On</string>
+
+</resources>
