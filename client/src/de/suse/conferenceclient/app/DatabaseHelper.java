@@ -36,6 +36,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "name VARCHAR, "
 			+ "description VARCHAR)";
 	
+	private static final String tracksTableCreate = "CREATE TABLE tracks ("
+			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+			+ "guid VARCHAR, "
+			+ "conference_id INTEGER, "
+			+ "name VARCHAR)";
+	
 	private static final String speakerTableCreate = "CREATE TABLE speakers ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "guid VARCHAR, "
@@ -44,21 +50,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "biography VARCHAR, "
 			+ "photo_guid VARCHAR)";
 	
-	private static final String typeTableCreate = "CREATE TABLE eventTypes ("
-			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-			+ "name VARCHAR)";
-	
 	private static final String eventTableCreate = "CREATE TABLE events ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "guid VARCHAR, "
-			+ "type_id INTEGER, "
-			+ "speaker_id INTEGER, "
+			+ "conference_id INTEGER, "
 			+ "room_id INTEGER, "
+			+ "track_id INTEGER, "
 			+ "date DATETIME, "
 			+ "length INTEGER, "
+			+ "type VARCHAR, "
 			+ "language VARCHAR, "
 			+ "abstract VARCHAR, "
 			+ "url_list VARCHAR)";
+	
+	private static final String speakerEventTableCreate = "CREATE TABLE eventSpeakers ("
+			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+			+ "speaker_id INTEGER, "
+			+ "event_id INTEGER)";
 	
 	private static final String myEventTableCreate = "CREATE TABLE myEvents ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -76,9 +84,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL(venueTableCreate);
 		db.execSQL(roomsTableCreate);
 		db.execSQL(speakerTableCreate);
-		db.execSQL(typeTableCreate);
 		db.execSQL(eventTableCreate);
 		db.execSQL(myEventTableCreate);
+		db.execSQL(tracksTableCreate);
+		db.execSQL(speakerEventTableCreate);
 	}
 
 	@Override

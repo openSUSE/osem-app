@@ -3,9 +3,6 @@
  */
 package de.suse.conferenceclient.models;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * @author Matt Barringer <mbarringer@suse.de>
  *
@@ -13,23 +10,15 @@ import java.util.List;
 
 public class Conference {
 	private String mGuid = "";
-	private String mSqlId = "-1";
+	private long mSqlId = -1;
 	private String mName = "";
 	private String mDescription = "";
 	private int mYear = 2012;
 	private String mDateRange = "";
 	private String mUrl = "";
 	
-	private List<Event> mEvents;
-	private List<Room> mRooms;
-	private List<Speaker> mSpeakers;
-	private Venue mVenue;
 	
 	public Conference() {
-		mEvents = new ArrayList<Event>();
-		mRooms = new ArrayList<Room>();
-		mSpeakers = new ArrayList<Speaker>();
-		mVenue = new Venue();
 	}
 
 	public String getGuid() {
@@ -40,11 +29,11 @@ public class Conference {
 		this.mGuid = guid;
 	}
 
-	public String getSqlId() {
+	public long getSqlId() {
 		return mSqlId;
 	}
 
-	public void setSqlId(String sqlId) {
+	public void setSqlId(long sqlId) {
 		this.mSqlId = sqlId;
 	}
 
@@ -88,35 +77,4 @@ public class Conference {
 		this.mUrl = url;
 	}
 
-	public List<Event> getEvents() {
-		return mEvents;
-	}
-
-	public void setEvents(List<Event> events) {
-		this.mEvents = events;
-	}
-
-	public List<Room> getRooms() {
-		return mRooms;
-	}
-
-	public void setRooms(List<Room> rooms) {
-		this.mRooms = rooms;
-	}
-
-	public List<Speaker> getSpeakers() {
-		return mSpeakers;
-	}
-
-	public void setSpeakers(List<Speaker> speakers) {
-		this.mSpeakers = speakers;
-	}
-
-	public Venue getVenue() {
-		return mVenue;
-	}
-
-	public void setVenue(Venue venue) {
-		this.mVenue = venue;
-	}
 }

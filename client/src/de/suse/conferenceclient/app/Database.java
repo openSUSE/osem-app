@@ -3,12 +3,15 @@
  */
 package de.suse.conferenceclient.app;
 
+import java.util.Date;
+
 import de.suse.conferenceclient.models.Conference;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 /**
  * Database access wrapper
@@ -42,7 +45,7 @@ public class Database {
 	
 	public long getConferenceIdFromGuid(String guid) {
 		String[] columns = {"_id"};
-		String where = "guid = " + guid;
+		String where = "guid = \"" + guid + "\"";
 		Cursor c = db.query("conferences", columns, where, null, null, null, null);
 		if (c.getCount() == 0) {
 			return -1;
@@ -52,6 +55,7 @@ public class Database {
 		c.close();
 		return id;
 	}
+	
 	public long addConference(Conference conference) {
 		ContentValues values = new ContentValues();
 		values.put("guid", conference.getGuid());
@@ -61,5 +65,78 @@ public class Database {
 		values.put("description", conference.getDescription());
 		long insertId = db.insert("conferences", null, values);
 		return insertId;
+	}
+	
+	public long insertVenue(String guid, String name, String address) {
+		ContentValues values = new ContentValues();
+		values.put("guid", guid);
+		values.put("name", name);
+		values.put("address", address);
+		long insertId = db.insert("venues", null, values);
+		return insertId;
+	}
+	
+	public long insertRoom(String guid, String name, String description, long venueId) {
+		ContentValues values = new ContentValues();
+		values.put("guid", guid);
+		values.put("name", name);
+		values.put("description", description);
+		values.put("venue_id", venueId);
+		long insertId = db.insert("rooms", null, values);
+		return insertId;
+	}
+	
+	public long insertTrack(String guid, String name, long conferenceId) {
+		ContentValues values = new ContentValues();
+		values.put("guid", guid);
+		values.put("name", name);
+		values.put("conference_id", conferenceId);
+		long insertId = db.insert("tracks", null, values);
+		return insertId;
+	}
+
+	public long insertSpeaker(String guid, String name, String company, String biography, String photoGuid) {
+		ContentValues values = new ContentValues();
+		values.put("guid", guid);
+		values.put("name", name);
+		values.put("company", company);
+		values.put("biography", biography);
+		values.put("photo_guid", photoGuid);
+		long insertId = db.insert("speakers", null, values);
+		return insertId;
+	}
+
+	public long insertEvent(String guid,
+							long conferenceId,
+							long roomId,
+							long trackId,
+							String date,
+							int length,
+							String type,
+							String language,
+							String abs,
+							String urlList) {
+		Log.d("SUSEConferences", "Inserting event: " + abs);
+		ContentValues values = new ContentValues();
+		values.put("guid", guid);
+		values.put("conference_id", conferenceId);
+		values.put("room_id", roomId);
+		values.put("track_id", trackId);
+		values.put("date", date);
+		values.put("length", length);
+		values.put("type", type);
+		values.put("language", language);
+		values.put("abstract", abs);
+		values.put("url_list", urlList);
+		long insertId = db.insert("events", null, values);
+		return insertId;
+	}
+	
+	public void insertEventSpeaker(long speakerId, long eventId) {
+		
+		ContentValues values = new ContentValues();
+		values.put("speaker_id", speakerId);
+		values.put("event_id", eventId);
+		db.insert("eventSpeakers", null, values);
 	}
 }
