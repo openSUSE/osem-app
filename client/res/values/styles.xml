@@ -2,4 +2,16 @@
 
     <style name="AppTheme" parent="Theme.suseconferences" />
 
+<style name="RoundBox">
+        <item name="android:layout_marginLeft">5dip</item>
+         <item name="android:layout_marginRight">5dip</item>
+         <item name="android:layout_marginTop">5dip</item>
+         <item name="android:background">@drawable/round_box</item>
+</style>
+<style name="BoxFill">
+            <item name="android:layout_marginLeft">1dip</item>
+         <item name="android:layout_marginRight">1dip</item>
+         <item name="android:layout_marginTop">1dip</item>
+         <item name="android:background">@drawable/box_fill</item>
+</style>
 </resources>

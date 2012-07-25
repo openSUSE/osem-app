@@ -25,11 +25,13 @@ import de.suse.conferenceclient.fragments.NewsFeedFragment;
 import de.suse.conferenceclient.fragments.WhatsOnFragment;
 import de.suse.conferenceclient.models.Conference;
 import de.suse.conferenceclient.tasks.GetConferencesTask;
+import de.suse.conferenceclient.views.WheelView;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Matrix;
 import android.support.v4.app.FragmentManager;
@@ -42,7 +44,8 @@ import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 
-public class HomeActivity extends SherlockFragmentActivity implements GetConferencesTask.ConferenceListListener {
+public class HomeActivity extends SherlockFragmentActivity implements 
+		GetConferencesTask.ConferenceListListener, WheelView.OnLaunch {
 	private ViewPager mViewPager;
 	private TabAdapter mTabsAdapter;
 	private MyScheduleFragment mMyScheduleFragment;
@@ -59,13 +62,13 @@ public class HomeActivity extends SherlockFragmentActivity implements GetConfere
         
         mDialog = null;
         mConferenceId = ((SUSEConferences) getApplicationContext()).getActiveId();
-//        if (mConferenceId == -1) {
-//        	Log.d("SUSEConferences", "Conference ID is -1");
-//        	loadConferences();
-//        } else {
+        if (mConferenceId == -1) {
+        	Log.d("SUSEConferences", "Conference ID is -1");
+        	loadConferences();
+        } else {
         	Log.d("SUSEConferences", "Conference ID is NOT -1");
         	setView();
-//        }
+        }
     }
     
     private void setView() {
@@ -94,6 +97,8 @@ public class HomeActivity extends SherlockFragmentActivity implements GetConfere
       } else {
       	// Tablet layout
       	FragmentManager fm = getSupportFragmentManager();
+      	WheelView view = (WheelView) findViewById(R.id.wheelView);
+      	view.setOnLaunchListener(this);
       	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment); 
       	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
 //      	mWheelView = (ImageView) findViewById(R.id.wheelView);
@@ -269,6 +274,7 @@ public class HomeActivity extends SherlockFragmentActivity implements GetConfere
     											   event.getInt("length"),
     											   event.getString("type"),
     											   event.getString("language"),
+    											   event.getString("title"),
     											   event.getString("abstract"),
     											   "");
     				
@@ -305,5 +311,14 @@ public class HomeActivity extends SherlockFragmentActivity implements GetConfere
     	}
 
     }
+
+	@Override
+	public void launchActivity(int activity) {
+		if (activity == WheelView.ACTIVITY_SCHEDULE) {
+			Intent intent = new Intent(HomeActivity.this, ScheduleActivity.class);
+			intent.putExtra("conferenceId", mConferenceId);
+			startActivity(intent);
+		}
+	}
 
 }

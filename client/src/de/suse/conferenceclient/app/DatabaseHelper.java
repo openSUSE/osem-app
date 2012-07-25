@@ -59,6 +59,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "date DATETIME, "
 			+ "length INTEGER, "
 			+ "type VARCHAR, "
+			+ "title VARCHAR, "
 			+ "language VARCHAR, "
 			+ "abstract VARCHAR, "
 			+ "url_list VARCHAR)";

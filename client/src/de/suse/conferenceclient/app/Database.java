@@ -3,9 +3,14 @@
  */
 package de.suse.conferenceclient.app;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import de.suse.conferenceclient.models.Conference;
+import de.suse.conferenceclient.models.Event;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -114,6 +119,7 @@ public class Database {
 							int length,
 							String type,
 							String language,
+							String title,
 							String abs,
 							String urlList) {
 		Log.d("SUSEConferences", "Inserting event: " + abs);
@@ -125,6 +131,7 @@ public class Database {
 		values.put("date", date);
 		values.put("length", length);
 		values.put("type", type);
+		values.put("title", title);
 		values.put("language", language);
 		values.put("abstract", abs);
 		values.put("url_list", urlList);
@@ -138,5 +145,30 @@ public class Database {
 		values.put("speaker_id", speakerId);
 		values.put("event_id", eventId);
 		db.insert("eventSpeakers", null, values);
+	}
+	
+	public List<Event> getScheduleTitles(long conferenceId) {
+		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'");  
+
+		List<Event> eventList = new ArrayList<Event>();
+		String[] columns = {"_id", "guid", "title", "date"};
+		String where = "conference_id = " + conferenceId;
+		Cursor c = db.query("events", columns, where, null, null, null, null);
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			Event newEvent = new Event();
+			newEvent.setGuid(c.getString(1));
+			newEvent.setTitle(c.getString(2));
+			try {  
+			    Date date = format.parse(c.getString(3));  
+			    newEvent.setDate(date);
+			    eventList.add(newEvent);
+			} catch (ParseException e) {  
+			    // TODO Auto-generated catch block  
+			    e.printStackTrace();  
+			}
+		}
+		c.close();
+		return eventList;
+
 	}
 }

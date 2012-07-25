@@ -1,0 +1,48 @@
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:id="@+id/dateLayout">
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/RoundBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                style="@style/BoxFill"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical" >
+                
+            <TextView
+                android:id="@+id/agendaTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="20dip"
+                android:text="Agenda Text"
+                android:textAppearance="?android:attr/textAppearanceLarge"
+                android:textColor="@color/dark_suse_green" />
+                
+            </LinearLayout>
+
+            <de.suse.conferenceclient.views.ScheduleView
+                android:id="@+id/scheduleView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+    </RelativeLayout>
