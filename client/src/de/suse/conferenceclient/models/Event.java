@@ -21,6 +21,8 @@ public class Event {
 	private String mEventType;
 	private String mTitle = "";
 	private String mTrackName = "";
+	private String mRoomName = "";
+	private String mColor = "#ffffff";
 	
 	public String getTrackName() {
 		return mTrackName;
@@ -83,6 +85,18 @@ public class Event {
 	}
 	public void setTitle(String title) {
 		mTitle = title;
+	}
+	public String getRoomName() {
+		return mRoomName;
+	}
+	public void setRoomName(String roomName) {
+		mRoomName = roomName;
+	}
+	public String getColor() {
+		return mColor;
+	}
+	public void setColor(String color) {
+		mColor = color;
 	}
 
 

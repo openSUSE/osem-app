@@ -125,11 +125,6 @@ public class WheelView extends View {
 	private void move(float x, float y) {
 	    float angle = (float) angle(mCenterX, mCenterY, startX, startY, x, y);
 	    direction = (float) Math.toDegrees(angle) * -1 + startDirection;
-//	    if (direction >= 360.0)
-//	    	direction = 0;
-//	    else if (direction <= -360.0)
-//	    	direction = 0;
-	    Log.d("SUSEConferences", "Direction: " + direction);
 	    this.invalidate();
 	}
 	
@@ -204,9 +199,7 @@ public class WheelView extends View {
  
         @Override
         public void run() {
-        	Log.d("SUSEConferences", "Animating to " + endDirection);
             if (Math.round(direction) != endDirection) {
-            	Log.d("SUSEConferences", "Direction is " + direction);
          	   if (direction > endDirection)
          		   direction -= 1f;
          	   else

@@ -92,10 +92,11 @@ public class Database {
 		return insertId;
 	}
 	
-	public long insertTrack(String guid, String name, long conferenceId) {
+	public long insertTrack(String guid, String name, String color, long conferenceId) {
 		ContentValues values = new ContentValues();
 		values.put("guid", guid);
 		values.put("name", name);
+		values.put("color", color);
 		values.put("conference_id", conferenceId);
 		long insertId = db.insert("tracks", null, values);
 		return insertId;
@@ -153,11 +154,11 @@ public class Database {
 
 		List<Event> eventList = new ArrayList<Event>();
 		String[] columns = {"_id", "guid", "title", "date"};
+		
 		String sql = "SELECT events.guid, events.title, events.date, events.length, "
-				   + "tracks.name FROM events INNER JOIN tracks ON tracks._id = events.track_id "
+				   + "rooms.name, track_id FROM events INNER JOIN rooms ON rooms._id = events.room_id "
 				   + "WHERE events.conference_id = " + conferenceId;
-//		String where = "conference_id = " + conferenceId;
-//		Cursor c = db.query("events", columns, where, null, null, null, null);
+		
 		Cursor c = db.rawQuery(sql, null);
 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
 			Event newEvent = new Event();
@@ -169,8 +170,16 @@ public class Database {
 			    GregorianCalendar cal = new GregorianCalendar();
 			    cal.setTime(date);
 			    cal.add(GregorianCalendar.MINUTE, c.getInt(3));
+			    newEvent.setLength(c.getInt(3));
 			    newEvent.setEndDate(cal.getTime());
-			    newEvent.setTrackName(c.getString(4));
+			    newEvent.setRoomName(c.getString(4));
+			    // TODO this should be merged into a subquery if possible
+			    long trackId = c.getLong(5);
+			    Cursor d = db.rawQuery("SELECT color, name FROM tracks WHERE _id=" + trackId, null);
+			    if (d.moveToFirst()) {
+			    	newEvent.setColor(d.getString(0));
+			    	newEvent.setTrackName(d.getString(1));
+			    }
 			    eventList.add(newEvent);
 			} catch (ParseException e) {  
 			    // TODO Auto-generated catch block  

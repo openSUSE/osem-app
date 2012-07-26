@@ -21,6 +21,7 @@
     <color name="bright_suse_green">#7AC142</color>
     <color name="dark_suse_green">#588f2b</color>
     <color name="light_suse_green">#307AC142</color>
+    <color name="very_light_suse_grey">#80e4e5e6</color>
 	<color name="light_suse_grey">#80e4e5e6</color>    
     
 </resources>

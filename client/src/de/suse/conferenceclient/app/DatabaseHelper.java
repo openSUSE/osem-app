@@ -40,6 +40,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "guid VARCHAR, "
 			+ "conference_id INTEGER, "
+			+ "color VARCHAR, "
 			+ "name VARCHAR)";
 	
 	private static final String speakerTableCreate = "CREATE TABLE speakers ("

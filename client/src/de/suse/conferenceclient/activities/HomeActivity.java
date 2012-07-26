@@ -135,9 +135,10 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		mConferenceId = id;
     	}
 
-    	SharedPreferences settings = getPreferences(0);
+    	SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("active_conference", mConferenceId);
+        editor.apply();
         
         SUSEConferences app = ((SUSEConferences) getApplicationContext());
         app.setActiveId(mConferenceId);
@@ -232,6 +233,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				String guid = track.getString("guid");
     				Long trackId = db.insertTrack(guid,
     											   track.getString("name"),
+    											   track.getString("color"),
     											   mConference.getSqlId());
     				trackMap.put(guid, trackId);
     			}
