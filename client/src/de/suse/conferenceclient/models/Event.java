@@ -12,12 +12,22 @@ import java.util.Date;
 public class Event {
 	private String mGuid = "";
 	private Date mDate;
+	private Date mEndDate;
+
 	private int mLength;
 	private String mLanguage = "";
 	private String mAbstract = "";
 	private String mUrlList = "";
 	private String mEventType;
 	private String mTitle = "";
+	private String mTrackName = "";
+	
+	public String getTrackName() {
+		return mTrackName;
+	}
+	public void setTrackName(String trackName) {
+		this.mTrackName = trackName;
+	}
 	
 	public String getGuid() {
 		return mGuid;
@@ -30,6 +40,12 @@ public class Event {
 	}
 	public void setDate(Date date) {
 		mDate = date;
+	}
+	public Date getEndDate() {
+		return mEndDate;
+	}
+	public void setEndDate(Date endDate) {
+		this.mEndDate = endDate;
 	}
 	public int getLength() {
 		return mLength;

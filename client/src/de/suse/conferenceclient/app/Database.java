@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import de.suse.conferenceclient.models.Conference;
@@ -152,15 +153,24 @@ public class Database {
 
 		List<Event> eventList = new ArrayList<Event>();
 		String[] columns = {"_id", "guid", "title", "date"};
-		String where = "conference_id = " + conferenceId;
-		Cursor c = db.query("events", columns, where, null, null, null, null);
+		String sql = "SELECT events.guid, events.title, events.date, events.length, "
+				   + "tracks.name FROM events INNER JOIN tracks ON tracks._id = events.track_id "
+				   + "WHERE events.conference_id = " + conferenceId;
+//		String where = "conference_id = " + conferenceId;
+//		Cursor c = db.query("events", columns, where, null, null, null, null);
+		Cursor c = db.rawQuery(sql, null);
 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
 			Event newEvent = new Event();
-			newEvent.setGuid(c.getString(1));
-			newEvent.setTitle(c.getString(2));
+			newEvent.setGuid(c.getString(0));
+			newEvent.setTitle(c.getString(1));
 			try {  
-			    Date date = format.parse(c.getString(3));  
+			    Date date = format.parse(c.getString(2));  
 			    newEvent.setDate(date);
+			    GregorianCalendar cal = new GregorianCalendar();
+			    cal.setTime(date);
+			    cal.add(GregorianCalendar.MINUTE, c.getInt(3));
+			    newEvent.setEndDate(cal.getTime());
+			    newEvent.setTrackName(c.getString(4));
 			    eventList.add(newEvent);
 			} catch (ParseException e) {  
 			    // TODO Auto-generated catch block  
