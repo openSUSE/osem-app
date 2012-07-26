@@ -53,6 +53,8 @@ import android.view.View;
  *
  */
 
+// TODO scrolling along the Y axis does not work
+
 public class ScheduleView extends View {
 	private class HourIterator
 	   implements Iterator<Date>, Iterable<Date>
@@ -63,7 +65,6 @@ public class ScheduleView extends View {
 	    public HourIterator(Date start, Date end)
 	    {
 	        this.end.setTime(end);
-//	        this.end.add(Calendar.HOUR_OF_DAY, 1);
 	        this.current.setTime(start);
 	        this.current.add(Calendar.HOUR_OF_DAY, -1);
 	    }
@@ -104,6 +105,10 @@ public class ScheduleView extends View {
 			this.mLabel = label;
 		}
 		
+		public boolean inBox(float x, float y) {
+			return mBox.contains(x, y);
+		}
+
 		public float getX() {
 			return mX;
 		}
@@ -148,7 +153,7 @@ public class ScheduleView extends View {
 	}
 	private Paint mHourPainter, mRoomPainter, mLinePainter;
 	private Paint mBoxPainter, mLabelPainter, mBoxColorPainter;
-	private Paint mHeaderPainter;
+	private Paint mHeaderPainter, mBoxBackgroundPainter;
 	private TextPaint mLabelTextPainter;
 	
 	private List<Event> mEventList;
@@ -160,13 +165,11 @@ public class ScheduleView extends View {
 	private int MAGIC_MULTIPLIER = 4;
 	private int MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
 	private int EVENT_BOX_HEIGHT = 30;
-	private int mScreenW = 100;
-	private int mScreenH = 100;
+	private RectF mHourHeader;
 	private float mHourStartX = 0;
 	private float mHourStartY = 30;
 	private float mMaximumScrollwidth = 0;
 	private float mEndTimeEdge = 0;
-	private RectF mHourHeader;
 	private float mHourHeaderHeight = 40;
 	private float mRoomStartText = 0;
 	private float mTranslateX = 0;
@@ -174,7 +177,6 @@ public class ScheduleView extends View {
 	private GestureDetector mGestureDetector;
 	Date mStartDate, mEndDate;
 	
-	private HashMap<String, Integer> mTrackAxisMap;
 	private HashMap<String, Event> mEventMap;
 	
 	public ScheduleView(Context context) {
@@ -191,12 +193,17 @@ public class ScheduleView extends View {
 		mBoxPainter = new Paint();
 		mBoxPainter.setAntiAlias(true);
 		mBoxPainter.setTextSize(20);
-		mBoxPainter.setColor(getResources().getColor(R.color.light_suse_grey));
+		mBoxPainter.setColor(getResources().getColor(R.color.bright_suse_green));
 		mBoxPainter.setStyle(Paint.Style.STROKE);
 		
 		mBoxColorPainter = new Paint();
 		mBoxColorPainter.setStyle(Paint.Style.FILL);
 		mBoxColorPainter.setAntiAlias(true);
+
+		mBoxBackgroundPainter = new Paint();
+		mBoxBackgroundPainter.setStyle(Paint.Style.FILL);
+		mBoxBackgroundPainter.setAntiAlias(false);
+		mBoxBackgroundPainter.setColor(getResources().getColor(R.color.light_suse_grey));
 
 		mLinePainter = new Paint();
 		mLinePainter.setAntiAlias(true);
@@ -214,18 +221,18 @@ public class ScheduleView extends View {
 		mHourPainter.setTextSize(20);
 		mHourPainter.setTextAlign(Paint.Align.CENTER);
 		mHourPainter.setTypeface(Typeface.DEFAULT_BOLD);
-		mHourPainter.setColor(Color.BLACK);
+		mHourPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		
 		mRoomPainter = new Paint();
 		mRoomPainter.setAntiAlias(true);
 		mRoomPainter.setTextSize(15);
-		mRoomPainter.setColor(Color.GRAY);
+		mRoomPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		mRoomPainter.setTextAlign(Paint.Align.RIGHT);
 
 		mLabelPainter = new Paint();
 		mLabelPainter.setAntiAlias(true);
 		mLabelPainter.setTextSize(15);
-		mLabelPainter.setColor(Color.BLACK);
+		mLabelPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		mLabelPainter.setTypeface(Typeface.DEFAULT_BOLD);
 		mLabelPainter.setTextAlign(Paint.Align.CENTER);
 		
@@ -233,9 +240,9 @@ public class ScheduleView extends View {
 		mLabelTextPainter.setAntiAlias(true);
 		mLabelTextPainter.setTextSize(15);
 		mLabelTextPainter.setTypeface(Typeface.DEFAULT_BOLD);
+		mLabelTextPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		mLabelTextPainter.setTextAlign(Paint.Align.CENTER);
 		
-		mTrackAxisMap = new HashMap<String, Integer>();
 		mEventMap = new HashMap<String, Event>();
 		mTimeList = new ArrayList<DisplayItem>();
 		mRoomList = new ArrayList<DisplayItem>();
@@ -249,7 +256,14 @@ public class ScheduleView extends View {
 	}
 	
 	public void setEvents(List<Event> eventList) {
-		mEventList = eventList;   
+		mEventList = eventList;
+		mEventMap.clear();
+		mTimeList.clear();
+		mRoomList.clear();
+		mEventDisplayList.clear();
+		mStartDate = null;
+		mEndDate = null;
+		
 		Calendar cal = new GregorianCalendar();
 		HashMap<String, Integer> roomYMap = new HashMap<String, Integer>();
 		HashMap<String, Float> hourXMap = new HashMap<String, Float>();
@@ -331,7 +345,7 @@ public class ScheduleView extends View {
 			
 			float boxX = x;
 			float boxY = y;
-			float boxRx = x + (length * MAGIC_MULTIPLIER);
+			float boxRx = x + (length * MAGIC_MULTIPLIER) - 10;
 			float boxRy = y + EVENT_BOX_HEIGHT;
 			newEvent.setBox(new RectF(boxX, boxY, boxRx, boxRy));
 			
@@ -341,13 +355,6 @@ public class ScheduleView extends View {
 		
 		invalidate();
 	}
-//	
-//	@Override 
-//	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-//	int parentWidth = MeasureSpec.getSize(widthMeasureSpec);
-//	int parentHeight = MeasureSpec.getSize(heightMeasureSpec);
-//	this.setMeasuredDimension(parentWidth/2, parentHeight / 4);
-//	}
 
 	@Override
     public void onSizeChanged (int w, int h, int oldw, int oldh){
@@ -361,9 +368,7 @@ public class ScheduleView extends View {
 		RectF colorBox = new RectF(box.left, box.top, box.left + 20, box.bottom);
 		
 		// Background
-		mBoxPainter.setColor(Color.WHITE);
-		mBoxPainter.setStyle(Paint.Style.FILL);
-		canvas.drawRoundRect(box, 5, 5, mBoxPainter);
+		canvas.drawRoundRect(box, 5, 5, mBoxBackgroundPainter);
 
 		// Track color
 		mBoxColorPainter.setColor(event.getTrackColor());
@@ -410,10 +415,10 @@ public class ScheduleView extends View {
 		}
 		canvas.restore();
 	}
+
 	// Touch handling
     private class TouchDetector extends SimpleOnGestureListener
     {
-
 			@Override
             public boolean onDown(MotionEvent event)
             {
@@ -423,6 +428,13 @@ public class ScheduleView extends View {
             @Override
             public boolean onSingleTapUp(MotionEvent event)
             {
+            	float translatedX = event.getX() - mTranslateX;
+            	
+            	for (DisplayItem eventItem : mEventDisplayList) {
+            		if (eventItem.inBox(translatedX, event.getY()))
+            			Log.d("SUSEConferences", "Clicked on " + eventItem.getLabel());
+            	}
+
             	return true;
             }
     }
@@ -448,9 +460,6 @@ public class ScheduleView extends View {
             mStartX = event.getX();
             invalidate();
         	break;
-        case MotionEvent.ACTION_UP:
-            mGestureDetector.onTouchEvent(event);
-            break;
 	    default:
 	    	mGestureDetector.onTouchEvent(event);
 	    	break;

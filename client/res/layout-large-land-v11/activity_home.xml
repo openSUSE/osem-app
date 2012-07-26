@@ -8,6 +8,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
+            android:paddingLeft="20dip"
             android:text="SUSECon 2012"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="@color/dark_suse_green" />
@@ -18,6 +19,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_below="@+id/conferenceNameTextView"
+            android:paddingLeft="20dip"
             android:text="Orlando, FL"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@color/bright_suse_green" />
@@ -80,6 +82,8 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
             android:background="@null"
+            android:paddingRight="20dip"
+            android:paddingTop="20dip"
             android:src="@drawable/who_is_around" />
 
         <LinearLayout

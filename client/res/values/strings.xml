@@ -5,4 +5,5 @@
     <string name="mySchedule">My Schedule</string>
     <string name="whatsOn">What\'s On</string>
     <string name="newsFeed">News Feed</string>
+    <string name="agendaFor">Agenda for</string>
 </resources>
