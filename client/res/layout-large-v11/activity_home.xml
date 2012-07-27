@@ -1,80 +1,4 @@
-<!--
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" 
-        android:orientation="horizontal">
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:layout_weight="1">
-
-            <TextView
-                android:id="@+id/myScheduleTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/mySchedule"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" >
-                <fragment android:name="de.suse.conferenceclient.fragments.MyScheduleFragment"
-                    android:id="@+id/myScheduleFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-             </FrameLayout>
-            
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:layout_weight="1">
-
-            <TextView
-                android:id="@+id/whatsOnTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/whatsOn"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
-
-            <FrameLayout android:layout_width="match_parent"
-            		android:layout_height="0dp"
-            		android:layout_weight="1" >
-                <fragment android:name="de.suse.conferenceclient.fragments.WhatsOnFragment"
-                    android:id="@+id/whatsOnFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/newsFeedTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/newsFeed"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-            	android:layout_height="0dp"
-            	android:layout_weight="1">
-                <fragment android:name="de.suse.conferenceclient.fragments.NewsFeedFragment"
-                    android:id="@+id/newsFeedFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
-            </FrameLayout>
-
-        </LinearLayout>
-
-    </LinearLayout>
--->
-
- 
-  <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" >
 
@@ -84,8 +8,10 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
+            android:paddingLeft="20dip"
             android:text="SUSECon 2012"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/dark_suse_green" />
 
         <TextView
             android:id="@+id/locationTextView"
@@ -93,14 +19,16 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_below="@+id/conferenceNameTextView"
+            android:paddingLeft="20dip"
             android:text="Orlando, FL"
-            android:textAppearance="?android:attr/textAppearanceMedium" />
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textColor="@color/bright_suse_green" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentLeft="true"
-            android:layout_below="@+id/wheelView"
+            android:layout_below="@+id/locationTextView"
             android:orientation="vertical" >
             >
         
@@ -122,14 +50,22 @@
             </FrameLayout>
             
         </LinearLayout>
-
-        <ImageView
-            android:id="@+id/wheelView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:src="@drawable/wheel" />
+		<de.suse.conferenceclient.views.WheelView
+		    android:id="@+id/wheelView"
+		    android:layout_gravity="center"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:layout_centerHorizontal="true"
+		    android:layout_centerVertical="true" />
+		
+<!--         <ImageView -->
+<!--             android:id="@+id/wheelView" -->
+<!--             android:layout_width="wrap_content" -->
+<!--             android:layout_height="wrap_content" -->
+<!--             android:layout_centerHorizontal="true" -->
+<!--             android:scaleType="matrix" -->
+<!--             android:layout_centerVertical="true" -->
+<!--             android:src="@drawable/wheel" /> -->
 
         <ImageView
             android:id="@+id/logoView"
@@ -146,14 +82,15 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
             android:background="@null"
-            android:src="@drawable/who_is_around" />
+            android:paddingRight="20dip"
+            android:paddingTop="20dip"
+            android:src="@drawable/maps" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
-            android:layout_below="@+id/wheelView"
             android:orientation="vertical" >
 
             <TextView
@@ -169,23 +106,20 @@
                 android:layout_weight="1" >
 
                 <fragment
-                    android:id="@+id/myScheduleFragment"
-                    android:name="de.suse.conferenceclient.fragments.MyScheduleFragment"
+                    android:id="@+id/whatsOnFragment"
+                    android:name="de.suse.conferenceclient.fragments.WhatsOnFragment"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
             </FrameLayout>
         </LinearLayout>
-
         <ImageView
             android:id="@+id/imageView1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="3dp"
-            
             android:layout_above="@+id/wheelView"
+            android:layout_marginBottom="3dp"
             android:layout_centerHorizontal="true"
             android:src="@drawable/wheel_arrow" />
-
         <ImageView
             android:id="@+id/imageView2"
             android:layout_width="wrap_content"
@@ -193,5 +127,4 @@
             android:layout_below="@+id/wheelView"
             android:layout_centerHorizontal="true"
             android:src="@drawable/wheel_shadow" />
-
     </RelativeLayout>

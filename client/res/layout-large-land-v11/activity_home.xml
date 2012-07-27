@@ -84,34 +84,41 @@
             android:background="@null"
             android:paddingRight="20dip"
             android:paddingTop="20dip"
-            android:src="@drawable/who_is_around" />
+            android:src="@drawable/maps" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
+            android:layout_toRightOf="@+id/wheelView"
+            android:gravity="right"
+            android:layout_gravity="right"
             android:orientation="vertical" >
+            
+        <TextView
+            android:id="@+id/myScheduleTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:text="@string/upcoming"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
 
-            <TextView
-                android:id="@+id/myScheduleTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/mySchedule"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" >
-
-                <fragment
-                    android:id="@+id/myScheduleFragment"
-                    android:name="de.suse.conferenceclient.fragments.MyScheduleFragment"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
-            </FrameLayout>
+<!--         <FrameLayout -->
+<!--             android:id="@+id/whatsOnFrameLayout" -->
+<!--             android:layout_width="wrap_content" -->
+<!--             android:layout_gravity="right" -->
+<!--             android:layout_height="wrap_content"> -->
+        <fragment
+                    android:id="@+id/whatsOnFragment"
+                    android:name="de.suse.conferenceclient.fragments.WhatsOnFragment"
+                    android:layout_width="wrap_content"                    
+                    android:layout_height="wrap_content" >
+            <!-- Preview: layout=@layout/whats_on_list_item -->
+        </fragment>
+<!-- 		</FrameLayout> -->
         </LinearLayout>
+        
         <ImageView
             android:id="@+id/imageView1"
             android:layout_width="wrap_content"
@@ -127,4 +134,5 @@
             android:layout_below="@+id/wheelView"
             android:layout_centerHorizontal="true"
             android:src="@drawable/wheel_shadow" />
+
     </RelativeLayout>

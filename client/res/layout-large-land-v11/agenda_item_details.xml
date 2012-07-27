@@ -1,0 +1,130 @@
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:padding="20dip"
+        
+        android:layout_height="fill_parent" >
+
+        <TextView
+            android:id="@+id/agendaItemName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:text="Talk Title"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/dark_suse_green" />
+        
+        <TextView
+            android:id="@+id/agendaItemTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/agendaItemName"
+            android:text="09:00 - 10:00 in the XYZ Room"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/trackTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/agendaItemTime"
+            android:paddingBottom="10dip"
+            android:layout_alignParentLeft="true"
+            android:text="Track: Some track"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+        
+        <View
+            android:id="@+id/horizontalLineView"
+            android:layout_width="fill_parent"
+            android:layout_height="2dip"
+            android:paddingLeft="20dip"
+            android:paddingRight="20dip"
+            android:background="@color/dark_suse_green"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/trackTextView" />
+
+        <ScrollView
+            android:id="@+id/scrollView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/horizontalLineView" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical" >
+
+             <TextView
+                 android:id="@+id/abstractContents"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:paddingTop="10dip"
+                 android:paddingBottom="10dip"
+                 android:text="TextView"
+                 android:textAppearance="?android:attr/textAppearanceMedium" />
+
+             <TextView
+                 android:id="@+id/textView1"
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:text="@string/speakers"
+                 android:textAppearance="?android:attr/textAppearanceSmall"
+                 android:textColor="@color/bright_suse_green"
+                 android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/speakersLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+            </LinearLayout>
+            
+            </LinearLayout>
+            
+        </ScrollView>
+
+        <ToggleButton
+            android:id="@+id/favoriteButton"
+            android:layout_width="wrap_content"
+            android:textOn=""
+            android:textOff=""
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:background="@drawable/favorite_toggle"
+            android:text="" />
+        
+<!--         <ImageButton -->
+<!--             android:id="@+id/favoriteButton" -->
+<!--             android:layout_width="wrap_content" -->
+<!--             android:layout_height="wrap_content" -->
+<!--             android:layout_alignParentRight="true" -->
+<!--             android:layout_alignParentTop="true" -->
+<!--             android:background="@null" -->
+<!--             android:src="@drawable/favorite_off" /> -->
+        <ToggleButton
+            android:id="@+id/calendarButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingRight="10dip"
+            android:textOn=""
+            android:textOff=""
+            android:layout_alignTop="@+id/favoriteButton"
+            android:layout_toLeftOf="@+id/favoriteButton"
+            android:background="@drawable/calendar_toggle"
+            android:text="" />
+
+<!--         <ImageButton -->
+<!--             android:id="@+id/calendarButton" -->
+<!--             android:paddingRight="10dip" -->
+<!--             android:layout_width="wrap_content" -->
+<!--             android:layout_height="wrap_content" -->
+<!--             android:layout_alignTop="@+id/favoriteButton" -->
+<!--             android:layout_toLeftOf="@+id/favoriteButton" -->
+<!--             android:background="@null" -->
+<!--             android:src="@drawable/event_off" /> -->
+
+
+    </RelativeLayout>

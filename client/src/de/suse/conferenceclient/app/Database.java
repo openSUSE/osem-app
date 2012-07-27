@@ -12,11 +12,13 @@ import java.util.List;
 
 import de.suse.conferenceclient.models.Conference;
 import de.suse.conferenceclient.models.Event;
+import de.suse.conferenceclient.models.Speaker;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 import android.util.Log;
 
 /**
@@ -47,6 +49,35 @@ public class Database {
 
 	public void close() {
 		helper.close();
+	}
+	
+	public boolean isEventInMySchedule(long eventId) {
+		boolean ret = false;
+		Log.d("SUSEConferences", "Checking if "+ eventId + " is in My Schedule");
+		Cursor c = db.rawQuery("SELECT _id FROM myEvents WHERE event_id=" + eventId, null);
+		if (c.getCount() > 0) {
+			Log.d("SUSEConferences", "It is!");
+			ret = true;
+		} else
+			Log.d("SUSEConference", "It isn't!");
+		
+		c.close();
+		return ret;
+	}
+	
+	public void removeEventFromMySchedule(long eventId) {
+		Log.d("SUSEConferences", "Removing " + eventId + " from My Schedule");
+		String sql = "event_id=" + eventId;
+		db.delete("myEvents", sql, null);
+	}
+	
+	public void addEventToMySchedule(long eventId, long conferenceId) {
+		Log.d("SUSEConferences", "Adding " + eventId + " " + conferenceId+ " to My Schedule");
+
+		ContentValues values = new ContentValues();
+		values.put("event_id", eventId);
+		values.put("conference_id", conferenceId);
+		db.insert("myEvents", null, values);
 	}
 	
 	public long getConferenceIdFromGuid(String guid) {
@@ -142,45 +173,92 @@ public class Database {
 	}
 	
 	public void insertEventSpeaker(long speakerId, long eventId) {
-		
 		ContentValues values = new ContentValues();
 		values.put("speaker_id", speakerId);
 		values.put("event_id", eventId);
 		db.insert("eventSpeakers", null, values);
 	}
 	
+	public List<Event> getNextTwoEvents(long conferenceId) {
+//		select name from events where date >= datetime('now', 'localtime') limit 2;
+		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
+				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
+				   + "WHERE events.date >= datetime(\'now\', \'localtime\') AND events.conference_id = " + conferenceId + " LIMIT 2";
+		return doEventsQuery(sql);
+	}
+	
+	public List<Event> getMyScheduleTitles(long conferenceId) {
+		// First get the list of IDs we need
+		// TODO subqueries?
+		String eventsSql = "SELECT event_id FROM myEvents WHERE conference_id=" + conferenceId;
+		Cursor c = db.rawQuery(eventsSql, null);
+		List<String> idList = new ArrayList<String>();
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			idList.add(c.getString(0));
+		}
+		
+		String ids = TextUtils.join(",", idList);
+		if (ids.isEmpty())
+			return new ArrayList<Event>();
+		
+		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
+				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
+				   + "WHERE events._id IN (" + ids + ")";
+		return doEventsQuery(sql);
+	}
+	
 	public List<Event> getScheduleTitles(long conferenceId) {
+
+		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
+				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
+				   + "WHERE events.conference_id = " + conferenceId;
+		return doEventsQuery(sql);
+	}
+	
+	private List<Event> doEventsQuery(String sql) {
 		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'");  
 
-		List<Event> eventList = new ArrayList<Event>();
-		String[] columns = {"_id", "guid", "title", "date"};
-		
-		String sql = "SELECT events.guid, events.title, events.date, events.length, "
-				   + "rooms.name, track_id FROM events INNER JOIN rooms ON rooms._id = events.room_id "
-				   + "WHERE events.conference_id = " + conferenceId;
-		
+		List<Event> eventList = new ArrayList<Event>();		
 		Cursor c = db.rawQuery(sql, null);
 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
 			Event newEvent = new Event();
-			newEvent.setGuid(c.getString(0));
-			newEvent.setTitle(c.getString(1));
+			long sqlId = c.getLong(0);
+			newEvent.setSqlId(sqlId);
+			newEvent.setGuid(c.getString(1));
+			newEvent.setTitle(c.getString(2));
 			try {  
-			    Date date = format.parse(c.getString(2));  
+			    Date date = format.parse(c.getString(3));  
 			    newEvent.setDate(date);
 			    GregorianCalendar cal = new GregorianCalendar();
 			    cal.setTime(date);
-			    cal.add(GregorianCalendar.MINUTE, c.getInt(3));
-			    newEvent.setLength(c.getInt(3));
+			    cal.add(GregorianCalendar.MINUTE, c.getInt(4));
+			    newEvent.setLength(c.getInt(4));
 			    newEvent.setEndDate(cal.getTime());
-			    newEvent.setRoomName(c.getString(4));
+			    newEvent.setRoomName(c.getString(5));
 			    // TODO this should be merged into a subquery if possible
-			    long trackId = c.getLong(5);
-			    Cursor d = db.rawQuery("SELECT color, name FROM tracks WHERE _id=" + trackId, null);
+			    long trackId = c.getLong(6);
+			    newEvent.setAbstract(c.getString(7));
+			    Cursor d = db.rawQuery("SELECT _id, color, name FROM tracks WHERE _id=" + trackId, null);
 			    if (d.moveToFirst()) {
-			    	newEvent.setColor(d.getString(0));
-			    	newEvent.setTrackName(d.getString(1));
+			    	newEvent.setColor(d.getString(1));
+			    	newEvent.setTrackName(d.getString(2));
 			    }
-			    eventList.add(newEvent);
+			    d.close();
+			    
+			    // Get the speakers
+			    d = db.rawQuery("SELECT speakers._id, speakers.name, speakers.company, speakers.biography, speakers.photo_guid " +
+			    					   " FROM speakers INNER JOIN eventSpeakers ON eventSpeakers.speaker_id = speakers._id WHERE eventSpeakers.event_id=" + sqlId, null);
+			    d.moveToFirst();
+		        while (d.isAfterLast() == false) {
+		        	Speaker newSpeaker = new Speaker(d.getString(1),
+		        									 d.getString(2),
+		        									 d.getString(3),
+		        									 null);
+		        	newEvent.addSpeaker(newSpeaker);
+		        	d.moveToNext();
+		        }
+		        d.close();
+		        eventList.add(newEvent);
 			} catch (ParseException e) {  
 			    // TODO Auto-generated catch block  
 			    e.printStackTrace();  
@@ -188,6 +266,5 @@ public class Database {
 		}
 		c.close();
 		return eventList;
-
 	}
 }

@@ -73,7 +73,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final String myEventTableCreate = "CREATE TABLE myEvents ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "conference_id INTEGER, "
-			+ "event_id INTEGER)";
+			+ "event_id INTEGER, UNIQUE(event_id) ON CONFLICT REPLACE)";
 	
 	public DatabaseHelper(Context context) {
 		super(context, "SUSEConferences", null, DATABASE_VERSION);

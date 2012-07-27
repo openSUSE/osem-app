@@ -56,6 +56,10 @@ import android.view.View;
 // TODO scrolling along the Y axis does not work
 
 public class ScheduleView extends View {
+	public interface OnEventClickListener {
+		public void clicked(Event event);
+	}
+	
 	private class HourIterator
 	   implements Iterator<Date>, Iterable<Date>
 	{
@@ -98,6 +102,8 @@ public class ScheduleView extends View {
 		int mLength;
 		RectF mBox;
 		int mTrackColor;
+		Event mEvent;
+		private String mGuid;
 		
 		public DisplayItem(String label) {
 			this.mX = 0;
@@ -149,6 +155,22 @@ public class ScheduleView extends View {
 			mTrackColor = trackColor;
 		}
 
+		public Event getEvent() {
+			return mEvent;
+		}
+
+		public void setEvent(Event event) {
+			mEvent= event;
+		}
+
+		public String getGuid() {
+			return mGuid;
+		}
+
+		public void setGuid(String guid) {
+			mGuid = guid;
+		}
+
 
 	}
 	private Paint mHourPainter, mRoomPainter, mLinePainter;
@@ -166,6 +188,8 @@ public class ScheduleView extends View {
 	private int MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
 	private int EVENT_BOX_HEIGHT = 30;
 	private RectF mHourHeader;
+	private float mWindowWidth = 0;
+	private float mWindowHeight = 0;
 	private float mHourStartX = 0;
 	private float mHourStartY = 30;
 	private float mMaximumScrollwidth = 0;
@@ -174,6 +198,7 @@ public class ScheduleView extends View {
 	private float mRoomStartText = 0;
 	private float mTranslateX = 0;
 	private float mStartX = 0;
+	private OnEventClickListener mListener = null;
 	private GestureDetector mGestureDetector;
 	Date mStartDate, mEndDate;
 	
@@ -255,6 +280,10 @@ public class ScheduleView extends View {
 		setEvents(new ArrayList<Event>());
 	}
 	
+	public void setOnEventClickListener(OnEventClickListener listener) {
+		this.mListener = listener;
+	}
+	
 	public void setEvents(List<Event> eventList) {
 		mEventList = eventList;
 		mEventMap.clear();
@@ -323,6 +352,11 @@ public class ScheduleView extends View {
 	    		// Don't let the user scroll too far right
 	    		if (!i.hasNext()) {
 	    			mEndTimeEdge = rx;
+	    	        mMaximumScrollwidth = mEndTimeEdge - mWindowWidth;
+	    	        // This is really only useful for My Schedule - 
+	    	        // if the user un-favorites an item that's far to the right,
+	    	        // we want to cleanly reset their scroll width
+	    	        mTranslateX = 0;
 	    		}
 	    		mTimeList.add(newHour);
 	    		hourCount++;
@@ -340,6 +374,8 @@ public class ScheduleView extends View {
 			DisplayItem newEvent = new DisplayItem(event.getTitle());
 			newEvent.setX(x);
 			newEvent.setY(y);
+			newEvent.setEvent(event);
+			newEvent.setGuid(event.getGuid());
 			int length = event.getLength();
 			newEvent.setLength(length);
 			
@@ -359,7 +395,9 @@ public class ScheduleView extends View {
 	@Override
     public void onSizeChanged (int w, int h, int oldw, int oldh){
         super.onSizeChanged(w, h, oldw, oldh);
-        mMaximumScrollwidth = mEndTimeEdge - w;
+        mWindowWidth = w;
+        mWindowHeight = w;
+        mMaximumScrollwidth = mEndTimeEdge - mWindowWidth;
 		mHourHeader.set(0, 0, mEndTimeEdge, mHourHeaderHeight);
     }
 	
@@ -425,6 +463,7 @@ public class ScheduleView extends View {
                     mStartX =  event.getX();
                     return true;
             }
+			
             @Override
             public boolean onSingleTapUp(MotionEvent event)
             {
@@ -432,7 +471,8 @@ public class ScheduleView extends View {
             	
             	for (DisplayItem eventItem : mEventDisplayList) {
             		if (eventItem.inBox(translatedX, event.getY()))
-            			Log.d("SUSEConferences", "Clicked on " + eventItem.getLabel());
+            			if (mListener != null)
+            				mListener.clicked(eventItem.getEvent());
             	}
 
             	return true;

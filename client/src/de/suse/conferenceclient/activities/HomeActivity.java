@@ -5,6 +5,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -17,6 +18,7 @@ import com.actionbarsherlock.app.SherlockFragmentActivity;
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
 import de.suse.conferenceclient.adapters.TabAdapter;
+import de.suse.conferenceclient.adapters.WhatsOnAdapter;
 import de.suse.conferenceclient.app.Database;
 import de.suse.conferenceclient.app.DatabaseHelper;
 import de.suse.conferenceclient.app.HTTPWrapper;
@@ -24,6 +26,7 @@ import de.suse.conferenceclient.fragments.MyScheduleFragment;
 import de.suse.conferenceclient.fragments.NewsFeedFragment;
 import de.suse.conferenceclient.fragments.WhatsOnFragment;
 import de.suse.conferenceclient.models.Conference;
+import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.tasks.GetConferencesTask;
 import de.suse.conferenceclient.views.WheelView;
 
@@ -43,6 +46,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
+import android.widget.ListView;
 
 public class HomeActivity extends SherlockFragmentActivity implements 
 		GetConferencesTask.ConferenceListListener, WheelView.OnLaunch {
@@ -99,11 +103,10 @@ public class HomeActivity extends SherlockFragmentActivity implements
       	FragmentManager fm = getSupportFragmentManager();
       	WheelView view = (WheelView) findViewById(R.id.wheelView);
       	view.setOnLaunchListener(this);
-      	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment); 
+//      	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment); 
       	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
-//      	mWheelView = (ImageView) findViewById(R.id.wheelView);
-//      	mWheelView.setOnTouchListener(new WheelOnTouchListener());
-//      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.whatsOnFragment);
+      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.whatsOnFragment);
+      	mWhatsOnFragment.setConferenceId(mConferenceId);
       }
     }
 
@@ -319,6 +322,12 @@ public class HomeActivity extends SherlockFragmentActivity implements
 		if (activity == WheelView.ACTIVITY_SCHEDULE) {
 			Intent intent = new Intent(HomeActivity.this, ScheduleActivity.class);
 			intent.putExtra("conferenceId", mConferenceId);
+			intent.putExtra("type", ScheduleActivity.FULL_SCHEDULE);
+			startActivity(intent);
+		} else if (activity == WheelView.ACTIVITY_MYSCHEDULE) {
+			Intent intent = new Intent(HomeActivity.this, ScheduleActivity.class);
+			intent.putExtra("conferenceId", mConferenceId);
+			intent.putExtra("type", ScheduleActivity.MY_SCHEDULE);
 			startActivity(intent);
 		}
 	}

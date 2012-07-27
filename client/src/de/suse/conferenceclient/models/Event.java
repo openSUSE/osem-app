@@ -3,7 +3,9 @@
  */
 package de.suse.conferenceclient.models;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author Matt Barringer <mbarringer@suse.de>
@@ -23,7 +25,13 @@ public class Event {
 	private String mTrackName = "";
 	private String mRoomName = "";
 	private String mColor = "#ffffff";
+	private List<Speaker> mSpeakers;
 	
+	private long mSqlId = -1;
+	
+	public Event() {
+		mSpeakers = new ArrayList<Speaker>();
+	}
 	public String getTrackName() {
 		return mTrackName;
 	}
@@ -97,6 +105,21 @@ public class Event {
 	}
 	public void setColor(String color) {
 		mColor = color;
+	}
+	public long getSqlId() {
+		return mSqlId;
+	}
+	public void setSqlId(long sqlId) {
+		mSqlId = sqlId;
+	}
+	public List<Speaker> getSpeakers() {
+		return mSpeakers;
+	}
+	public void addSpeaker(Speaker speaker) {
+		mSpeakers.add(speaker);
+	}
+	public void setSpeakers(List<Speaker> speakers) {
+		mSpeakers = speakers;
 	}
 
 
