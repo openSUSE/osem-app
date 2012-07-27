@@ -3,6 +3,7 @@ package de.suse.conferenceclient.activities;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,11 +41,14 @@ import android.graphics.Matrix;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 
@@ -105,8 +109,24 @@ public class HomeActivity extends SherlockFragmentActivity implements
       	view.setOnLaunchListener(this);
 //      	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment); 
       	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
-      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.whatsOnFragment);
-      	mWhatsOnFragment.setConferenceId(mConferenceId);
+		LinearLayout whatsOnLayout = (LinearLayout) findViewById(R.id.whatsOnLayout);
+		LayoutInflater inflater = LayoutInflater.from(this);
+		Database db = SUSEConferences.getDatabase();
+		List<Event> eventList = db.getNextTwoEvents(mConferenceId);
+		SimpleDateFormat formatter = new SimpleDateFormat("MMM dd HH:mm");
+		for (Event event : eventList) {
+			View root = inflater.inflate(R.layout.whats_on_list_item, null);
+			TextView title = (TextView) root.findViewById(R.id.titleTextView);
+			TextView room = (TextView) root.findViewById(R.id.roomTextView);
+			TextView time = (TextView) root.findViewById(R.id.timeTextView);
+			title.setText(event.getTitle());
+			room.setText(event.getRoomName());
+			time.setText(formatter.format(event.getDate()));
+			whatsOnLayout.addView(root);
+		}
+//      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.whatsOnFragment);
+//      	mWhatsOnFragment.setConferenceId(mConferenceId);
+      	
       }
     }
 
@@ -141,7 +161,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     	SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putLong("active_conference", mConferenceId);
-        editor.apply();
+        editor.commit();
         
         SUSEConferences app = ((SUSEConferences) getApplicationContext());
         app.setActiveId(mConferenceId);
