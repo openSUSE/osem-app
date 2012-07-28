@@ -21,13 +21,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "name VARCHAR, "
 			+ "description VARCHAR, "
 			+ "year INTEGER, "
+			+ "venue_id INTEGER,"
 			+ "dateRange VARCHAR)";
 	
 	private static final String venueTableCreate = "CREATE TABLE venues (" 
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "guid VARCHAR, "
 			+ "name VARCHAR, "
-			+ "address VARCHAR)";
+			+ "address VARCHAR, "
+			+ "info_text VARCHAR)";
 	
 	private static final String roomsTableCreate = "CREATE TABLE rooms ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT,"

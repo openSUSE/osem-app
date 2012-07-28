@@ -13,6 +13,7 @@ import java.util.List;
 import de.suse.conferenceclient.models.Conference;
 import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.models.Speaker;
+import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -65,6 +66,24 @@ public class Database {
 		return ret;
 	}
 	
+	public void setConferenceVenue(long venueId, long conferenceId) {
+		Log.d("SUSEConferences", "Setting venue_id to " + venueId + " where conference is " + conferenceId);
+		ContentValues values = new ContentValues();
+		values.put("venue_id", venueId);
+		db.update("conferences", values, "_id = " + conferenceId, null);		
+	}
+	
+	public long getConferenceVenue(long conferenceId) {
+		long id = -1;
+		String sql = "SELECT venue_id FROM conferences WHERE _id=" + conferenceId;
+		Cursor c = db.rawQuery(sql, null);
+		if (c.moveToFirst()) {
+			id = c.getLong(0);
+		}
+		c.close();
+		return id;
+	}
+	
 	public void removeEventFromMySchedule(long eventId) {
 		Log.d("SUSEConferences", "Removing " + eventId + " from My Schedule");
 		String sql = "event_id=" + eventId;
@@ -93,6 +112,19 @@ public class Database {
 		return id;
 	}
 	
+	public String getVenueInfo(long venueId) {
+		Log.d("SUSEConferences", "Getting venue info for " + venueId);
+		String ret = "";
+		String[] columns = { "info_text" };
+		String where = "_id = " + venueId;
+		Cursor c = db.query("venues", columns, where, null, null, null, null);
+		if (c.moveToFirst()) {
+			ret = c.getString(0);
+		}
+		c.close();
+		return ret;
+	}
+
 	public long addConference(Conference conference) {
 		ContentValues values = new ContentValues();
 		values.put("guid", conference.getGuid());
@@ -104,15 +136,16 @@ public class Database {
 		return insertId;
 	}
 	
-	public long insertVenue(String guid, String name, String address) {
+	public long insertVenue(String guid, String name, String address, String infoText) {
 		ContentValues values = new ContentValues();
 		values.put("guid", guid);
 		values.put("name", name);
 		values.put("address", address);
+		values.put("info_text", infoText);
 		long insertId = db.insert("venues", null, values);
 		return insertId;
 	}
-	
+		
 	public long insertRoom(String guid, String name, String description, long venueId) {
 		ContentValues values = new ContentValues();
 		values.put("guid", guid);
@@ -187,6 +220,7 @@ public class Database {
 		return doEventsQuery(sql);
 	}
 	
+	
 	public List<Event> getMyScheduleTitles(long conferenceId) {
 		// First get the list of IDs we need
 		// TODO subqueries?
@@ -198,7 +232,7 @@ public class Database {
 		}
 		
 		String ids = TextUtils.join(",", idList);
-		if (ids.isEmpty())
+		if (ids.length() == 0)
 			return new ArrayList<Event>();
 		
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "

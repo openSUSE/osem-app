@@ -1,0 +1,89 @@
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:background="#ffffff"
+        android:padding="20dip"
+        android:layout_height="fill_parent" >
+
+        <ScrollView
+            style="@style/RoundBox"
+            android:id="@+id/scrollView1"
+            android:paddingRight="40dip"
+            android:paddingLeft="40dip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true" >
+
+            <LinearLayout
+             android:paddingTop="20dip"
+             android:paddingBottom="20dip"
+             android:paddingRight="10dip"
+             android:paddingLeft="10dip"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <TextView
+                    android:id="@+id/infoTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TextView" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <TextView
+            android:id="@+id/mapsTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="5dip"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:clickable="true"
+            android:text="@string/maps"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/very_light_suse_grey" />
+        <View
+            android:id="@+id/view2"
+    		android:layout_width="1dip"
+    		android:layout_height="fill_parent"
+    		android:background="@color/dark_suse_green"
+            android:layout_alignLeft="@+id/mapsTextView"
+            android:layout_alignTop="@+id/mapsTextView"
+            android:layout_alignBottom="@+id/mapsTextView" />
+        
+        <TextView
+            android:id="@+id/afterHoursText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+                        android:paddingLeft="5dip"
+                        android:paddingRight="5dip"
+            
+            android:layout_toLeftOf="@+id/mapsTextView"
+            android:text="@string/afterHours"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/light_suse_grey" />
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toLeftOf="@+id/afterHoursText"
+            android:text="@string/info"
+                        android:paddingRight="5dip"
+            
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@color/dark_suse_green" />
+
+        <View
+            android:id="@+id/view1"
+    		android:layout_width="1dip"
+    		android:layout_height="fill_parent"
+    		android:background="@color/dark_suse_green"
+            android:layout_alignLeft="@+id/afterHoursText"
+            android:layout_alignTop="@+id/afterHoursText"
+            android:layout_alignBottom="@+id/afterHoursText" />
+
+    </RelativeLayout>

@@ -3,6 +3,8 @@
     <string name="app_name">SUSE Conferences</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_home">SUSE Conferences</string>
+    <string name="title_activity_info">Conference Information</string>
+    
     <string name="mySchedule">My Schedule</string>
     <string name="fullSchedule">Full Schedule</string>
     <string name="whatsOn">What\'s On</string>
@@ -11,4 +13,7 @@
     <string name="myAgendaFor">My Agenda for</string>
     <string name="speakers">SPEAKERS</string>
     <string name="upcoming">UPCOMING</string>
+    <string name="maps">Maps</string>
+    <string name="afterHours">After Hours</string>
+    <string name="info">Info</string>
 </resources>

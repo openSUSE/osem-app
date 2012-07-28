@@ -45,7 +45,9 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -53,7 +55,7 @@ import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 
 public class HomeActivity extends SherlockFragmentActivity implements 
-		GetConferencesTask.ConferenceListListener, WheelView.OnLaunch {
+		GetConferencesTask.ConferenceListListener, WheelView.OnLaunch, OnClickListener {
 	private ViewPager mViewPager;
 	private TabAdapter mTabsAdapter;
 	private MyScheduleFragment mMyScheduleFragment;
@@ -107,8 +109,9 @@ public class HomeActivity extends SherlockFragmentActivity implements
       	FragmentManager fm = getSupportFragmentManager();
       	WheelView view = (WheelView) findViewById(R.id.wheelView);
       	view.setOnLaunchListener(this);
-//      	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment); 
+//      	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment);
       	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
+      	// TODO try to move this back into a fragment, if it won't blowup the layout
 		LinearLayout whatsOnLayout = (LinearLayout) findViewById(R.id.whatsOnLayout);
 		LayoutInflater inflater = LayoutInflater.from(this);
 		Database db = SUSEConferences.getDatabase();
@@ -124,6 +127,9 @@ public class HomeActivity extends SherlockFragmentActivity implements
 			time.setText(formatter.format(event.getDate()));
 			whatsOnLayout.addView(root);
 		}
+		
+		ImageButton mapButton = (ImageButton) findViewById(R.id.mapButton);
+		mapButton.setOnClickListener(this);
 //      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.whatsOnFragment);
 //      	mWhatsOnFragment.setConferenceId(mConferenceId);
       	
@@ -228,9 +234,15 @@ public class HomeActivity extends SherlockFragmentActivity implements
 
     			JSONObject venueReply = HTTPWrapper.get(venueUrl);
     			JSONObject venue = venueReply.getJSONObject("venue");
+    			String infoUrl = url + "/" + venue.getString("info_text");
+    			String info = HTTPWrapper.getRawText(infoUrl);
+    			
     			long venueId = db.insertVenue(venue.getString("guid"),
     										  venue.getString("name"),
-    										  venue.getString("address"));
+    										  venue.getString("address"),
+    										  info);
+    			
+    			db.setConferenceVenue(venueId, mConferenceId);
     			
 				Log.d("SUSEConferences", "Rooms");
 
@@ -349,6 +361,18 @@ public class HomeActivity extends SherlockFragmentActivity implements
 			intent.putExtra("conferenceId", mConferenceId);
 			intent.putExtra("type", ScheduleActivity.MY_SCHEDULE);
 			startActivity(intent);
+		}
+	}
+
+	@Override
+	public void onClick(View v) {
+		if (v.getId() == R.id.mapButton) {
+	    	Database db = SUSEConferences.getDatabase();
+			long venueId = db.getConferenceVenue(mConferenceId);
+			Intent intent = new Intent(HomeActivity.this, InfoActivity.class);
+			intent.putExtra("venueId", venueId);
+			startActivity(intent);
+
 		}
 	}
 
