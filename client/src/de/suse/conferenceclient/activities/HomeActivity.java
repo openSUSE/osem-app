@@ -106,11 +106,13 @@ public class HomeActivity extends SherlockFragmentActivity implements
                   NewsFeedFragment.class, null);
       } else {
       	// Tablet layout
-      	FragmentManager fm = getSupportFragmentManager();
+//      	FragmentManager fm = getSupportFragmentManager();
       	WheelView view = (WheelView) findViewById(R.id.wheelView);
       	view.setOnLaunchListener(this);
 //      	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment);
-      	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
+//      	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
+//      	mNewsFeedFragment.setSearch("#opensuse");
+      	
       	// TODO try to move this back into a fragment, if it won't blowup the layout
 		LinearLayout whatsOnLayout = (LinearLayout) findViewById(R.id.whatsOnLayout);
 		LayoutInflater inflater = LayoutInflater.from(this);

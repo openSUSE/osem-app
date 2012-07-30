@@ -18,6 +18,8 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 
 /**
@@ -28,6 +30,36 @@ import android.util.Log;
  * TODO This probably doesn't work with HTTPS
  */
 public class HTTPWrapper {
+	
+	public static Bitmap getImage(String url) throws ClientProtocolException, IOException {
+		HttpClient client = new DefaultHttpClient();
+		HttpGet get = new HttpGet(url);
+		Log.d("SUSEConferences", "Get: " + url);
+		HttpResponse response = client.execute(get);
+		StatusLine statusLine = response.getStatusLine();
+		int statusCode = statusLine.getStatusCode();
+		if (statusCode >= 200 && statusCode <= 299) {
+			final HttpEntity entity = response.getEntity();
+	        if (entity != null) {
+	            InputStream inputStream = null;
+	            try {
+	                inputStream = entity.getContent(); 
+	                final Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+	                return bitmap;
+	            } finally {
+	                if (inputStream != null) {
+	                    inputStream.close();  
+	                }
+	                entity.consumeContent();
+	            }
+	        } else {
+	        	throw new HttpResponseException(statusCode, statusLine.getReasonPhrase());
+	        }
+		} else {
+        	throw new HttpResponseException(statusCode, statusLine.getReasonPhrase());
+        }
+	}
+	
 	public static String getRawText(String url) throws ClientProtocolException, IOException {
 		HttpClient client = new DefaultHttpClient();
 		HttpGet get = new HttpGet(url);
