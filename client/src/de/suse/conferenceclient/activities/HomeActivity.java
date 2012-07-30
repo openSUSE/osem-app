@@ -28,6 +28,7 @@ import de.suse.conferenceclient.fragments.NewsFeedFragment;
 import de.suse.conferenceclient.fragments.WhatsOnFragment;
 import de.suse.conferenceclient.models.Conference;
 import de.suse.conferenceclient.models.Event;
+import de.suse.conferenceclient.models.Venue;
 import de.suse.conferenceclient.tasks.GetConferencesTask;
 import de.suse.conferenceclient.views.WheelView;
 
@@ -40,6 +41,7 @@ import android.content.SharedPreferences;
 import android.graphics.Matrix;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -117,7 +119,13 @@ public class HomeActivity extends SherlockFragmentActivity implements
 		LinearLayout whatsOnLayout = (LinearLayout) findViewById(R.id.whatsOnLayout);
 		LayoutInflater inflater = LayoutInflater.from(this);
 		Database db = SUSEConferences.getDatabase();
+		long venueId = db.getConferenceVenue(mConferenceId);
+		Venue venue = db.getVenueInfo(venueId);
+		TextView infoText = (TextView) findViewById(R.id.infoTextView);
+		infoText.setText(Html.fromHtml(venue.getInfo()));
+
 		List<Event> eventList = db.getNextTwoEvents(mConferenceId);
+		
 		SimpleDateFormat formatter = new SimpleDateFormat("MMM dd HH:mm");
 		for (Event event : eventList) {
 			View root = inflater.inflate(R.layout.whats_on_list_item, null);
@@ -243,7 +251,24 @@ public class HomeActivity extends SherlockFragmentActivity implements
     										  venue.getString("name"),
     										  venue.getString("address"),
     										  info);
-    			
+    			JSONArray mapPoints = venue.getJSONArray("map_points");
+    			int mapLen = mapPoints.length();
+    			for (int i = 0; i < mapLen; i++) {
+    				JSONObject point = mapPoints.getJSONObject(i);
+    				String lat = point.getString("lat");
+    				String lon = point.getString("lon");
+    				String type = point.getString("type");
+    				String name = "";
+    				String addr = "";
+    				String desc = "";
+    				if (!type.equals("venue")) {
+    					name = point.getString("name");
+    					addr = point.getString("address");
+    					desc = point.getString("description");
+    				}
+    				
+    				db.insertVenuePoint(venueId, lat, lon, type, name, addr, desc);
+    			}
     			db.setConferenceVenue(venueId, mConferenceId);
     			
 				Log.d("SUSEConferences", "Rooms");

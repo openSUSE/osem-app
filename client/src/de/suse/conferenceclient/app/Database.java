@@ -13,6 +13,8 @@ import java.util.List;
 import de.suse.conferenceclient.models.Conference;
 import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.models.Speaker;
+import de.suse.conferenceclient.models.Venue;
+import de.suse.conferenceclient.models.Venue.MapPoint;
 import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
@@ -84,6 +86,48 @@ public class Database {
 		return id;
 	}
 	
+	public Venue getVenueInfo(long venueId) {
+		Venue venue = null;
+		String sql = "SELECT name, address, info_text FROM venues WHERE _id=" + venueId;
+		String pointSql = "SELECT type, lat, lon, name, address, description FROM points WHERE venue_id=" + venueId;
+		Cursor c = db.rawQuery(sql, null);
+		if (c.moveToFirst()) {
+			venue = new Venue(c.getString(0), c.getString(1), c.getString(2));
+		}
+		c.close();
+		
+		c = db.rawQuery(pointSql, null);
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			String typeStr = c.getString(0);
+			int lat = getLatLon(c.getString(1));
+			int lon = getLatLon(c.getString(2));
+			int type = 0;
+			if (typeStr.equals("venue"))
+				type = MapPoint.TYPE_VENUE;
+			else if (typeStr.equals("food"))
+				type = MapPoint.TYPE_FOOD;
+			else if (typeStr.equals("drink"))
+				type = MapPoint.TYPE_DRINK;
+			else if (typeStr.equals("electronics"))
+				type = MapPoint.TYPE_ELECTRONICS;
+			MapPoint newPoint = venue.new MapPoint(type, lat, lon);
+			
+			if (type == MapPoint.TYPE_VENUE) {
+				newPoint.setName(c.getString(3));
+				newPoint.setAddress(c.getString(4));
+				newPoint.setDescription(c.getString(5));
+			}
+			
+			venue.addPoint(newPoint);
+		}
+		return venue;
+	}
+	
+	public int getLatLon(String str) {
+		double val = Double.parseDouble(str);
+		int ret = (int) (val * 1E6);
+		return ret;
+	}
 	public void removeEventFromMySchedule(long eventId) {
 		Log.d("SUSEConferences", "Removing " + eventId + " from My Schedule");
 		String sql = "event_id=" + eventId;
@@ -111,19 +155,6 @@ public class Database {
 		c.close();
 		return id;
 	}
-	
-	public String getVenueInfo(long venueId) {
-		Log.d("SUSEConferences", "Getting venue info for " + venueId);
-		String ret = "";
-		String[] columns = { "info_text" };
-		String where = "_id = " + venueId;
-		Cursor c = db.query("venues", columns, where, null, null, null, null);
-		if (c.moveToFirst()) {
-			ret = c.getString(0);
-		}
-		c.close();
-		return ret;
-	}
 
 	public long addConference(Conference conference) {
 		ContentValues values = new ContentValues();
@@ -145,7 +176,25 @@ public class Database {
 		long insertId = db.insert("venues", null, values);
 		return insertId;
 	}
-		
+	
+	public void insertVenuePoint(long venueId,
+								 String lat,
+								 String lon,
+								 String type,
+								 String name,
+								 String address,
+								 String description) {
+		ContentValues values = new ContentValues();
+		values.put("venue_id", venueId);
+		values.put("type", type);
+		values.put("lat", lat);
+		values.put("lon", lon);
+		values.put("name", name);
+		values.put("address", address);
+		values.put("description", description);
+		db.insert("points", null, values);
+	}
+	
 	public long insertRoom(String guid, String name, String description, long venueId) {
 		ContentValues values = new ContentValues();
 		values.put("guid", guid);

@@ -1,3 +1,9 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ffffff" >
+    
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
@@ -168,5 +174,50 @@
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="@color/dark_suse_green"
         android:textStyle="bold" />
-
 </RelativeLayout>
+
+ <LinearLayout
+     android:layout_width="fill_parent"
+     android:layout_height="fill_parent"
+     android:gravity="center_vertical|right"
+     android:orientation="vertical" >
+
+<de.suse.conferenceclient.app.InfoDrawer android:layout_width="wrap_content"
+                           android:layout_height="fill_parent"
+                           android:orientation="horizontal"
+                           android:content="@+id/scrollView"
+                           android:handle="@+id/handle">
+
+  <ImageView android:id="@+id/handle"
+        android:layout_width="wrap_content" 
+        android:layout_height="fill_parent"
+        android:src="@drawable/info_tab" />
+  
+        <ScrollView
+            android:id="@+id/scrollView"
+            style="@style/RoundBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#ffffff">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="20dip"
+                android:paddingLeft="10dip"
+                android:paddingRight="10dip"
+                android:paddingTop="20dip" >
+
+                <TextView
+                    android:id="@+id/infoTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TextView" />
+              
+            </LinearLayout>
+        </ScrollView>
+        </de.suse.conferenceclient.app.InfoDrawer>
+    </LinearLayout>
+
+</FrameLayout>

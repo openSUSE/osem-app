@@ -31,6 +31,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "address VARCHAR, "
 			+ "info_text VARCHAR)";
 	
+	private static final String mapPointsTableCreate = "CREATE TABLE points ("
+			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+			+ "venue_id INTEGER, "
+			+ "type VARCHAR, "
+			+ "lat VARCHAR,"
+			+ "lon VARCHAR, "
+			+ "name VARCHAR, "
+			+ "address VARCHAR, "
+			+ "description VARCHAR)";
+	
 	private static final String roomsTableCreate = "CREATE TABLE rooms ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
 			+ "guid VARCHAR, "
@@ -92,6 +102,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL(myEventTableCreate);
 		db.execSQL(tracksTableCreate);
 		db.execSQL(speakerEventTableCreate);
+		db.execSQL(mapPointsTableCreate);
 	}
 
 	@Override

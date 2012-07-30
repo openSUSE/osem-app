@@ -1,58 +1,14 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ffffff" >
+    
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
-    android:background="#ffffff"
-    android:layout_height="fill_parent" >
-
-    <TextView
-        android:id="@+id/conferenceNameTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:paddingLeft="20dip"
-        android:text="SUSECon 2012"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@color/dark_suse_green" />
-
-    <TextView
-        android:id="@+id/locationTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/conferenceNameTextView"
-        android:paddingLeft="20dip"
-        android:text="Orlando, FL"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="@color/bright_suse_green" />
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@+id/locationTextView"
-        android:orientation="vertical" >
-            >
-
-        <TextView
-            android:id="@+id/newsFeedTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/newsFeed"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" >
-
-            <fragment
-                android:id="@+id/newsFeedFragment"
-                android:name="de.suse.conferenceclient.fragments.NewsFeedFragment"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-        </FrameLayout>
-    </LinearLayout>
+    android:layout_height="fill_parent"
+    android:background="#ffffff" >
 
     <de.suse.conferenceclient.views.WheelView
         android:id="@+id/wheelView"
@@ -70,54 +26,46 @@
         android:layout_centerVertical="true"
         android:src="@drawable/logo" />
 
-    <ImageButton
-        android:id="@+id/mapButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:background="@null"
-        android:paddingRight="20dip"
-        android:paddingTop="20dip"
-        android:src="@drawable/maps" />
-
     <LinearLayout
+        android:id="@+id/linearLayout1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_gravity="right"        
-  		android:paddingRight="20dip"
-		android:paddingBottom="20dip"
+        android:layout_gravity="right"
         android:gravity="right"
-        android:orientation="vertical" >
-        
+        android:orientation="vertical"
+        android:paddingBottom="20dip"
+        android:paddingRight="20dip" >
+
         <TextView
             android:id="@+id/myScheduleTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:paddingBottom="10dip"
             android:text="@string/upcoming"
-           android:paddingBottom="10dip"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="@color/dark_suse_green"
             android:textStyle="bold" />
+
         <View
             android:id="@+id/horizontalLineView"
             android:layout_width="fill_parent"
             android:layout_height="2dip"
             android:layout_marginLeft="20dip"
             android:layout_marginRight="20dip"
-            android:paddingBottom="20dip"
-            android:background="@color/dark_suse_green" />
-        
-		<LinearLayout android:layout_width="wrap_content"
-		       android:layout_height="wrap_content"		       
-		       android:orientation="vertical"
-		       android:paddingTop="20dip"
-		       android:paddingRight="20dip"
-		       android:id="@+id/whatsOnLayout">
-		</LinearLayout>
+            android:background="@color/dark_suse_green"
+            android:paddingBottom="20dip" />
+
+        <LinearLayout
+            android:id="@+id/whatsOnLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingRight="20dip"
+            android:paddingTop="20dip" >
+        </LinearLayout>
     </LinearLayout>
 
     <ImageView
@@ -137,4 +85,139 @@
         android:layout_centerHorizontal="true"
         android:src="@drawable/wheel_shadow" />
 
+    <!-- <LinearLayout -->
+    <!-- android:id="@+id/newsFeedLayout" -->
+    <!-- android:layout_toLeftOf="@+id/wheelView" -->
+
+
+    <!-- android:layout_width="wrap_content" -->
+    <!-- android:layout_height="wrap_content" -->
+    <!-- android:layout_alignParentBottom="true" -->
+    <!-- android:layout_alignParentLeft="true" -->
+    <!-- android:layout_below="@+id/logoView" -->
+    <!-- android:orientation="vertical" -->
+    <!-- android:paddingRight="20dip" -->
+    <!-- android:paddingTop="20dip" > -->
+
+
+    <!-- <TextView -->
+    <!-- android:id="@+id/newsFeedTextView" -->
+    <!-- android:layout_width="wrap_content" -->
+    <!-- android:layout_height="wrap_content" -->
+    <!-- android:gravity="center_horizontal" -->
+    <!-- android:paddingBottom="10dip" -->
+    <!-- android:paddingLeft="20dip" -->
+    <!-- android:text="@string/newsFeed" -->
+    <!-- android:textAppearance="?android:attr/textAppearanceSmall" -->
+    <!-- android:textColor="@color/dark_suse_green" -->
+    <!-- android:textStyle="bold" /> -->
+
+
+    <!-- <View -->
+    <!-- android:id="@+id/newsFeedLine" -->
+    <!-- android:layout_width="fill_parent" -->
+    <!-- android:layout_height="2dip" -->
+    <!-- android:layout_marginLeft="20dip" -->
+    <!-- android:background="@color/dark_suse_green" -->
+    <!-- android:paddingBottom="20dip" /> -->
+
+
+    <!-- <fragment -->
+    <!-- android:id="@+id/newsFeedFragment" -->
+    <!-- android:name="de.suse.conferenceclient.fragments.NewsFeedFragment" -->
+    <!-- android:layout_width="wrap_content" -->
+    <!-- android:layout_height="match_parent" -->
+    <!-- tools:layout="@layout/social_item" /> -->
+    <!-- </LinearLayout> -->
+
+    <TextView
+        android:id="@+id/conferenceNameTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:paddingLeft="20dip"
+        android:text="SUSECon 2012"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@color/dark_suse_green" />
+
+    <TextView
+        android:id="@+id/locationTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/conferenceNameTextView"
+        android:layout_centerHorizontal="true"
+        android:paddingLeft="20dip"
+        android:text="Orlando, FL"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/bright_suse_green" />
+
+    <ImageButton
+        android:id="@+id/mapButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/textView1"
+        android:layout_alignParentLeft="true"
+        android:background="@null"
+        android:paddingRight="20dip"
+        android:paddingTop="20dip"
+        android:src="@drawable/maps" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignRight="@+id/mapButton"
+        android:layout_alignTop="@+id/linearLayout1"
+        android:layout_marginRight="24dp"
+        android:text="@string/venueAndMaps"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@color/dark_suse_green"
+        android:textStyle="bold" />
 </RelativeLayout>
+
+ <LinearLayout
+     android:layout_width="fill_parent"
+     android:layout_height="fill_parent"
+     android:gravity="center_vertical|right"
+     android:orientation="vertical" >
+
+<de.suse.conferenceclient.app.InfoDrawer android:layout_width="wrap_content"
+                           android:layout_height="fill_parent"
+                           android:orientation="horizontal"
+                           android:content="@+id/scrollView"
+                           android:handle="@+id/handle">
+
+  <ImageView android:id="@+id/handle"
+        android:layout_width="wrap_content" 
+        android:layout_height="fill_parent"
+        android:src="@drawable/info_tab" />
+  
+        <ScrollView
+            android:id="@+id/scrollView"
+            style="@style/RoundBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#ffffff">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="20dip"
+                android:paddingLeft="10dip"
+                android:paddingRight="10dip"
+                android:paddingTop="20dip" >
+
+                <TextView
+                    android:id="@+id/infoTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TextView" />
+              
+            </LinearLayout>
+        </ScrollView>
+        </de.suse.conferenceclient.app.InfoDrawer>
+    </LinearLayout>
+
+</FrameLayout>
