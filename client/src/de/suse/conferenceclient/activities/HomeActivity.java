@@ -58,6 +58,7 @@ import android.widget.ListView;
 
 public class HomeActivity extends SherlockFragmentActivity implements 
 		GetConferencesTask.ConferenceListListener, WheelView.OnLaunch, OnClickListener {
+
 	private ViewPager mViewPager;
 	private TabAdapter mTabsAdapter;
 	private MyScheduleFragment mMyScheduleFragment;
@@ -108,22 +109,22 @@ public class HomeActivity extends SherlockFragmentActivity implements
                   NewsFeedFragment.class, null);
       } else {
       	// Tablet layout
-//      	FragmentManager fm = getSupportFragmentManager();
+      	FragmentManager fm = getSupportFragmentManager();
       	WheelView view = (WheelView) findViewById(R.id.wheelView);
       	view.setOnLaunchListener(this);
 //      	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment);
-//      	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
-//      	mNewsFeedFragment.setSearch("#opensuse");
+      	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
+      	mNewsFeedFragment.setSearch("#opensuse");
       	
       	// TODO try to move this back into a fragment, if it won't blowup the layout
 		LinearLayout whatsOnLayout = (LinearLayout) findViewById(R.id.whatsOnLayout);
 		LayoutInflater inflater = LayoutInflater.from(this);
 		Database db = SUSEConferences.getDatabase();
-		long venueId = db.getConferenceVenue(mConferenceId);
-		Venue venue = db.getVenueInfo(venueId);
-		TextView infoText = (TextView) findViewById(R.id.infoTextView);
-		infoText.setText(Html.fromHtml(venue.getInfo()));
-
+//		long venueId = db.getConferenceVenue(mConferenceId);
+//		Venue venue = db.getVenueInfo(venueId);
+//		TextView infoText = (TextView) findViewById(R.id.infoTextView);
+//		infoText.setText(Html.fromHtml(venue.getInfo()));
+//
 		List<Event> eventList = db.getNextTwoEvents(mConferenceId);
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("MMM dd HH:mm");
@@ -388,9 +389,10 @@ public class HomeActivity extends SherlockFragmentActivity implements
 			intent.putExtra("conferenceId", mConferenceId);
 			intent.putExtra("type", ScheduleActivity.MY_SCHEDULE);
 			startActivity(intent);
+		} else if (activity == WheelView.ACTIVITY_SOCIAL) {
+
 		}
 	}
-
 	@Override
 	public void onClick(View v) {
 		if (v.getId() == R.id.mapButton) {
@@ -399,7 +401,6 @@ public class HomeActivity extends SherlockFragmentActivity implements
 			Intent intent = new Intent(HomeActivity.this, InfoActivity.class);
 			intent.putExtra("venueId", venueId);
 			startActivity(intent);
-
 		}
 	}
 

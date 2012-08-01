@@ -27,16 +27,19 @@ public class WheelView extends View {
 		public void launchActivity(int activity);
 	}
 	
-	public static int ACTIVITY_MYSCHEDULE = 1;
-	public static int ACTIVITY_SCHEDULE = 2;
-	public static int ACTIVITY_MAPS = 3;
-	public static int ACTIVITY_SOCIAL = 4;
-	
+	public static final int ACTIVITY_MYSCHEDULE = 1;
+	public static final int ACTIVITY_SCHEDULE = 2;
+	public static final int ACTIVITY_MAPS = 3;
+	public static final int ACTIVITY_SOCIAL = 4;
+	public static final int ACTIVITY_DASHBOARD = 5;
 	private WheelView me;
 	private static Matrix mMatrix;
-	private static Bitmap mBitmap;
+	private static Bitmap mBitmap, mLogoBitmap;
 	private static final Paint mPainter = new Paint(Paint.ANTI_ALIAS_FLAG);
+	private static final Paint mTextPainter = new Paint(Paint.ANTI_ALIAS_FLAG);
 	private float mCenterX, mCenterY;
+	private float mLogoX, mLogoY;
+	private float mTextX, mTextY;
 	private float direction = 0;
 	private float startX, startY;
 	private float startDirection=0;
@@ -61,8 +64,14 @@ public class WheelView extends View {
 	private void setup(Context context) {
 		me = this;
 		mListener = null;
+		mTextPainter.setTextSize(30);
+		mTextPainter.setTextAlign(Paint.Align.CENTER);
+		mTextPainter.setColor(getResources().getColor(R.color.dark_suse_green));
+		
 		mMatrix = new Matrix();
 		mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.wheel);
+		mLogoBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.logo);
+
 //		mDetector = new GestureDetector(context, new WheelGestureDetector());
 	}
 	
@@ -74,13 +83,31 @@ public class WheelView extends View {
 	@Override
 	public void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
+		
 		if (canvas == null) return;
-
+	    mLogoX = (this.getWidth() - mLogoBitmap.getWidth()) / 2;
+	    mLogoY = (this.getHeight() - mLogoBitmap.getHeight()) / 2;
+	    
 		canvas.save();
+		switch(mSelectedActivity) {
+		case ACTIVITY_MYSCHEDULE:
+			canvas.drawText("My Schedule", mTextX, mTextY, mTextPainter);
+			break;
+		case ACTIVITY_SCHEDULE:
+			canvas.drawText("Schedule", mTextX, mTextY, mTextPainter);
+			break;
+		case ACTIVITY_SOCIAL:
+			canvas.drawText("Social", mTextX, mTextY, mTextPainter);
+			break;
+		default:
+			canvas.drawBitmap(mLogoBitmap, mLogoX, mLogoY, mPainter);
+			break;
+		}
 		canvas.rotate(direction, mCenterX, mCenterY);
 		canvas.drawBitmap(mBitmap, mMatrix, mPainter);
 		canvas.restore();
 	}
+	
 	
     @Override
     public boolean onTouchEvent(MotionEvent event)
@@ -118,6 +145,11 @@ public class WheelView extends View {
 	private void start(float x, float y) {
 	    mCenterX = this.getWidth() / 2;
 	    mCenterY = this.getHeight() / 2;
+	    mLogoX = (this.getWidth() - mLogoBitmap.getWidth()) / 2;
+	    mLogoY = (this.getHeight() - mLogoBitmap.getHeight()) / 2;
+	    mTextX = this.getWidth() / 2;
+	    mTextY = this.getHeight() / 2;
+
 	    startX = x;
 	    startY = y;
 	}
@@ -125,6 +157,41 @@ public class WheelView extends View {
 	private void move(float x, float y) {
 	    float angle = (float) angle(mCenterX, mCenterY, startX, startY, x, y);
 	    direction = (float) Math.toDegrees(angle) * -1 + startDirection;
+		int rounded = Math.round(direction);
+		
+		if (rounded >= 0 && rounded <= 45) {
+			// It's the dashboard
+			mSelectedActivity = ACTIVITY_DASHBOARD;
+		} else if (rounded >=46 && rounded <= 135) {
+			// It's the Schedule
+			mSelectedActivity = ACTIVITY_SCHEDULE;
+		} else if (rounded >= 136 && rounded <= 225) {
+			// It's the Social 
+			mSelectedActivity = ACTIVITY_SOCIAL;
+		} else if (rounded >= 226 && rounded <= 315) {
+			// It's My Schedule
+			mSelectedActivity = ACTIVITY_MYSCHEDULE;
+		}  else if (rounded >= 316 && rounded <= 360) {
+			// Looped back to the dashboard
+			mSelectedActivity = ACTIVITY_DASHBOARD;
+
+		} else if (rounded <= 0 && rounded >= -45) {
+			// Dashboard again
+			mSelectedActivity = ACTIVITY_DASHBOARD;
+		} else if (rounded <= -45 && rounded >= -135) {
+			// My Schedule
+			mSelectedActivity = ACTIVITY_MYSCHEDULE;
+		} else if (rounded <= -136 && rounded >= -225) {
+			//Social
+			mSelectedActivity = ACTIVITY_SOCIAL;
+		} else if (rounded <= -226 && rounded >= -315) {
+			// Schedule
+			mSelectedActivity = ACTIVITY_SCHEDULE;
+		} else if (rounded <= -316 && rounded >= -360) {
+			// And Dashboard yet again
+			mSelectedActivity = ACTIVITY_DASHBOARD;
+		}
+
 	    this.invalidate();
 	}
 	
@@ -170,6 +237,7 @@ public class WheelView extends View {
 			me.post(new WheelAnimation(-360));
 		}
 	}
+	
 //    private class WheelGestureDetector extends SimpleOnGestureListener {
 //        @Override
 //        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {

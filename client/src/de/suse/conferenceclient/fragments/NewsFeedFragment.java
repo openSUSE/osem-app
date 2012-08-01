@@ -50,12 +50,15 @@ public class NewsFeedFragment extends SherlockListFragment {
 				JSONArray items = result.getJSONArray("results");
 				int len = items.length();
 				for (int i = 0; i < len; i++) {
+					if (i > 1)
+						break;
 					JSONObject jsonItem = items.getJSONObject(i);
 					Bitmap image = HTTPWrapper.getImage(jsonItem.getString("profile_image_url"));
 					SocialItem newItem = new SocialItem(jsonItem.getString("from_user"),
 														jsonItem.getString("text"),
 														jsonItem.getString("created_at"),
 														image);
+
 					socialItems.add(newItem);
 				}
 			} catch (IllegalStateException e) {

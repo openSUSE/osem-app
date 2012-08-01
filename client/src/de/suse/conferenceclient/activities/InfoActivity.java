@@ -32,43 +32,20 @@ import de.suse.conferenceclient.app.MapOverlay;
 import de.suse.conferenceclient.models.Venue;
 import de.suse.conferenceclient.models.Venue.MapPoint;
 
-public class InfoActivity extends MapActivity implements OnClickListener {
+public class InfoActivity extends MapActivity {
 	private MapView mMapView;
-	private TextView mInfoText;
-	private TextView mSocialText;
-	private TextView mMapText;
-	private ScrollView mScrollView;
 	private GeoPoint mConferencePoint;
-    private int mDarkText, mLightText;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-        mDarkText = getResources().getColor(R.color.dark_suse_green);
-        mLightText = getResources().getColor(R.color.light_suse_green);
 
 		long venueId = getIntent().getLongExtra("venueId", -1);
 		setContentView(R.layout.activity_info);
 		Database db = SUSEConferences.getDatabase();
 		Venue venue = db.getVenueInfo(venueId);
-		mScrollView = (ScrollView) findViewById(R.id.scrollView);
 		
-		TextView infoText = (TextView) findViewById(R.id.infoTextView);
-		infoText.setText(Html.fromHtml(venue.getInfo()));
-		
-		mInfoText = (TextView) findViewById(R.id.infoTextHeader);
-		mInfoText.setOnClickListener(this);
-		
-		mSocialText= (TextView) findViewById(R.id.afterHoursText);
-		mSocialText.setOnClickListener(this);
-
-		mMapText= (TextView) findViewById(R.id.mapsTextView);
-		mMapText.setOnClickListener(this);
-
 		mMapView = (MapView) findViewById(R.id.mapView);
-		mMapView.setVisibility(View.GONE);
-		mMapView.setBuiltInZoomControls(true);
-		
 		List<Overlay> overlays = mMapView.getOverlays();
 		Drawable venueDrawable = this.getResources().getDrawable(R.drawable.venue_marker);
 		Drawable foodDrawable = this.getResources().getDrawable(R.drawable.food_marker);
@@ -87,7 +64,7 @@ public class InfoActivity extends MapActivity implements OnClickListener {
 			Log.d("SUSEConferences", "Adding point");
 			 GeoPoint mapPoint = new GeoPoint(point.getLat(), point.getLon());
 			 OverlayItem overlay = new OverlayItem(mapPoint, venue.getName(), venue.getAddress());
-			 
+
 			 switch (point.getType()) {
 			 case MapPoint.TYPE_VENUE:
 				 controller.setCenter(mapPoint);
@@ -109,7 +86,7 @@ public class InfoActivity extends MapActivity implements OnClickListener {
 		
 		overlays.add(mapOverlays);
 	}
-	
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -133,31 +110,4 @@ public class InfoActivity extends MapActivity implements OnClickListener {
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see android.view.View.OnClickListener#onClick(android.view.View)
-	 */
-	@Override
-	public void onClick(View v) {
-		mSocialText.setTextColor(mLightText);
-		mMapText.setTextColor(mLightText);
-		mInfoText.setTextColor(mLightText);
-
-		switch(v.getId()) {
-		case R.id.infoTextHeader:
-			mInfoText.setTextColor(mDarkText);
-			mMapView.setVisibility(View.GONE);
-			mScrollView.setVisibility(View.VISIBLE);
-			break;
-		case R.id.afterHoursText:
-			mSocialText.setTextColor(mDarkText);
-			mMapView.setVisibility(View.VISIBLE);
-			mScrollView.setVisibility(View.GONE);
-			break;
-		case R.id.mapsTextView:
-			mMapText.setTextColor(mDarkText);
-			mMapView.setVisibility(View.VISIBLE);
-			mScrollView.setVisibility(View.GONE);
-			break;
-		}
-	}
 }
