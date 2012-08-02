@@ -21,7 +21,6 @@
         android:background="@drawable/conference_name_box"
         android:orientation="horizontal" >
         
-        
         <ImageButton
             android:id="@+id/imageButton1"
             android:layout_width="wrap_content"
@@ -100,6 +99,7 @@
            	        android:id="@+id/newsFeedTextView"
            	        android:layout_width="wrap_content"
            	        android:layout_height="wrap_content"
+           	        android:gravity="center_horizontal"
            	        android:text="@string/newsFeed"
            	        android:layout_alignParentLeft="true"
            	        android:layout_above="@+id/newsFeedBorder"
@@ -107,21 +107,16 @@
            	        android:textColor="@color/dark_suse_green"
            	        android:textStyle="bold" />
 
-<!--            	    <View -->
-<!--            	        android:id="@+id/newsFeedLine" -->
-<!--            	        android:layout_width="fill_parent" -->
-<!--            	        android:layout_height="2dip" -->
-<!--            	        android:background="@color/dark_suse_green" /> -->
-
 			<FrameLayout
 			    android:id="@+id/newsFeedBorder"
 			    android:layout_width="wrap_content"
 			    android:layout_height="wrap_content"
-			    android:background="@drawable/conference_name_box"
+			    android:background="@drawable/fragment_box"
 			    android:layout_alignParentBottom="true"
            	    	android:layout_alignParentLeft="true"
-           	    	android:layout_toLeftOf="@+id/arrowView"
-           	    	android:layout_below="@+id/shadowView">
+    			    android:layout_below="@+id/myScheduleTextView"
+    
+           	    	android:layout_toLeftOf="@+id/arrowView">
            	    <fragment
            	        android:id="@+id/newsFeedFragment"
            	        android:name="de.suse.conferenceclient.fragments.NewsFeedFragment"
@@ -129,15 +124,6 @@
            	        android:layout_height="wrap_content"
 				/>
 			</FrameLayout>
-
-           <LinearLayout
-               android:layout_width="wrap_content"
-               android:layout_height="wrap_content"
-               android:layout_alignParentBottom="true"
-               android:layout_alignParentRight="true"
-           	   android:layout_toRightOf="@+id/shadowView"
-           	   android:layout_below="@+id/wheelView"
-               android:orientation="vertical" >
 
         <TextView
             android:id="@+id/myScheduleTextView"
@@ -147,27 +133,26 @@
             android:layout_marginBottom="5dip"
             android:gravity="center_horizontal"
             android:text="@string/upcoming"
+            android:layout_alignParentRight="true"
+           	android:layout_above="@+id/upcomingFeedBorder"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="@color/dark_suse_green"
             android:textStyle="bold" />
+        
+			<FrameLayout
+			    android:id="@+id/upcomingFeedBorder"
+			    android:layout_width="wrap_content"
+			    android:layout_height="wrap_content"
+			    android:layout_alignParentBottom="true"
+			    android:layout_alignParentRight="true"
+			    android:layout_toRightOf="@+id/arrowView"
+			    android:background="@drawable/fragment_box" >
 
-        <View
-            android:id="@+id/horizontalLineView"
-            android:layout_width="match_parent"
-            android:layout_height="2dip"
-            android:layout_marginLeft="20dip"
-            android:layout_marginRight="20dip"
-            android:background="@color/dark_suse_green"
-            android:paddingBottom="20dip" />
-
-        <LinearLayout
-            android:id="@+id/whatsOnLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingRight="20dip"
-            android:paddingTop="20dip" >
-        </LinearLayout>
-    </LinearLayout>
-           	
+           	    <fragment
+           	        android:id="@+id/upcomingFragment"
+           	        android:name="de.suse.conferenceclient.fragments.WhatsOnFragment"
+           	        android:layout_width="wrap_content"
+           	        android:layout_height="wrap_content"
+				/>
+			</FrameLayout>           	
 </RelativeLayout>

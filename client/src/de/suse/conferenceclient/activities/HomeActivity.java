@@ -112,38 +112,14 @@ public class HomeActivity extends SherlockFragmentActivity implements
       	FragmentManager fm = getSupportFragmentManager();
       	WheelView view = (WheelView) findViewById(R.id.wheelView);
       	view.setOnLaunchListener(this);
-//      	mMyScheduleFragment = (MyScheduleFragment) fm.findFragmentById(R.id.myScheduleFragment);
       	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
       	mNewsFeedFragment.setSearch("#opensuse");
       	
-      	// TODO try to move this back into a fragment, if it won't blowup the layout
-		LinearLayout whatsOnLayout = (LinearLayout) findViewById(R.id.whatsOnLayout);
-		LayoutInflater inflater = LayoutInflater.from(this);
-		Database db = SUSEConferences.getDatabase();
-//		long venueId = db.getConferenceVenue(mConferenceId);
-//		Venue venue = db.getVenueInfo(venueId);
-//		TextView infoText = (TextView) findViewById(R.id.infoTextView);
-//		infoText.setText(Html.fromHtml(venue.getInfo()));
-//
-		List<Event> eventList = db.getNextTwoEvents(mConferenceId);
-		
-		SimpleDateFormat formatter = new SimpleDateFormat("MMM dd HH:mm");
-		for (Event event : eventList) {
-			View root = inflater.inflate(R.layout.whats_on_list_item, null);
-			TextView title = (TextView) root.findViewById(R.id.titleTextView);
-			TextView room = (TextView) root.findViewById(R.id.roomTextView);
-			TextView time = (TextView) root.findViewById(R.id.timeTextView);
-			title.setText(event.getTitle());
-			room.setText(event.getRoomName());
-			time.setText(formatter.format(event.getDate()));
-			whatsOnLayout.addView(root);
-		}
-		
+      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.upcomingFragment);
+      	mWhatsOnFragment.setConferenceId(mConferenceId);
+      			
 		ImageButton mapButton = (ImageButton) findViewById(R.id.mapButton);
 		mapButton.setOnClickListener(this);
-//      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.whatsOnFragment);
-//      	mWhatsOnFragment.setConferenceId(mConferenceId);
-      	
       }
     }
 
@@ -247,10 +223,11 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			JSONObject venue = venueReply.getJSONObject("venue");
     			String infoUrl = url + "/" + venue.getString("info_text");
     			String info = HTTPWrapper.getRawText(infoUrl);
-    			
+    			String venueName = venue.getString("name");
+    			String venueAddr =  venue.getString("address");
     			long venueId = db.insertVenue(venue.getString("guid"),
-    										  venue.getString("name"),
-    										  venue.getString("address"),
+    										  venueName,
+    										  venueAddr,
     										  info);
     			JSONArray mapPoints = venue.getJSONArray("map_points");
     			int mapLen = mapPoints.length();
@@ -259,15 +236,15 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				String lat = point.getString("lat");
     				String lon = point.getString("lon");
     				String type = point.getString("type");
-    				String name = "";
-    				String addr = "";
-    				String desc = "";
+    				String name = venueName;
+    				String addr = venueAddr;
+    				String desc = "Conference Venue";
+    				
     				if (!type.equals("venue")) {
     					name = point.getString("name");
     					addr = point.getString("address");
     					desc = point.getString("description");
-    				}
-    				
+    				} 
     				db.insertVenuePoint(venueId, lat, lon, type, name, addr, desc);
     			}
     			db.setConferenceVenue(venueId, mConferenceId);
@@ -398,7 +375,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
 		if (v.getId() == R.id.mapButton) {
 	    	Database db = SUSEConferences.getDatabase();
 			long venueId = db.getConferenceVenue(mConferenceId);
-			Intent intent = new Intent(HomeActivity.this, InfoActivity.class);
+			Intent intent = new Intent(HomeActivity.this, VenueMapsActivity.class);
 			intent.putExtra("venueId", venueId);
 			startActivity(intent);
 		}

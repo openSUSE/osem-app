@@ -1,0 +1,72 @@
+<!-- <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" -->
+
+<!--         android:layout_width="fill_parent" -->
+<!--         android:padding="5dip" -->
+<!--         android:layout_height="fill_parent" > -->
+
+<!--         <ImageView -->
+<!--             android:id="@+id/userPicture" -->
+<!--             android:layout_width="wrap_content" -->
+<!--             android:layout_height="wrap_content" -->
+<!--             android:src="@drawable/ic_launcher" /> -->
+
+<!--         <LinearLayout -->
+<!--             android:layout_width="wrap_content" -->
+<!--             android:layout_height="match_parent" -->
+<!--             android:orientation="vertical" > -->
+
+<!--             <TextView -->
+<!--                 android:id="@+id/userNameTextView" -->
+<!--                 android:layout_width="wrap_content" -->
+<!--                 android:layout_height="wrap_content" -->
+<!--                 android:text="Username" -->
+<!--                 android:textAppearance="?android:attr/textAppearanceSmall" -->
+<!--                 android:textStyle="bold" /> -->
+
+<!--             <TextView -->
+<!--                 android:id="@+id/messageTextView" -->
+<!--                 android:layout_width="wrap_content" -->
+<!--                 android:layout_height="wrap_content" -->
+<!--                 android:text="Small Text" -->
+<!--                 android:textAppearance="?android:attr/textAppearanceSmall" /> -->
+
+<!--         </LinearLayout> -->
+
+<!--     </LinearLayout> -->
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:paddingTop="5dip"
+        android:paddingBottom="5dip"
+        android:paddingLeft="2dip"
+        android:paddingRight="2dip"
+        android:layout_height="fill_parent" >
+
+        <ImageView
+            android:id="@+id/userPicture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/ic_launcher" />
+
+        <TextView
+            android:id="@+id/userNameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/userPicture"
+            android:layout_marginLeft="14dp"
+            android:layout_toRightOf="@+id/userPicture"
+            android:text="Small Text"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/messageTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/userNameTextView"
+            android:layout_below="@+id/userNameTextView"
+            android:text="Small Text"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    </RelativeLayout>

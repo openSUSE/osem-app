@@ -24,17 +24,37 @@ public class MapOverlay extends ItemizedOverlay<OverlayItem> {
 		super(boundCenterBottom(defaultMarker));
 		this.mContext = context;
 	}
-	
-	public void addOverlay(OverlayItem overlay) {
-	    mOverlays.add(overlay);
-	    populate();
-	}
-	
+		
 	@Override
 	protected OverlayItem createItem(int i) {
 		return mOverlays.get(i);
 	}
-
+	
+	public static Drawable boundDrawable(Drawable d) {
+		return boundCenterBottom(d);
+	}
+	
+	public void addOverlay(OverlayItem overlayItem) {
+		mOverlays.add(overlayItem);
+	}
+	
+	public void addOverlays(ArrayList<OverlayItem> overlays) {
+		mOverlays.addAll(overlays);
+	}
+	
+	public void removeOverlay(OverlayItem overlayItem) {
+		mOverlays.remove(overlayItem);
+	}
+	
+	public void clearOverlays() {
+		mOverlays.clear();
+	}
+	
+	public void doPopulate() {
+		populate();
+		setLastFocusedIndex(-1);
+	}
+	
 	@Override
 	public int size() {
 		return mOverlays.size();

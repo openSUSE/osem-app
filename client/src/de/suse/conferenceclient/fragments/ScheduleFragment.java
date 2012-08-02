@@ -50,6 +50,10 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
     private List<Event> mEventList;
     private OnEventListener mListener;
     
+    public ScheduleFragment() {
+    	
+    }
+    
     public ScheduleFragment(List<Event> eventList, long conferenceId, boolean mySchedule, OnEventListener listener) {
         this.mMySchedule = mySchedule;
 		this.conferenceId = conferenceId;

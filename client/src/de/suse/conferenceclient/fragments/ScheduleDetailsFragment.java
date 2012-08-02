@@ -96,6 +96,7 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 		
 		List<Speaker> speakerList = mEvent.getSpeakers();
 		LinearLayout speakerLayout = (LinearLayout) view.findViewById(R.id.speakersLayout);
+		speakerLayout.removeAllViews();
 		
 		for (Speaker speaker : speakerList) {
 			View newView = View.inflate(getActivity(), R.layout.speaker_view, null);

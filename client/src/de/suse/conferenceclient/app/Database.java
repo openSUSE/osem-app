@@ -111,13 +111,9 @@ public class Database {
 			else if (typeStr.equals("electronics"))
 				type = MapPoint.TYPE_ELECTRONICS;
 			MapPoint newPoint = venue.new MapPoint(type, lat, lon);
-			
-			if (type == MapPoint.TYPE_VENUE) {
-				newPoint.setName(c.getString(3));
-				newPoint.setAddress(c.getString(4));
-				newPoint.setDescription(c.getString(5));
-			}
-			
+			newPoint.setName(c.getString(3));
+			newPoint.setAddress(c.getString(4));
+			newPoint.setDescription(c.getString(5));			
 			venue.addPoint(newPoint);
 		}
 		return venue;
@@ -265,7 +261,8 @@ public class Database {
 //		select name from events where date >= datetime('now', 'localtime') limit 2;
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
 				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
-				   + "WHERE events.date >= datetime(\'now\', \'localtime\') AND events.conference_id = " + conferenceId + " LIMIT 2";
+				   + "WHERE events.date >= datetime(\'now\', \'localtime\') AND events.conference_id = " + conferenceId 
+				   + " ORDER BY julianday(events.date) ASC LIMIT 2";
 		return doEventsQuery(sql);
 	}
 	

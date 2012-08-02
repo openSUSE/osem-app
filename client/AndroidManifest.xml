@@ -29,7 +29,7 @@
             android:label="@string/title_activity_home" >
         </activity>
         <activity
-            android:name=".activities.InfoActivity"
+            android:name=".activities.VenueMapsActivity"
               android:theme="@style/AppTheme"
             android:label="@string/title_activity_info" >
         </activity>

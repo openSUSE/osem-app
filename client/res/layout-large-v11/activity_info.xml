@@ -2,16 +2,14 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:background="#ffffff"
-        android:padding="20dip"
         android:layout_height="fill_parent" >
 
-        <com.google.android.maps.MapView
+        <de.suse.conferenceclient.views.AreaMapView
             android:id="@+id/mapView"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:apiKey=""
+            android:apiKey="04fPcVba6EsLh-u1pRCC8LCRFEySM52Zy7kjm6w"
             android:clickable="true" >
-
-        </com.google.android.maps.MapView>
+        </de.suse.conferenceclient.views.AreaMapView>
 
     </LinearLayout>

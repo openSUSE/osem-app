@@ -25,9 +25,9 @@ public class WhatsOnAdapter extends ArrayAdapter<Event> {
 	private List<Event> mEvents;
 	private LayoutInflater mInflater;
 	private int mResource;
-	private SimpleDateFormat mFormatter;
-	private static final String FORMAT = "MMM dd HH:mm";
-	
+	private SimpleDateFormat mTimeFormatter, mDateFormatter;
+	private static final String TIME_FORMAT = "HH:mm";
+	private static final String DATE_FORMAT = "MMM d";
 	/**
 	 * @param context
 	 * @param resource
@@ -39,7 +39,8 @@ public class WhatsOnAdapter extends ArrayAdapter<Event> {
 		this.mInflater = LayoutInflater.from(context);
 		this.mEvents = objects;
 		this.mResource = textViewResourceId;
-		this.mFormatter = new SimpleDateFormat(FORMAT);
+		this.mTimeFormatter = new SimpleDateFormat(TIME_FORMAT);
+		this.mDateFormatter = new SimpleDateFormat(DATE_FORMAT);
 	}
 
 	public View getView(int position, View convertView, ViewGroup parent) {
@@ -52,10 +53,12 @@ public class WhatsOnAdapter extends ArrayAdapter<Event> {
 		}
 		TextView title = (TextView) root.findViewById(R.id.titleTextView);
 		TextView room = (TextView) root.findViewById(R.id.roomTextView);
+		TextView date = (TextView) root.findViewById(R.id.dateTextView);
 		TextView time = (TextView) root.findViewById(R.id.timeTextView);
 		title.setText(event.getTitle());
 		room.setText(event.getRoomName());
-		time.setText(mFormatter.format(event.getDate()));
+		time.setText(mTimeFormatter.format(event.getDate()));
+		date.setText(mDateFormatter.format(event.getDate()));
 		return root;
 	}
 }
