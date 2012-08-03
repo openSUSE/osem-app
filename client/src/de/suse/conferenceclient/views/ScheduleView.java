@@ -32,6 +32,7 @@ import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.models.Event;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
@@ -187,6 +188,7 @@ public class ScheduleView extends View {
 	private int MAGIC_MULTIPLIER = 4;
 	private int MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
 	private int EVENT_BOX_HEIGHT = 30;
+	private boolean mVertical;
 	private RectF mHourHeader;
 	private float mWindowWidth = 0;
 	private float mWindowHeight = 0;
@@ -214,6 +216,8 @@ public class ScheduleView extends View {
 	 */
 	public ScheduleView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		// TODO draw a different layout in portrait mode
+		mVertical = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT);
 		
 		mBoxPainter = new Paint();
 		mBoxPainter.setAntiAlias(true);

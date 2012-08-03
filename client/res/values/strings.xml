@@ -17,4 +17,7 @@
     <string name="afterHours">After Hours</string>
     <string name="info">Info</string>
     <string name="venueAndMaps">VENUE AND MAPS</string>
+    <string name="twitter">Twitter</string>
+    <string name="googlePlus">Google+</string>
+    <string name="planet">Planet OpenSUSE</string>
 </resources>

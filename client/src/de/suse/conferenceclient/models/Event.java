@@ -28,6 +28,7 @@ public class Event {
 	private List<Speaker> mSpeakers;
 	
 	private long mSqlId = -1;
+	private long mConferenceId = -1;
 	
 	public Event() {
 		mSpeakers = new ArrayList<Speaker>();
@@ -120,6 +121,12 @@ public class Event {
 	}
 	public void setSpeakers(List<Speaker> speakers) {
 		mSpeakers = speakers;
+	}
+	public long getConferenceId() {
+		return mConferenceId;
+	}
+	public void setConferenceId(long conferenceId) {
+		mConferenceId = conferenceId;
 	}
 
 

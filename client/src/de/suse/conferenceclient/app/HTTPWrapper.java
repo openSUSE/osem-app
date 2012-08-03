@@ -7,6 +7,9 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -14,7 +17,13 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.SingleClientConnManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -84,10 +93,19 @@ public class HTTPWrapper {
 	}
 	public static JSONObject get(String url) throws IllegalStateException, SocketException, 
 							UnsupportedEncodingException, IOException, JSONException {
-		HttpClient client = new DefaultHttpClient();
+		HostnameVerifier hostnameVerifier = org.apache.http.conn.ssl.SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER;
+		DefaultHttpClient client = new DefaultHttpClient();
+		SchemeRegistry registry = new SchemeRegistry();
+		SSLSocketFactory socketFactory = SSLSocketFactory.getSocketFactory();
+		socketFactory.setHostnameVerifier((X509HostnameVerifier) hostnameVerifier);
+		registry.register(new Scheme("https", socketFactory, 443));
+		registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+		SingleClientConnManager mgr = new SingleClientConnManager(client.getParams(), registry);
+		DefaultHttpClient httpClient = new DefaultHttpClient(mgr, client.getParams());
+		HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier);
+
 		HttpGet get = new HttpGet(url);
-		
-		HttpResponse response = client.execute(get);
+		HttpResponse response = httpClient.execute(get);
 		StatusLine statusLine = response.getStatusLine();
 		int statusCode = statusLine.getStatusCode();
 		if (statusCode >= 200 && statusCode <= 299) {

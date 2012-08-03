@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 
+import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,6 +39,10 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
 		public void eventClicked(Event event);
 	}
 	
+	public interface OnGetEventsListener {
+		public List<Event> getEvents();
+	}
+	
     private Database db;
     private long conferenceId;
     
@@ -49,20 +55,36 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
     private boolean mMySchedule = false;
     private List<Event> mEventList;
     private OnEventListener mListener;
+    private OnGetEventsListener mGetEventsListener;
     
     public ScheduleFragment() {
-    	
     }
-    
-    public ScheduleFragment(List<Event> eventList, long conferenceId, boolean mySchedule, OnEventListener listener) {
+
+    public ScheduleFragment(long conferenceId, boolean mySchedule) {
+    	Log.d("SUSEConferences", "new ScheduleFragment");
         this.mMySchedule = mySchedule;
 		this.conferenceId = conferenceId;
-		this.mEventList = eventList;
-		this.mListener = listener;
+    }
+    
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mGetEventsListener = (OnGetEventsListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnGetEventsListener");
+        }
+        
+        try {
+            mListener = (OnEventListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnEventListener");
+        }
     }
     
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setRetainInstance(true);
 	}
 	
     @Override
@@ -82,7 +104,8 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
     @Override
     public void onStart() {
     	super.onStart();
-        setEventList(mEventList);
+    	mEventList = mGetEventsListener.getEvents();
+    	setEventList(null);
     }
     
     public void toggleFavorite(boolean checked, Event event) {
@@ -102,8 +125,11 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
     }
     
     public void setEventList(List<Event> eventList) {
-    	View view = getView();
+    	if (eventList != null)
+    		mEventList = eventList;
     	
+    	View view = getView();
+    	Log.d("SUSEConferences", "setEventList");
         GregorianCalendar cal = new GregorianCalendar();
         LinearLayout daysLayout = (LinearLayout) view.findViewById(R.id.datesLayout);
 		this.db = SUSEConferences.getDatabase();

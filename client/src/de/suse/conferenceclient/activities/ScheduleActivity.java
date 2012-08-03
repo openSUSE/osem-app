@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
@@ -39,6 +40,7 @@ import de.suse.conferenceclient.fragments.ScheduleDetailsFragment;
 import de.suse.conferenceclient.fragments.ScheduleDetailsFragment.OnDetailsListener;
 import de.suse.conferenceclient.fragments.ScheduleFragment;
 import de.suse.conferenceclient.fragments.ScheduleFragment.OnEventListener;
+import de.suse.conferenceclient.fragments.ScheduleFragment.OnGetEventsListener;
 import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.views.ScheduleView;
 import de.suse.conferenceclient.views.ScheduleView.OnEventClickListener;
@@ -47,37 +49,51 @@ import de.suse.conferenceclient.views.ScheduleView.OnEventClickListener;
  * @author Matt Barringer <mbarringer@suse.de>
  *
  */
-public class ScheduleActivity extends SherlockFragmentActivity implements OnFavoriteListener, OnEventListener, OnPageChangeListener, OnDetailsListener {
+public class ScheduleActivity extends SherlockFragmentActivity implements OnFavoriteListener,
+				OnEventListener, OnGetEventsListener, OnPageChangeListener, OnDetailsListener {
 	public static int FULL_SCHEDULE = 0;
 	public static int MY_SCHEDULE = 1;
 	
     private Database db;
     private long conferenceId;
+    private int mType;
     
     private HashMap<String, List<Event>> dailyEvents;
     private TextView mActiveDay;
     private TextView mAgendaTitle;
     private boolean mMySchedule = false;
+    private Event mCurrentEvent = null;
     private List<Event> mEventList;
     private ScheduleDetailsFragment mDetailsFragment;
     private ScheduleViewPager mPager;
     private ScheduleFragment mScheduleFragment;
+    private SchedulePagerAdapter mAdapter;
+    
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong("conferenceId", this.conferenceId);
+        outState.putInt("type", this.mType);
+    }
+    
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
         setContentView(R.layout.activity_agenda);
         ActionBar bar = getSupportActionBar();
       	FragmentManager fm = getSupportFragmentManager();
 
       	this.db = SUSEConferences.getDatabase();
-		this.conferenceId = getIntent().getLongExtra("conferenceId", -1);
-		int type = getIntent().getIntExtra("type", 0);
-
-		mPager = (ScheduleViewPager) findViewById(R.id.agendaViewPager);
-		mPager.setPagingEnabled(false);
-		mDetailsFragment = new ScheduleDetailsFragment(this);
-
-		if (type == FULL_SCHEDULE) {
+      	if (savedInstanceState != null) {
+      		this.conferenceId = savedInstanceState.getLong("conferenceId", -1);
+      		this.mType = savedInstanceState.getInt("type", 0);
+        } else {
+        	this.conferenceId = getIntent().getLongExtra("conferenceId", -1);
+        	this.mType = getIntent().getIntExtra("type", 0);
+        }
+      	
+		if (this.mType == FULL_SCHEDULE) {
 			mEventList = db.getScheduleTitles(conferenceId);
 	        bar.setTitle(getString(R.string.fullSchedule));
 		} else {
@@ -86,10 +102,11 @@ public class ScheduleActivity extends SherlockFragmentActivity implements OnFavo
 	        mMySchedule = true;
 		}
 		
-		mScheduleFragment = new ScheduleFragment(mEventList, this.conferenceId, mMySchedule, this);
-		SchedulePagerAdapter adapter = new SchedulePagerAdapter(fm, mScheduleFragment, mDetailsFragment);
-		mPager.setAdapter(adapter);
+		mPager = (ScheduleViewPager) findViewById(R.id.agendaViewPager);
+		mAdapter = new SchedulePagerAdapter(fm, conferenceId, mMySchedule);
+		mPager.setAdapter(mAdapter);
 		mPager.setOnPageChangeListener(this);
+		mPager.setPagingEnabled(false);
     }
 	
     @Override
@@ -117,7 +134,7 @@ public class ScheduleActivity extends SherlockFragmentActivity implements OnFavo
 
 	@Override
 	public void eventClicked(Event event) {
-		mDetailsFragment.setEvent(event, conferenceId);
+		mCurrentEvent = event;
 		mPager.setPagingEnabled(true);
 		mPager.setCurrentItem(1, true);
 	}
@@ -141,22 +158,21 @@ public class ScheduleActivity extends SherlockFragmentActivity implements OnFavo
 	}
 	
 	public static class SchedulePagerAdapter extends FragmentPagerAdapter {
-		private ScheduleFragment mScheduleFragment;
-		private ScheduleDetailsFragment mDetailsFragment;
-		public SchedulePagerAdapter(FragmentManager fm,
-									ScheduleFragment scheduleFragment,
-									ScheduleDetailsFragment detailsFragment) {
+		private long mConferenceId;
+		private boolean mMySchedule;
+		public SchedulePagerAdapter(FragmentManager fm, long conferenceId, boolean mySchedule) {
 			super(fm);
-			this.mScheduleFragment = scheduleFragment;
-			this.mDetailsFragment = detailsFragment;
+			this.mConferenceId = conferenceId;
+			this.mMySchedule = mySchedule;
 		}
-
+ 
 		@Override
 		public Fragment getItem(int index) {
-			if (index == 0)
-				return this.mScheduleFragment;
-			else
-				return this.mDetailsFragment;
+			if (index == 0) {
+				return new ScheduleFragment(mConferenceId, mMySchedule);
+			} else {
+				return new ScheduleDetailsFragment();
+			}
 		}
 
 		@Override
@@ -164,6 +180,16 @@ public class ScheduleActivity extends SherlockFragmentActivity implements OnFavo
 			return 2;
 		}
 		
+	}
+
+	@Override
+	public List<Event> getEvents() {
+		return mEventList;
+	}
+
+	@Override
+	public Event getCurrentEvent() {
+		return mCurrentEvent;
 	}
 
 }

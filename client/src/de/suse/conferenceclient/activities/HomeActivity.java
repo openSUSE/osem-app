@@ -367,7 +367,9 @@ public class HomeActivity extends SherlockFragmentActivity implements
 			intent.putExtra("type", ScheduleActivity.MY_SCHEDULE);
 			startActivity(intent);
 		} else if (activity == WheelView.ACTIVITY_SOCIAL) {
-
+			Intent intent = new Intent(HomeActivity.this, SocialActivity.class);
+			intent.putExtra("conferenceId", mConferenceId);
+			startActivity(intent);
 		}
 	}
 	@Override

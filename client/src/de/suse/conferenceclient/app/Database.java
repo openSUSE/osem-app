@@ -263,7 +263,7 @@ public class Database {
 				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
 				   + "WHERE events.date >= datetime(\'now\', \'localtime\') AND events.conference_id = " + conferenceId 
 				   + " ORDER BY julianday(events.date) ASC LIMIT 2";
-		return doEventsQuery(sql);
+		return doEventsQuery(sql, conferenceId);
 	}
 	
 	
@@ -284,7 +284,7 @@ public class Database {
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
 				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
 				   + "WHERE events._id IN (" + ids + ")";
-		return doEventsQuery(sql);
+		return doEventsQuery(sql, conferenceId);
 	}
 	
 	public List<Event> getScheduleTitles(long conferenceId) {
@@ -292,16 +292,17 @@ public class Database {
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
 				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
 				   + "WHERE events.conference_id = " + conferenceId;
-		return doEventsQuery(sql);
+		return doEventsQuery(sql, conferenceId);
 	}
 	
-	private List<Event> doEventsQuery(String sql) {
+	private List<Event> doEventsQuery(String sql, long conferenceId) {
 		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'");  
 
 		List<Event> eventList = new ArrayList<Event>();		
 		Cursor c = db.rawQuery(sql, null);
 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
 			Event newEvent = new Event();
+			newEvent.setConferenceId(conferenceId);
 			long sqlId = c.getLong(0);
 			newEvent.setSqlId(sqlId);
 			newEvent.setGuid(c.getString(1));

@@ -6,6 +6,7 @@ package de.suse.conferenceclient.fragments;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.text.Html;
 import android.util.Log;
@@ -22,6 +23,8 @@ import com.actionbarsherlock.app.SherlockFragment;
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
 import de.suse.conferenceclient.app.Database;
+import de.suse.conferenceclient.fragments.ScheduleFragment.OnEventListener;
+import de.suse.conferenceclient.fragments.ScheduleFragment.OnGetEventsListener;
 import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.models.Speaker;
 
@@ -32,46 +35,100 @@ import de.suse.conferenceclient.models.Speaker;
 public class ScheduleDetailsFragment extends SherlockFragment implements OnClickListener {
 	public interface OnDetailsListener {
 		public void onFavoriteToggle(boolean checked, Event event);
+		public Event getCurrentEvent();
 	}
 
 	private Event mEvent;
 	private Database mDb;
 	private long mConferenceId;
 	private OnDetailsListener mListener;
+	private ToggleButton mFavoriteButton, mCalendarButton;
+	private TextView mTitleView, mTitleTime, mAbstractView, mTrackView;
+	private boolean mStateRetained = false;
 	
-	public ScheduleDetailsFragment(OnDetailsListener listener) {
-		this.mListener = listener;
+	public ScheduleDetailsFragment() {
 	}
 	
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        Log.d("SUSEConferences", "details onAttach");
+        try {
+        	mListener = (OnDetailsListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnDetailsListener");
+        }
+    }
+
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setRetainInstance(true);
 	}
 	
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+    	Log.d("SUSEConferences", "Details onCreateView()");
         View view = inflater.inflate(R.layout.agenda_item_details, container, false);
+        mFavoriteButton = (ToggleButton) view.findViewById(R.id.favoriteButton);
+        mCalendarButton = (ToggleButton) view.findViewById(R.id.calendarButton);
+		mTitleView = (TextView) view.findViewById(R.id.agendaItemName);
+		mTitleTime = (TextView) view.findViewById(R.id.agendaItemTime);
+		mAbstractView = (TextView) view.findViewById(R.id.abstractContents);
+		mTrackView = (TextView) view.findViewById(R.id.trackTextView);
+		mFavoriteButton.setOnClickListener(this);
+		mCalendarButton.setOnClickListener(this);
+		
+		
         return view;
     }
     
-    public void setEvent(Event event, long conferenceId) {
-    	this.mEvent = event;
-    	this.mConferenceId = conferenceId;
+    @Override
+    public void onActivityCreated (Bundle savedInstanceState) {
+    	super.onActivityCreated(savedInstanceState);
+		if (savedInstanceState != null) {
+			Log.d("SUSEConferences", "Reading from savedInstanceState");
+			mStateRetained = true;
+			mFavoriteButton.setChecked(savedInstanceState.getBoolean("favoriteChecked"));
+			mCalendarButton.setChecked(savedInstanceState.getBoolean("calendarChecked"));
+			mTitleView.setText(savedInstanceState.getString("title"));
+			mTitleTime.setText(savedInstanceState.getString("time"));
+			mAbstractView.setText(savedInstanceState.getString("abstract"));
+			mTrackView.setText(savedInstanceState.getString("track"));
+		}
+    }
+    @Override
+    public void onSaveInstanceState (Bundle outState) {
+    	outState.putLong("conferenceId", mConferenceId);
+    	outState.putBoolean("favoriteChecked", mFavoriteButton.isChecked());
+    	outState.putBoolean("calendarChecked", mCalendarButton.isChecked());
+    	outState.putString("title", mTitleView.getText().toString());
+    	outState.putString("time", mTitleTime.getText().toString());
+    	outState.putString("abstract", mAbstractView.getText().toString());
+    	outState.putString("track", mTrackView.getText().toString());
+    }
+    
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+	    super.setUserVisibleHint(isVisibleToUser);
+	
+	    if (isVisibleToUser) { 
+	    	if (!mStateRetained)
+	    		setEvent(mListener.getCurrentEvent());
+	    }
+    }
+    
+    public void setEvent(Event event) {
+    	if (event == null) return;
+       	this.mEvent = event;
+    	this.mConferenceId = event.getConferenceId();
         mDb = SUSEConferences.getDatabase();
     	View view = getView();
 
-		ToggleButton favoriteButton = (ToggleButton) view.findViewById(R.id.favoriteButton);
-		ToggleButton calendarButton = (ToggleButton) view.findViewById(R.id.calendarButton);
-		favoriteButton.setOnClickListener(this);
-		calendarButton.setOnClickListener(this);
 		if (mDb.isEventInMySchedule(mEvent.getSqlId()))
-			favoriteButton.setChecked(true);
+			mFavoriteButton.setChecked(true);
 		
-		TextView titleView = (TextView) view.findViewById(R.id.agendaItemName);
-		TextView titleTime = (TextView) view.findViewById(R.id.agendaItemTime);
-		TextView abstractView = (TextView) view.findViewById(R.id.abstractContents);
-		TextView trackView = (TextView) view.findViewById(R.id.trackTextView);
-		titleView.setText(mEvent.getTitle());
+		mTitleView.setText(mEvent.getTitle());
 		String startTime = "";
 		String endTime = "";
 		GregorianCalendar cal = new GregorianCalendar();
@@ -90,9 +147,9 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 									mEvent.getRoomName(),
 									startTime,
 									endTime);
-		titleTime.setText(time);
-		abstractView.setText(Html.fromHtml(mEvent.getAbstract()));
-		trackView.setText(mEvent.getTrackName());
+		mTitleTime.setText(time);
+		mAbstractView.setText(Html.fromHtml(mEvent.getAbstract()));
+		mTrackView.setText(mEvent.getTrackName());
 		
 		List<Speaker> speakerList = mEvent.getSpeakers();
 		LinearLayout speakerLayout = (LinearLayout) view.findViewById(R.id.speakersLayout);
@@ -109,12 +166,8 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 			newView.setPadding(0, 10, 0, 0);
 			speakerLayout.addView(newView);
 		}
-
     }
 
-	/* (non-Javadoc)
-	 * @see android.view.View.OnClickListener#onClick(android.view.View)
-	 */
 	@Override
 	public void onClick(View v) {
 		ToggleButton button = (ToggleButton) v;

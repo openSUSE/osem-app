@@ -7,6 +7,11 @@ public class SocialItem {
 	private Bitmap mUserImage;
 	private String mMessage;
 	private String mDatestamp;
+	private String mLink;
+	private String mTitle;
+	
+	public SocialItem() {	
+	}
 	
 	public SocialItem (String username, String message, String datestamp, Bitmap image) {
 		this.mUserName = username;
@@ -45,5 +50,21 @@ public class SocialItem {
 
 	public void setDatestamp(String datestamp) {
 		mDatestamp = datestamp;
+	}
+
+	public String getLink() {
+		return mLink;
+	}
+
+	public void setLink(String link) {
+		mLink = link;
+	}
+
+	public String getTitle() {
+		return mTitle;
+	}
+
+	public void setTitle(String title) {
+		mTitle = title;
 	}
 }
