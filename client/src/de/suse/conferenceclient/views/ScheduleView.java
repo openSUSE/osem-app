@@ -281,14 +281,14 @@ public class ScheduleView extends View {
 		mStartDate = null;
 		mEndDate = null;
 		mGestureDetector = new GestureDetector(context, new TouchDetector());
-		setEvents(new ArrayList<Event>());
+		setEvents(new ArrayList<Event>(), mVertical);
 	}
 	
 	public void setOnEventClickListener(OnEventClickListener listener) {
 		this.mListener = listener;
 	}
 	
-	public void setEvents(List<Event> eventList) {
+	public void setEvents(List<Event> eventList, boolean vertical) {
 		mEventList = eventList;
 		mEventMap.clear();
 		mTimeList.clear();

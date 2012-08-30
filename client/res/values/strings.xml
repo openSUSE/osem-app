@@ -20,4 +20,5 @@
     <string name="twitter">Twitter</string>
     <string name="googlePlus">Google+</string>
     <string name="planet">Planet OpenSUSE</string>
+    <string name="mapsOptionMenuItem">Maps</string>
 </resources>

@@ -1,15 +1,18 @@
-
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="horizontal" >
-
+        android:orientation="vertical">
+        
     <android.support.v4.view.ViewPager
-        android:id="@+id/homePager"
-        android:layout_width="0dp"
+        android:id="@+id/phonePager"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
+
+    <fragment
+        android:id="@+id/upcomingFragment"
+        android:name="de.suse.conferenceclient.fragments.WhatsOnFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
     
     </LinearLayout>
-
-    

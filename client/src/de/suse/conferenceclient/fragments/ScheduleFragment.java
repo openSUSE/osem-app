@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,6 +35,7 @@ import de.suse.conferenceclient.views.ScheduleView.OnEventClickListener;
  * @author Matt Barringer <mbarringer@suse.de>
  *
  */
+@TargetApi(9)
 public class ScheduleFragment extends SherlockFragment implements OnEventClickListener {
 	public interface OnEventListener {
 		public void eventClicked(Event event);
@@ -119,8 +121,8 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
 				eventList.remove(event);
 				mEventList.remove(event);
 			}
-			
-			mScheduleView.setEvents(eventList);
+			// TODO orientation
+			mScheduleView.setEvents(eventList, false);
 		}
     }
     
@@ -188,7 +190,9 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
 			mAgendaTitle.setText(getResources().getString(R.string.myAgendaFor) + " " + text);
 		else
 			mAgendaTitle.setText(getResources().getString(R.string.agendaFor) + " " + text);
-		mScheduleView.setEvents(dailyEvents.get(text));
+
+		// TODO orientation for the calendar
+		mScheduleView.setEvents(dailyEvents.get(text), false);
 	}
 
 	@Override

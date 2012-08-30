@@ -15,6 +15,8 @@ import org.json.JSONObject;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
@@ -24,7 +26,10 @@ import de.suse.conferenceclient.app.Database;
 import de.suse.conferenceclient.app.DatabaseHelper;
 import de.suse.conferenceclient.app.HTTPWrapper;
 import de.suse.conferenceclient.fragments.MyScheduleFragment;
+import de.suse.conferenceclient.fragments.MySchedulePhoneFragment;
 import de.suse.conferenceclient.fragments.NewsFeedFragment;
+import de.suse.conferenceclient.fragments.NewsFeedPhoneFragment;
+import de.suse.conferenceclient.fragments.SchedulePhoneFragment;
 import de.suse.conferenceclient.fragments.WhatsOnFragment;
 import de.suse.conferenceclient.models.Conference;
 import de.suse.conferenceclient.models.Event;
@@ -44,7 +49,6 @@ import android.support.v4.view.ViewPager;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -52,6 +56,7 @@ import android.view.View.OnTouchListener;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
@@ -59,7 +64,7 @@ import android.widget.ListView;
 public class HomeActivity extends SherlockFragmentActivity implements 
 		GetConferencesTask.ConferenceListListener, WheelView.OnLaunch, OnClickListener {
 
-	private ViewPager mViewPager;
+	private ViewPager mPhonePager;
 	private TabAdapter mTabsAdapter;
 	private MyScheduleFragment mMyScheduleFragment;
 	private NewsFeedFragment mNewsFeedFragment;
@@ -68,6 +73,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
 	private long mConferenceId = -1;
 	private ProgressDialog mDialog;
 	private static Matrix mMatrix;
+	private boolean mIsTablet = false;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -82,32 +88,56 @@ public class HomeActivity extends SherlockFragmentActivity implements
         	Log.d("SUSEConferences", "Conference ID is NOT -1");
         	setView();
         }
+        
     }
     
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	if (!mIsTablet) {
+    		menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
+    			.setIcon(R.drawable.icon_venue_off)
+                .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+    	}
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+    	switch (menuItem.getItemId()) {
+    	case R.id.mapsOptionMenuItem:
+    		Intent i = new Intent(HomeActivity.this, VenueMapsActivity.class);
+    		i.putExtra("venueId", mConferenceId);
+    		startActivity(i);
+    		return true;
+    	}
+    	
+    	return super.onOptionsItemSelected(menuItem);
+    }
+
     private void setView() {
     	if (mMatrix == null)
     		mMatrix = new Matrix();
     	if (mDialog != null)
         	mDialog.dismiss();
       setContentView(R.layout.activity_home);
-      mViewPager = (ViewPager) findViewById(R.id.homePager);
-      if (mViewPager !=  null) {
+      mPhonePager= (ViewPager) findViewById(R.id.phonePager);
+      if (mPhonePager !=  null) {
       	// Phone layout
       	ActionBar bar = getSupportActionBar();
           bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 
-          mTabsAdapter = new TabAdapter(this, mViewPager);
-
+          mTabsAdapter = new TabAdapter(this, mPhonePager);
           mTabsAdapter.addTab(
                           bar.newTab().setText(getString(R.string.mySchedule)),
-                          MyScheduleFragment.class, null);
+                          MySchedulePhoneFragment.class, null);
           mTabsAdapter.addTab(
-                          bar.newTab().setText(getString(R.string.whatsOn)),
-                          WhatsOnFragment.class, null);
+                          bar.newTab().setText(getString(R.string.fullSchedule)),
+                          SchedulePhoneFragment.class, null);
           mTabsAdapter.addTab(
                   bar.newTab().setText(getString(R.string.newsFeed)),
-                  NewsFeedFragment.class, null);
+                  NewsFeedPhoneFragment.class, null);
       } else {
+    	mIsTablet = true;
       	// Tablet layout
       	FragmentManager fm = getSupportFragmentManager();
       	WheelView view = (WheelView) findViewById(R.id.wheelView);
@@ -122,7 +152,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
 		mapButton.setOnClickListener(this);
       }
     }
-
+    
     private void loadConferences() {
     	 mDialog = ProgressDialog.show(HomeActivity.this, "", 
                 "Loading. Please wait...", true);
