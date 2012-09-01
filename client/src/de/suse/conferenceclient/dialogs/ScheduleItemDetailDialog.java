@@ -58,7 +58,7 @@ public class ScheduleItemDetailDialog extends Dialog implements View.OnClickList
 		ToggleButton calendarButton = (ToggleButton) findViewById(R.id.calendarButton);
 		favoriteButton.setOnClickListener(this);
 		calendarButton.setOnClickListener(this);
-		if (mDb.isEventInMySchedule(mEvent.getSqlId()))
+		if (mEvent.isInMySchedule())
 			favoriteButton.setChecked(true);
 		
 		TextView titleView = (TextView) findViewById(R.id.agendaItemName);
@@ -110,9 +110,9 @@ public class ScheduleItemDetailDialog extends Dialog implements View.OnClickList
 		if (v.getId() == R.id.favoriteButton) {
 			mListener.onFavoriteToggle(button.isChecked(), mEvent);
 			if (button.isChecked())
-				mDb.addEventToMySchedule(mEvent.getSqlId(), mConferenceId);
+				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 1);
 			else
-				mDb.removeEventFromMySchedule(mEvent.getSqlId());
+				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 0);
 		} else {
 			Log.d("SUSEConferences", "Calendar clicked");
 		}

@@ -3,17 +3,14 @@ package de.suse.conferenceclient.activities;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockActivity;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
@@ -21,19 +18,14 @@ import com.actionbarsherlock.view.MenuItem;
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
 import de.suse.conferenceclient.adapters.TabAdapter;
-import de.suse.conferenceclient.adapters.WhatsOnAdapter;
 import de.suse.conferenceclient.app.Database;
-import de.suse.conferenceclient.app.DatabaseHelper;
 import de.suse.conferenceclient.app.HTTPWrapper;
-import de.suse.conferenceclient.fragments.MyScheduleFragment;
 import de.suse.conferenceclient.fragments.MySchedulePhoneFragment;
 import de.suse.conferenceclient.fragments.NewsFeedFragment;
 import de.suse.conferenceclient.fragments.NewsFeedPhoneFragment;
 import de.suse.conferenceclient.fragments.SchedulePhoneFragment;
 import de.suse.conferenceclient.fragments.WhatsOnFragment;
 import de.suse.conferenceclient.models.Conference;
-import de.suse.conferenceclient.models.Event;
-import de.suse.conferenceclient.models.Venue;
 import de.suse.conferenceclient.tasks.GetConferencesTask;
 import de.suse.conferenceclient.views.WheelView;
 
@@ -66,7 +58,6 @@ public class HomeActivity extends SherlockFragmentActivity implements
 
 	private ViewPager mPhonePager;
 	private TabAdapter mTabsAdapter;
-	private MyScheduleFragment mMyScheduleFragment;
 	private NewsFeedFragment mNewsFeedFragment;
 	private WhatsOnFragment mWhatsOnFragment;
 	private ImageView mWheelView;
@@ -124,18 +115,19 @@ public class HomeActivity extends SherlockFragmentActivity implements
       if (mPhonePager !=  null) {
       	// Phone layout
       	ActionBar bar = getSupportActionBar();
-          bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-
-          mTabsAdapter = new TabAdapter(this, mPhonePager);
-          mTabsAdapter.addTab(
-                          bar.newTab().setText(getString(R.string.mySchedule)),
-                          MySchedulePhoneFragment.class, null);
-          mTabsAdapter.addTab(
-                          bar.newTab().setText(getString(R.string.fullSchedule)),
-                          SchedulePhoneFragment.class, null);
-          mTabsAdapter.addTab(
-                  bar.newTab().setText(getString(R.string.newsFeed)),
-                  NewsFeedPhoneFragment.class, null);
+      	bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+      	Bundle args = new Bundle();
+      	args.putLong("conferenceId", this.mConferenceId);
+      	mTabsAdapter = new TabAdapter(this, mPhonePager);
+      	mTabsAdapter.addTab(
+      			bar.newTab().setText(getString(R.string.mySchedule)),
+      			MySchedulePhoneFragment.class, args);
+      	mTabsAdapter.addTab(
+      			bar.newTab().setText(getString(R.string.fullSchedule)),
+      			SchedulePhoneFragment.class, args);
+      	mTabsAdapter.addTab(
+      			bar.newTab().setText(getString(R.string.newsFeed)),
+      			NewsFeedPhoneFragment.class, args);
       } else {
     	mIsTablet = true;
       	// Tablet layout

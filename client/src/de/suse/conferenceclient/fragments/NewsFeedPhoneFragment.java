@@ -1,7 +1,16 @@
 package de.suse.conferenceclient.fragments;
 
-import com.actionbarsherlock.app.SherlockFragment;
+import android.os.Bundle;
+import android.view.View;
 
-public class NewsFeedPhoneFragment extends SherlockFragment {
+import com.actionbarsherlock.app.SherlockListFragment;
+
+public class NewsFeedPhoneFragment extends SherlockListFragment {
+	public NewsFeedPhoneFragment() {}
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}	
 
 }

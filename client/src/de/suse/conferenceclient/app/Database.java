@@ -54,20 +54,6 @@ public class Database {
 		helper.close();
 	}
 	
-	public boolean isEventInMySchedule(long eventId) {
-		boolean ret = false;
-		Log.d("SUSEConferences", "Checking if "+ eventId + " is in My Schedule");
-		Cursor c = db.rawQuery("SELECT _id FROM myEvents WHERE event_id=" + eventId, null);
-		if (c.getCount() > 0) {
-			Log.d("SUSEConferences", "It is!");
-			ret = true;
-		} else
-			Log.d("SUSEConference", "It isn't!");
-		
-		c.close();
-		return ret;
-	}
-	
 	public void setConferenceVenue(long venueId, long conferenceId) {
 		Log.d("SUSEConferences", "Setting venue_id to " + venueId + " where conference is " + conferenceId);
 		ContentValues values = new ContentValues();
@@ -124,21 +110,15 @@ public class Database {
 		int ret = (int) (val * 1E6);
 		return ret;
 	}
-	public void removeEventFromMySchedule(long eventId) {
-		Log.d("SUSEConferences", "Removing " + eventId + " from My Schedule");
-		String sql = "event_id=" + eventId;
-		db.delete("myEvents", sql, null);
-	}
 	
-	public void addEventToMySchedule(long eventId, long conferenceId) {
-		Log.d("SUSEConferences", "Adding " + eventId + " " + conferenceId+ " to My Schedule");
-
+	public void toggleEventInMySchedule(long eventId, int val) {
+		Log.d("SUSEConferences", "Toggling " + eventId + " in My Schedule");
+		String sql = "_id=" + eventId;
 		ContentValues values = new ContentValues();
-		values.put("event_id", eventId);
-		values.put("conference_id", conferenceId);
-		db.insert("myEvents", null, values);
+		values.put("my_schedule", val);
+		db.update("events", values, sql, null);
 	}
-	
+		
 	public long getConferenceIdFromGuid(String guid) {
 		String[] columns = {"_id"};
 		String where = "guid = \"" + guid + "\"";
@@ -239,6 +219,7 @@ public class Database {
 		values.put("conference_id", conferenceId);
 		values.put("room_id", roomId);
 		values.put("track_id", trackId);
+		values.put("my_schedule", 0);
 		values.put("date", date);
 		values.put("length", length);
 		values.put("type", type);
@@ -256,16 +237,14 @@ public class Database {
 		values.put("event_id", eventId);
 		db.insert("eventSpeakers", null, values);
 	}
-	
+		
 	public List<Event> getNextTwoEvents(long conferenceId) {
-//		select name from events where date >= datetime('now', 'localtime') limit 2;
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
 				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
 				   + "WHERE events.date >= datetime(\'now\', \'localtime\') AND events.conference_id = " + conferenceId 
 				   + " ORDER BY julianday(events.date) ASC LIMIT 2";
 		return doEventsQuery(sql, conferenceId);
 	}
-	
 	
 	public List<Event> getMyScheduleTitles(long conferenceId) {
 		// First get the list of IDs we need
@@ -282,19 +261,29 @@ public class Database {
 			return new ArrayList<Event>();
 		
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
-				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
-				   + "WHERE events._id IN (" + ids + ")";
+				   + "rooms.name, events.track_id, events.abstract, events.my_schedule FROM events INNER JOIN rooms ON rooms._id = events.room_id "
+				   + "WHERE events.my_schedule=1 ORDER BY julianday(events.date) ASC";
 		return doEventsQuery(sql, conferenceId);
 	}
 	
 	public List<Event> getScheduleTitles(long conferenceId) {
-
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
-				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
-				   + "WHERE events.conference_id = " + conferenceId;
+				   + "rooms.name, events.track_id, events.abstract, events.my_schedule FROM events INNER JOIN rooms ON rooms._id = events.room_id "
+				   + "WHERE events.conference_id = " + conferenceId + " ORDER BY julianday(events.date) ASC";
 		return doEventsQuery(sql, conferenceId);
 	}
 	
+	public Event getEvent(long conferenceId, long eventId) {
+		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
+				   + "rooms.name, events.track_id, events.abstract, events.my_schedule FROM events INNER JOIN rooms ON rooms._id = events.room_id "
+				   + "WHERE events._id = " + eventId;
+		List<Event> events = doEventsQuery(sql, conferenceId);
+		if (events.size() == 0)
+			return null;
+		
+		Event e = events.get(0);
+		return e;
+	}
 	private List<Event> doEventsQuery(String sql, long conferenceId) {
 		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'");  
 
@@ -319,6 +308,7 @@ public class Database {
 			    // TODO this should be merged into a subquery if possible
 			    long trackId = c.getLong(6);
 			    newEvent.setAbstract(c.getString(7));
+			    newEvent.setInMySchedule(c.getInt(8) != 0);
 			    Cursor d = db.rawQuery("SELECT _id, color, name FROM tracks WHERE _id=" + trackId, null);
 			    if (d.moveToFirst()) {
 			    	newEvent.setColor(d.getString(1));

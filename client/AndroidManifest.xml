@@ -38,6 +38,11 @@
               android:theme="@style/AppTheme"
             android:label="@string/title_activity_info" >
         </activity>
+        <activity
+            android:name=".activities.ScheduleDetailsActivity"
+              android:theme="@style/AppTheme"
+            android:label="@string/title_activity_info" >
+        </activity>
         
     </application>
 </manifest>

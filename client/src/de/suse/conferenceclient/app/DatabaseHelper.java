@@ -69,6 +69,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "conference_id INTEGER, "
 			+ "room_id INTEGER, "
 			+ "track_id INTEGER, "
+			+ "my_schedule INTEGER, "
 			+ "date DATETIME, "
 			+ "length INTEGER, "
 			+ "type VARCHAR, "
@@ -81,12 +82,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "speaker_id INTEGER, "
 			+ "event_id INTEGER)";
-	
-	private static final String myEventTableCreate = "CREATE TABLE myEvents ("
-			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-			+ "conference_id INTEGER, "
-			+ "event_id INTEGER, UNIQUE(event_id) ON CONFLICT REPLACE)";
-	
 	public DatabaseHelper(Context context) {
 		super(context, "SUSEConferences", null, DATABASE_VERSION);
 	}
@@ -99,7 +94,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL(roomsTableCreate);
 		db.execSQL(speakerTableCreate);
 		db.execSQL(eventTableCreate);
-		db.execSQL(myEventTableCreate);
 		db.execSQL(tracksTableCreate);
 		db.execSQL(speakerEventTableCreate);
 		db.execSQL(mapPointsTableCreate);

@@ -16,6 +16,7 @@ public class Event {
 	private Date mDate;
 	private Date mEndDate;
 
+	private boolean mInMySchedule;
 	private int mLength;
 	private String mLanguage = "";
 	private String mAbstract = "";
@@ -127,6 +128,12 @@ public class Event {
 	}
 	public void setConferenceId(long conferenceId) {
 		mConferenceId = conferenceId;
+	}
+	public boolean isInMySchedule() {
+		return mInMySchedule;
+	}
+	public void setInMySchedule(boolean inMySchedule) {
+		mInMySchedule = inMySchedule;
 	}
 
 

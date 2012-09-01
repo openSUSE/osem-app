@@ -78,8 +78,6 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 		mTrackView = (TextView) view.findViewById(R.id.trackTextView);
 		mFavoriteButton.setOnClickListener(this);
 		mCalendarButton.setOnClickListener(this);
-		
-		
         return view;
     }
     
@@ -95,10 +93,16 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 			mTitleTime.setText(savedInstanceState.getString("time"));
 			mAbstractView.setText(savedInstanceState.getString("abstract"));
 			mTrackView.setText(savedInstanceState.getString("track"));
+		} else {
+			if (mListener != null) {
+				Event e = mListener.getCurrentEvent();
+				setEvent(e);
+			}
 		}
     }
     @Override
     public void onSaveInstanceState (Bundle outState) {
+    	Log.d("SUSEConferences", "onSaveInstanceState");
     	outState.putLong("conferenceId", mConferenceId);
     	outState.putBoolean("favoriteChecked", mFavoriteButton.isChecked());
     	outState.putBoolean("calendarChecked", mCalendarButton.isChecked());
@@ -125,7 +129,7 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
         mDb = SUSEConferences.getDatabase();
     	View view = getView();
 
-		if (mDb.isEventInMySchedule(mEvent.getSqlId()))
+		if (event.isInMySchedule())
 			mFavoriteButton.setChecked(true);
 		
 		mTitleView.setText(mEvent.getTitle());
@@ -175,9 +179,9 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 		if (v.getId() == R.id.favoriteButton) {
 			mListener.onFavoriteToggle(button.isChecked(), mEvent);
 			if (button.isChecked())
-				mDb.addEventToMySchedule(mEvent.getSqlId(), mConferenceId);
+				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 1);
 			else
-				mDb.removeEventFromMySchedule(mEvent.getSqlId());
+				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 0);
 		} else {
 			Log.d("SUSEConferences", "Calendar clicked");
 		}
