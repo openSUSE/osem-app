@@ -58,6 +58,7 @@ public class SchedulePhoneFragment extends SherlockListFragment {
 						items.add(newHeader);
 					}
 				}
+				Log.d("SUSEConferences", "#" + event.getSqlId() + " - " + event.getTitle());
 				previousEvent = event;
 				ScheduleItem newEvent = new ScheduleItem(event, false);
 				items.add(newEvent);
@@ -76,6 +77,7 @@ public class SchedulePhoneFragment extends SherlockListFragment {
 		super.onActivityCreated(savedInstanceState);
 		getListView().setDrawSelectorOnTop(true);
 	}
+	
 	private String buildHeaderText(Event event) {
 		return mHeaderFormatter.format(event.getDate());
 	}
@@ -95,9 +97,12 @@ public class SchedulePhoneFragment extends SherlockListFragment {
 								 View v,
 								 int position,
 								 long id) {
-		Log.d("SUSEConferences", "Clicked id: " + id);
+		ScheduleItem item = (ScheduleItem) l.getItemAtPosition(position);
+		if (item.isHeader())
+			return;
+		
 		Intent intent = new Intent(getActivity(), ScheduleDetailsActivity.class);
-		intent.putExtra("eventId", id);
+		intent.putExtra("eventId", item.getEvent().getSqlId());
 		intent.putExtra("conferenceId", mConferenceId);
 		startActivity(intent);
 	}

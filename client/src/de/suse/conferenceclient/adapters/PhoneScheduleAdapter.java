@@ -11,6 +11,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.text.TextUtils.TruncateAt;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +26,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 		Event mEvent = null;
 		int mColor = 0;
 		boolean mIsEmpty;
+		boolean mConflict;
 		
 		public ScheduleItem(String headerTitle) {
 			this.mHeaderTitle = headerTitle;
@@ -35,8 +37,17 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 			this.mEvent = event;
 			this.mColor = Color.parseColor(event.getColor());
 			this.mIsEmpty = isEmpty;
+			this.mConflict = false;
 		}
 
+		public boolean conflicts() {
+			return mConflict;
+		}
+		
+		public void setConflict(boolean conflict) {
+			mConflict = conflict;
+		}
+		
 		public boolean isEmpty() {
 			return mIsEmpty;
 		}
@@ -100,7 +111,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 
         TextView titleText = (TextView) root.findViewById(R.id.titleTextView);
         TextView speakerText = (TextView) root.findViewById(R.id.speakerPhoneTextView);
-        TextView trackText = (TextView) root.findViewById(R.id.trackTextView);
+        TextView trackText = (TextView) root.findViewById(R.id.trackTextView);        
         TextView roomText = (TextView) root.findViewById(R.id.roomTextView);
         LinearLayout timeLayout = (LinearLayout) root.findViewById(R.id.timeLayout);
         TextView timeText = (TextView) root.findViewById(R.id.timeText);
@@ -117,6 +128,11 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
         } else {
         	timeLayout.setVisibility(View.VISIBLE);
         	timeText.setVisibility(View.VISIBLE);
+        	if (item.conflicts()) {
+        		timeText.setTextColor(Color.RED);
+        	} else {
+        		timeText.setTextColor(Color.BLACK);
+        	}
         	String time = mTimeFormatter.format(event.getDate());
         	if (!DateFormat.is24HourFormat(mContext) && mTimeFormatter.getCalendar().get(Calendar.HOUR) < 10)
         		time = "0" + time;

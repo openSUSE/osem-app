@@ -15,6 +15,7 @@ import de.suse.conferenceclient.models.Event;
 // Only useful for the phone
 public class ScheduleDetailsActivity extends SherlockFragmentActivity implements OnDetailsListener {
 	private Event mEvent;
+	
 	public ScheduleDetailsActivity() {
 	}
 	
@@ -28,6 +29,7 @@ public class ScheduleDetailsActivity extends SherlockFragmentActivity implements
 		Database db = SUSEConferences.getDatabase();
 		mEvent = db.getEvent(conferenceId, eventId);
 	}
+	
 	@Override
     public void onSaveInstanceState (Bundle outState) {
 		Log.d("SUSEConferences", "Activity onSaveInstance");
