@@ -1,6 +1,7 @@
 package de.suse.conferenceclient.adapters;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.List;
 
 import de.suse.conferenceclient.R;
@@ -16,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -86,10 +88,11 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 	private LayoutInflater mLayoutInflator;
 	private List<ScheduleItem> mItems;
     private java.text.DateFormat mTimeFormatter;
-
-	public PhoneScheduleAdapter(Context context, int resource, int headerTextColor, int headerBackColor, List<ScheduleItem> itemList) {
+    private Boolean mFullSchedule = true;
+	public PhoneScheduleAdapter(Context context, boolean fullSchedule, int resource, int headerTextColor, int headerBackColor, List<ScheduleItem> itemList) {
 		super(context, resource, itemList);
 		this.mItems = itemList;
+		this.mFullSchedule = fullSchedule;
 		this.mContext = context;
 		this.mLayoutInflator = LayoutInflater.from(context);
 		this.mResource = resource;
@@ -98,6 +101,14 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 		this.mTimeFormatter = DateFormat.getTimeFormat(context);
 	}
 	
+	@Override
+	public void clear() {
+		mItems.clear();
+	}
+	
+	public void setList(List<ScheduleItem> list) {
+		mItems = list;
+	}
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
         View root;
@@ -109,6 +120,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
             root = convertView;
         }
 
+        ImageView favoriteView = (ImageView) root.findViewById(R.id.eventFavorited);
         TextView titleText = (TextView) root.findViewById(R.id.titleTextView);
         TextView speakerText = (TextView) root.findViewById(R.id.speakerPhoneTextView);
         TextView trackText = (TextView) root.findViewById(R.id.trackTextView);        
@@ -116,7 +128,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
         LinearLayout timeLayout = (LinearLayout) root.findViewById(R.id.timeLayout);
         TextView timeText = (TextView) root.findViewById(R.id.timeText);
     	root.setBackgroundColor(mHeaderBackColor);
-
+    	
         if (item.isHeader()) {
         	titleText.setText(item.getHeaderTitle());
         	titleText.setTextColor(mHeaderTextColor);
@@ -125,7 +137,15 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
         	roomText.setVisibility(View.GONE);
         	timeLayout.setVisibility(View.GONE);
         	timeText.setVisibility(View.GONE);
+    		favoriteView.setVisibility(View.GONE);
         } else {
+          	
+        	if (!mFullSchedule || !event.isInMySchedule()) {
+        		favoriteView.setVisibility(View.GONE);
+        	} else {
+        		favoriteView.setVisibility(View.VISIBLE);
+        	}
+        	
         	timeLayout.setVisibility(View.VISIBLE);
         	timeText.setVisibility(View.VISIBLE);
         	if (item.conflicts()) {

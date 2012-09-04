@@ -66,6 +66,7 @@ public class SchedulePhoneFragment extends SherlockListFragment {
 		}
 		
 		PhoneScheduleAdapter adapter = new PhoneScheduleAdapter(getActivity(),
+																true,
 																R.layout.schedule_list_item,
 																getResources().getColor(R.color.dark_suse_green),
 																getResources().getColor(R.color.suse_grey),

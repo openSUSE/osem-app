@@ -33,17 +33,48 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
     private long mConferenceId;
     private List<Event> mEventList;
     private DateFormat mHeaderFormatter;
-
+    private PhoneScheduleAdapter mAdapter;
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mHeaderFormatter = DateFormat.getDateInstance(DateFormat.LONG);		
 		Bundle args = getArguments();
-		boolean isEmpty = false;
-		boolean conflict = false;
 		this.mConferenceId = args.getLong("conferenceId");
 		this.db = SUSEConferences.getDatabase();
-		this.mEventList = db.getScheduleTitles(mConferenceId);
+		
+//		List<ScheduleItem> items = getScheduleItems();
+//		mAdapter = new PhoneScheduleAdapter(getActivity(),
+//											R.layout.schedule_list_item,
+//											getResources().getColor(R.color.dark_suse_green),
+//											getResources().getColor(R.color.suse_grey),
+//											items);
+//		setListAdapter(mAdapter);
+	}
+	
+	public void onActivityCreated(Bundle savedInstanceState) {
+		super.onActivityCreated(savedInstanceState);
+		getListView().setDrawSelectorOnTop(true);
+	}
+
+	public void onResume() {
+		super.onResume();
+		Log.d("SUSEConferences", "MySchedulePhoneFragment onResume()");
+		List<ScheduleItem> items = getScheduleItems();
+		mAdapter = new PhoneScheduleAdapter(getActivity(),
+				false,
+				R.layout.schedule_list_item,
+				getResources().getColor(R.color.dark_suse_green),
+				getResources().getColor(R.color.suse_grey),
+				items);
+		setListAdapter(mAdapter);
+		getListView().invalidate();
+	}
+
+	private List<ScheduleItem> getScheduleItems() {
+		boolean isEmpty = false;
+		boolean conflict = false;
+
 		List<ScheduleItem> items = new ArrayList<ScheduleItem>();
+		this.mEventList = db.getScheduleTitles(mConferenceId);
 
 		if (mEventList.size() > 0) {
 			ScheduleItem newItem = new ScheduleItem(buildHeaderText(mEventList.get(0)));
@@ -107,22 +138,10 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 				newEvent.setConflict(conflict);
 				items.add(newEvent);
 			}
-
 		}
-		
-		PhoneScheduleAdapter adapter = new PhoneScheduleAdapter(getActivity(),
-																R.layout.schedule_list_item,
-																getResources().getColor(R.color.dark_suse_green),
-																getResources().getColor(R.color.suse_grey),
-																items);
-		setListAdapter(adapter);
+		return items;
 	}
 	
-	public void onActivityCreated(Bundle savedInstanceState) {
-		super.onActivityCreated(savedInstanceState);
-		getListView().setDrawSelectorOnTop(true);
-	}
-
 	private String buildHeaderText(Event event) {
 		return mHeaderFormatter.format(event.getDate());
 	}

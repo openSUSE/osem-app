@@ -180,11 +180,11 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 		
 		if (v.getId() == R.id.favoriteButton) {
 			Log.d("SUSEConferences", "Toggling " + mEvent.getSqlId());
-			mListener.onFavoriteToggle(button.isChecked(), mEvent);
 			if (button.isChecked())
 				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 1);
 			else
 				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 0);
+			mListener.onFavoriteToggle(button.isChecked(), mEvent);
 		} else {
 			Log.d("SUSEConferences", "Calendar clicked");
 		}

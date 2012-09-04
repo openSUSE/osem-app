@@ -35,6 +35,8 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
+            android:layout_toLeftOf="@+id/eventFavorited"
+            android:marqueeRepeatLimit="marquee_forever"
             android:text="Title"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -64,6 +66,14 @@
             android:layout_below="@+id/trackTextView"
             android:text="Room"
             android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <ImageView
+            android:id="@+id/eventFavorited"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:src="@drawable/favorite_on" />
 
     </RelativeLayout>
 
