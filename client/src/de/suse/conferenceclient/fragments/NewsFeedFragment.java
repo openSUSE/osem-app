@@ -45,39 +45,6 @@ public class NewsFeedFragment extends SherlockListFragment {
 			String twitterSearch = "http://search.twitter.com/search.json?q=" + searchTag;
 			List<SocialItem> socialItems = new ArrayList<SocialItem>();
 			
-			try {
-				JSONObject result = HTTPWrapper.get(twitterSearch);
-				JSONArray items = result.getJSONArray("results");
-				int len = items.length();
-				for (int i = 0; i < len; i++) {
-					if (i > 1)
-						break;
-					JSONObject jsonItem = items.getJSONObject(i);
-					Bitmap image = HTTPWrapper.getImage(jsonItem.getString("profile_image_url"));
-					SocialItem newItem = new SocialItem(jsonItem.getString("from_user"),
-														jsonItem.getString("text"),
-														jsonItem.getString("created_at"),
-														image);
-
-					socialItems.add(newItem);
-				}
-			} catch (IllegalStateException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (SocketException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
 			return socialItems;
 		}
 		

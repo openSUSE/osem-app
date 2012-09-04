@@ -118,6 +118,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
       	bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
       	Bundle args = new Bundle();
       	args.putLong("conferenceId", this.mConferenceId);
+      	args.putString("socialTag", "opensuse");
       	mTabsAdapter = new TabAdapter(this, mPhonePager);
       	mTabsAdapter.addTab(
       			bar.newTab().setText(getString(R.string.mySchedule)),

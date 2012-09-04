@@ -41,6 +41,10 @@ public class SocialItemAdapter extends ArrayAdapter<SocialItem> {
 		username.setText(item.getUserName());
 		TextView message = (TextView) root.findViewById(R.id.messageTextView);
 		message.setText(item.getMessage());
+		TextView time = (TextView) root.findViewById(R.id.timeTextView);
+		time.setText(item.getDatestamp());
+		ImageView typeIcon = (ImageView) root.findViewById(R.id.typeIcon);
+		typeIcon.setImageBitmap(item.getTypeIcon());
 		return root;
 	}
 
