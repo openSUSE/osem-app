@@ -40,14 +40,6 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		Bundle args = getArguments();
 		this.mConferenceId = args.getLong("conferenceId");
 		this.db = SUSEConferences.getDatabase();
-		
-//		List<ScheduleItem> items = getScheduleItems();
-//		mAdapter = new PhoneScheduleAdapter(getActivity(),
-//											R.layout.schedule_list_item,
-//											getResources().getColor(R.color.dark_suse_green),
-//											getResources().getColor(R.color.suse_grey),
-//											items);
-//		setListAdapter(mAdapter);
 	}
 	
 	public void onActivityCreated(Bundle savedInstanceState) {
@@ -57,7 +49,6 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 
 	public void onResume() {
 		super.onResume();
-		Log.d("SUSEConferences", "MySchedulePhoneFragment onResume()");
 		List<ScheduleItem> items = getScheduleItems();
 		mAdapter = new PhoneScheduleAdapter(getActivity(),
 				false,
@@ -177,7 +168,7 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 								 int position,
 								 long id) {
 		ScheduleItem item = (ScheduleItem) l.getItemAtPosition(position);
-		if (item.isHeader())
+		if (item.isHeader() || item.isEmpty())
 			return;
 		
 		Intent intent = new Intent(getActivity(), ScheduleDetailsActivity.class);

@@ -13,9 +13,13 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockListFragment;
 
@@ -52,5 +56,19 @@ public class TwitterFragment extends SherlockListFragment {
 		}
 
 	}
+	
+	@Override
+	public void onListItemClick (ListView l,
+								 View v,
+								 int position,
+								 long id) {
+		SocialItem item = (SocialItem) l.getItemAtPosition(position);
+		if (item.getLink().isEmpty())
+			return;
+
+		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(item.getLink()));
+		startActivity(intent);
+	}
+
 
 }

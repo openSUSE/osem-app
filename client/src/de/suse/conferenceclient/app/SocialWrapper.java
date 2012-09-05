@@ -26,13 +26,6 @@ import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.models.SocialItem;
 
 public class SocialWrapper {
-	public static class DateCompare implements Comparator<SocialItem> {
-	    @Override
-	    public int compare(SocialItem one, SocialItem two) {
-	        return one.getDate().compareTo(two.getDate());
-	    }
-	}
-	
 	public static List<SocialItem> getTwitterItems(Context context, String tag) {
 		String twitterSearch = "http://search.twitter.com/search.json?q=" + tag;
 		List<SocialItem> socialItems = new ArrayList<SocialItem>();
@@ -53,9 +46,9 @@ public class SocialWrapper {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
+				String user = jsonItem.getString("from_user");
 				SocialItem newItem = new SocialItem(SocialItem.TWITTER,
-													jsonItem.getString("from_user"),
+													user,
 													jsonItem.getString("text"),
 													formattedDate,
 													DateUtils.formatDateTime(context,
@@ -66,7 +59,8 @@ public class SocialWrapper {
 															|DateUtils.FORMAT_SHOW_DATE),
 													image,
 													icon);
-
+				String link = "http://twitter.com/" + user + "/status/" + jsonItem.getString("id_str");
+				newItem.setLink(link);
 				socialItems.add(newItem);
 			}
 		} catch (IllegalStateException e) {
@@ -129,7 +123,7 @@ public class SocialWrapper {
 															|DateUtils.FORMAT_SHOW_DATE),
 													image,
 													icon);
-
+				newItem.setLink(jsonItem.getString("url"));
 				socialItems.add(newItem);
 			}
 		} catch (IllegalStateException e) {

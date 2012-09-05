@@ -27,7 +27,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 		String mHeaderTitle = null;
 		Event mEvent = null;
 		int mColor = 0;
-		boolean mIsEmpty;
+		boolean mIsEmpty = true;
 		boolean mConflict;
 		
 		public ScheduleItem(String headerTitle) {

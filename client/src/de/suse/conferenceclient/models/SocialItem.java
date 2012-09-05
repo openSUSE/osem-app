@@ -30,6 +30,7 @@ public class SocialItem implements Comparable<SocialItem> {
 		this.mDate = date;
 		this.mDatestamp = datestamp;
 		this.mUserImage = image;
+		this.mLink = "";
 		Log.d("SUSEConferences", "Social type: " + type + " date: " + date);
 	}
 	
