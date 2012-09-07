@@ -19,6 +19,7 @@ import com.google.android.maps.MapView;
  *
  */
 
+
 public class AreaMapView extends MapView  implements OnZoomListener {
 	public interface AreaZoomListener {
 	    public void onZoom(int oldZoom, int newZoom);
@@ -39,7 +40,6 @@ public class AreaMapView extends MapView  implements OnZoomListener {
 		super(context, attrs, defStyle);
 	}
 	
-    
     public void setZoomLevel(int zoom) {
         this.mZoomLevel = zoom;
         this.getController().setZoom(zoom);

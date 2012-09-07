@@ -1,4 +1,5 @@
 
     <resources>
         <item name="mapsOptionMenuItem" type="id"/>
+        <item name="socialRefreshItem" type="id"/>
     </resources>

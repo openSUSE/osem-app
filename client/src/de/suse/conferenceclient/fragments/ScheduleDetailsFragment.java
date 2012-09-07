@@ -5,9 +5,18 @@ package de.suse.conferenceclient.fragments;
 
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.CalendarContract;
+import android.provider.CalendarContract.Events;
+import android.provider.CalendarContract.Instances;
 import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -134,6 +143,12 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 		if (event.isInMySchedule())
 			mFavoriteButton.setChecked(true);
 		
+		// Check if this event is in the calendar
+		if (android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			if (findEventId() >= 0)
+				mCalendarButton.setChecked(true);
+		}
+		
 		mTitleView.setText(mEvent.getTitle());
 		String startTime = "";
 		String endTime = "";
@@ -186,7 +201,50 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 0);
 			mListener.onFavoriteToggle(button.isChecked(), mEvent);
 		} else {
-			Log.d("SUSEConferences", "Calendar clicked");
+			// Before ICS, there was no reliable way to add events
+			// to the user's calendar.  So if this runs on API 14+,
+			// we'll use the built in.  If not, we'll add it to
+			// their Google Calendar.
+			if (android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+				if (button.isChecked()) {
+					Intent intent = new Intent(Intent.ACTION_INSERT);
+					intent.setType("vnd.android.cursor.item/event");
+					intent.putExtra(Events.TITLE, mEvent.getTitle());
+					intent.putExtra(Events.EVENT_LOCATION, mEvent.getRoomName());
+					// TODO The conference should specify the timezone
+					TimeZone timeZone = TimeZone.getDefault();
+					intent.putExtra(Events.EVENT_TIMEZONE, timeZone.getID());
+					intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, mEvent.getDate().getTime());
+					intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, mEvent.getEndDate().getTime());
+					intent.setData(CalendarContract.Events.CONTENT_URI);
+					startActivity(intent); 
+				} else {
+					long id = findEventId();
+					removeEvent(id);
+				}
+			}
 		}
+	}
+	
+	private long findEventId() {
+		long id = -1;
+		ContentResolver cr = getActivity().getContentResolver();
+		String[] fields = { Instances.EVENT_ID, Instances.TITLE };
+		Cursor c = CalendarContract.Instances.query(cr, fields, mEvent.getDate().getTime(), mEvent.getEndDate().getTime());
+		while (c.moveToNext()) {
+			String title = c.getString(1);
+			if (title.equals(mEvent.getTitle())) {
+				id = c.getLong(0);
+				break;
+			}
+		}
+		c.close();
+		return id;
+	}
+	
+	private void removeEvent(long id) {
+		ContentResolver cr = getActivity().getContentResolver();
+		Uri uri = ContentUris.withAppendedId(Events.CONTENT_URI, id);
+		int rows = cr.delete(uri, null, null);
 	}
 }

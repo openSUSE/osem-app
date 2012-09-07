@@ -11,6 +11,9 @@ import android.view.View;
 import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockListFragment;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.activities.ScheduleDetailsActivity;
@@ -26,6 +29,8 @@ public class NewsFeedPhoneFragment extends SherlockListFragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setHasOptionsMenu(true);
+
 		Bundle args = getArguments();
 		String tag = args.getString("socialTag");
 		
@@ -60,5 +65,13 @@ public class NewsFeedPhoneFragment extends SherlockListFragment {
 
 		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(item.getLink()));
 		startActivity(intent);
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu,  MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		menu.add(Menu.NONE, R.id.socialRefreshItem, Menu.NONE, getString(R.string.refresh))
+		 .setIcon(R.drawable.refresh)
+    	 .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
 	}
 }

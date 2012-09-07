@@ -284,8 +284,9 @@ public class Database {
 		Event e = events.get(0);
 		return e;
 	}
+	
 	private List<Event> doEventsQuery(String sql, long conferenceId) {
-		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss'Z'");  
+		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssz");  
 
 		List<Event> eventList = new ArrayList<Event>();		
 		Cursor c = db.rawQuery(sql, null);
