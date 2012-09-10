@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 
 import de.suse.conferenceclient.models.Conference;
 import de.suse.conferenceclient.models.Event;
@@ -286,7 +287,7 @@ public class Database {
 	}
 	
 	private List<Event> doEventsQuery(String sql, long conferenceId) {
-		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ssz");  
+		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
 		List<Event> eventList = new ArrayList<Event>();		
 		Cursor c = db.rawQuery(sql, null);
@@ -297,15 +298,22 @@ public class Database {
 			newEvent.setSqlId(sqlId);
 			newEvent.setGuid(c.getString(1));
 			newEvent.setTitle(c.getString(2));
-			try {  
-			    Date date = format.parse(c.getString(3));  
+			try {
+				String time = c.getString(3);
+			    Date date = format.parse(time);
+			    String tzOffset = time.substring(time.length() - 5);
+			    TimeZone tz = TimeZone.getTimeZone("GMT"+tzOffset);
+			    newEvent.setTimeZone(tz);
 			    newEvent.setDate(date);
+
 			    GregorianCalendar cal = new GregorianCalendar();
 			    cal.setTime(date);
+			    cal.setTimeZone(tz);
 			    cal.add(GregorianCalendar.MINUTE, c.getInt(4));
 			    newEvent.setLength(c.getInt(4));
 			    newEvent.setEndDate(cal.getTime());
 			    newEvent.setRoomName(c.getString(5));
+			    
 			    // TODO this should be merged into a subquery if possible
 			    long trackId = c.getLong(6);
 			    newEvent.setAbstract(c.getString(7));
@@ -314,9 +322,13 @@ public class Database {
 			    if (d.moveToFirst()) {
 			    	newEvent.setColor(d.getString(1));
 			    	newEvent.setTrackName(d.getString(2));
+			    	if (d.getString(2).equalsIgnoreCase("meta")) {
+			    		Log.d("SUSEConferences", "This event is meta");
+			    		newEvent.setMetaInformation(true);
+			    	}
 			    }
 			    d.close();
-			    
+
 			    // Get the speakers
 			    d = db.rawQuery("SELECT speakers._id, speakers.name, speakers.company, speakers.biography, speakers.photo_guid " +
 			    					   " FROM speakers INNER JOIN eventSpeakers ON eventSpeakers.speaker_id = speakers._id WHERE eventSpeakers.event_id=" + sqlId, null);

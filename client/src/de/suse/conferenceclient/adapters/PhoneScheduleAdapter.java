@@ -10,6 +10,7 @@ import de.suse.conferenceclient.models.Speaker;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.text.TextUtils.TruncateAt;
 import android.text.format.DateFormat;
 import android.util.Log;
@@ -131,6 +132,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
     	
         if (item.isHeader()) {
         	titleText.setText(item.getHeaderTitle());
+        	titleText.setTypeface(null, Typeface.BOLD);
         	titleText.setTextColor(mHeaderTextColor);
         	speakerText.setVisibility(View.GONE);
         	trackText.setVisibility(View.GONE);
@@ -138,8 +140,23 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
         	timeLayout.setVisibility(View.GONE);
         	timeText.setVisibility(View.GONE);
     		favoriteView.setVisibility(View.GONE);
+        } else if (event.isMetaInformation()) {
+        	titleText.setText(event.getTitle());
+        	titleText.setTypeface(null, Typeface.NORMAL);
+        	titleText.setTextColor(Color.GRAY);        	
+    		favoriteView.setVisibility(View.GONE);
+        	speakerText.setVisibility(View.GONE);
+        	trackText.setVisibility(View.GONE);
+        	roomText.setVisibility(View.GONE);
+        	timeLayout.setVisibility(View.VISIBLE);
+        	timeText.setVisibility(View.VISIBLE);
+    		timeText.setTextColor(Color.BLACK);
+        	mTimeFormatter.setTimeZone(event.getTimeZone());
+        	String time = mTimeFormatter.format(event.getDate());
+        	if (!DateFormat.is24HourFormat(mContext) && mTimeFormatter.getCalendar().get(Calendar.HOUR) < 10)
+        		time = "0" + time;
+        	timeText.setText(time);
         } else {
-          	
         	if (!mFullSchedule || !event.isInMySchedule()) {
         		favoriteView.setVisibility(View.GONE);
         	} else {
@@ -153,13 +170,15 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
         	} else {
         		timeText.setTextColor(Color.BLACK);
         	}
+        	mTimeFormatter.setTimeZone(event.getTimeZone());
         	String time = mTimeFormatter.format(event.getDate());
         	if (!DateFormat.is24HourFormat(mContext) && mTimeFormatter.getCalendar().get(Calendar.HOUR) < 10)
         		time = "0" + time;
         	timeText.setText(time);
-        	
+        	titleText.setTypeface(null, Typeface.NORMAL);
+
         	if (item.isEmpty()) {
-	        	titleText.setTextColor(Color.BLACK);
+	        	titleText.setTextColor(Color.GRAY);
 	        	titleText.setText("Empty Slot");
 	        	speakerText.setVisibility(View.GONE);
 	        	trackText.setVisibility(View.GONE);
@@ -168,7 +187,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 	            titleText.setText(event.getTitle());
 	            titleText.setEllipsize(TruncateAt.MARQUEE);
 	        	titleText.setTextColor(Color.BLACK);
-	
+
 	        	speakerText.setVisibility(View.VISIBLE);
 	        	roomText.setVisibility(View.VISIBLE);
 	        	String roomStr= event.getRoomName() + ", " + event.getLength() + " minutes";
@@ -178,10 +197,8 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 	        	trackText.setTextColor(item.getColor());
 	
 	            List<Speaker> speakers = event.getSpeakers();
-	            String speakersStr;
-	            if (speakers.size() == 0) {
-	            	speakersStr = "Unknown";
-	            } else {
+	            String speakersStr = "";
+	            if (speakers.size() > 0) {
 	            	speakersStr = speakers.get(0).getName();
 	            }
 	            
@@ -193,7 +210,10 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 	            	speakersStr = speakersStr + " and others";
 	            }
 	            
-	            speakerText.setText(speakersStr);
+	            if (speakers.size() == 0)
+	            	speakerText.setVisibility(View.GONE);
+	            else
+	            	speakerText.setText(speakersStr);
         	}
         }
         

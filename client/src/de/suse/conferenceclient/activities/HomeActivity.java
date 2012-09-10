@@ -322,33 +322,49 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			JSONArray events = eventsReply.getJSONArray("events");
     			int eventsLen = events.length();
     			for (int i = 0; i < eventsLen; i++) {
-    				Log.d("SUSEConferences", "Event #" + i);
     				JSONObject event = events.getJSONObject(i);
     				String guid = event.getString("guid");
+    				String track = event.getString("track");
+    				Long trackId = trackMap.get(track);
     				Long roomId = roomMap.get(event.getString("room"));
-    				if (roomId == null) continue;
-    				
-    				Long trackId = trackMap.get(event.getString("track"));
-    				if (trackId == null) continue;
-    				
-    				Long eventId = db.insertEvent(guid,
-    											   mConference.getSqlId(),
-    											   roomId.longValue(),
-    											   trackId.longValue(),
-    											   event.getString("date"),
-    											   event.getInt("length"),
-    											   event.getString("type"),
-    											   event.getString("language"),
-    											   event.getString("title"),
-    											   event.getString("abstract"),
-    											   "");
-    				
-    				JSONArray eventSpeakers = event.getJSONArray("speaker_ids");
-    				int eventSpeakersLen = eventSpeakers.length();
-    				for (int j = 0; j < eventSpeakersLen; j++) {
-    					Long speakerId = speakerMap.get(eventSpeakers.getString(j));
-    					if (speakerId != null)
-    						db.insertEventSpeaker(speakerId, eventId);
+
+    				Log.d("SUSEConferences", "Track: " + track + ":" + trackId);
+    				if (track.equals("meta")) {
+    					Log.d("SUSEConferences", "Found a meta track");
+    					// The "meta" track is used to insert information
+    					// into the schedule that automatically appears on "my schedule".
+    					// It only contains a title and start date
+    					db.insertEvent(guid,
+    								   mConference.getSqlId(),
+    								   roomId.longValue(),
+    								   trackId.longValue(),
+    								   event.getString("date"),
+    								   60,
+    								   "",
+    								   "",
+    								   event.getString("title"),
+    								   "",
+    								   "");
+    				} else {
+	    				Long eventId = db.insertEvent(guid,
+	    											   mConference.getSqlId(),
+	    											   roomId.longValue(),
+	    											   trackId.longValue(),
+	    											   event.getString("date"),
+	    											   event.getInt("length"),
+	    											   event.getString("type"),
+	    											   event.getString("language"),
+	    											   event.getString("title"),
+	    											   event.getString("abstract"),
+	    											   "");
+	    				
+	    				JSONArray eventSpeakers = event.getJSONArray("speaker_ids");
+	    				int eventSpeakersLen = eventSpeakers.length();
+	    				for (int j = 0; j < eventSpeakersLen; j++) {
+	    					Long speakerId = speakerMap.get(eventSpeakers.getString(j));
+	    					if (speakerId != null)
+	    						db.insertEventSpeaker(speakerId, eventId);
+	    				}
     				}
     			}
     		} catch (IllegalStateException e) {

@@ -6,18 +6,22 @@ package de.suse.conferenceclient.models;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * @author Matt Barringer <mbarringer@suse.de>
  *
  */
-public class Event {
+public class Event implements Comparable<Event> {
 	private String mGuid = "";
 	private Date mDate;
 	private Date mEndDate;
-
-	private boolean mInMySchedule;
-	private int mLength;
+	private TimeZone mTimeZone;
+	
+	private boolean mInMySchedule = false;
+	private boolean mMetaInformation = false;
+	
+	private int mLength = 0;
 	private String mLanguage = "";
 	private String mAbstract = "";
 	private String mUrlList = "";
@@ -27,7 +31,7 @@ public class Event {
 	private String mRoomName = "";
 	private String mColor = "#ffffff";
 	private List<Speaker> mSpeakers;
-	
+
 	private long mSqlId = -1;
 	private long mConferenceId = -1;
 	
@@ -134,6 +138,24 @@ public class Event {
 	}
 	public void setInMySchedule(boolean inMySchedule) {
 		mInMySchedule = inMySchedule;
+	}
+	
+	@Override
+	public int compareTo(Event another) {
+		return mDate.compareTo(another.getDate());
+	}
+	
+	public TimeZone getTimeZone() {
+		return mTimeZone;
+	}
+	public void setTimeZone(TimeZone timeZone) {
+		mTimeZone = timeZone;
+	}
+	public boolean isMetaInformation() {
+		return mMetaInformation;
+	}
+	public void setMetaInformation(boolean metaInformation) {
+		mMetaInformation = metaInformation;
 	}
 
 

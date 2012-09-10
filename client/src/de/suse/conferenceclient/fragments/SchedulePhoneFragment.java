@@ -3,9 +3,11 @@ package de.suse.conferenceclient.fragments;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TimeZone;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -46,19 +48,19 @@ public class SchedulePhoneFragment extends SherlockListFragment {
 		this.db = SUSEConferences.getDatabase();
 		this.mEventList = db.getScheduleTitles(mConferenceId);
 		List<ScheduleItem> items = new ArrayList<ScheduleItem>();
-
+		Collections.sort(mEventList);
+		
 		if (mEventList.size() > 0) {
 			ScheduleItem newItem = new ScheduleItem(buildHeaderText(mEventList.get(0)));
 			items.add(newItem);
 			Event previousEvent = null;
 			for (Event event : mEventList) {
 				if (previousEvent != null) {
-					if (!sameDay(previousEvent.getDate(), event.getDate())) {
+					if (!sameDay(previousEvent.getDate(), event.getDate(), previousEvent.getTimeZone(), event.getTimeZone())) {
 						ScheduleItem newHeader= new ScheduleItem(buildHeaderText(event));
 						items.add(newHeader);
 					}
 				}
-				Log.d("SUSEConferences", "#" + event.getSqlId() + " - " + event.getTitle());
 				previousEvent = event;
 				ScheduleItem newEvent = new ScheduleItem(event, false);
 				items.add(newEvent);
@@ -83,9 +85,11 @@ public class SchedulePhoneFragment extends SherlockListFragment {
 		return mHeaderFormatter.format(event.getDate());
 	}
 	
-	private boolean sameDay(Date day1, Date day2) {
+	private boolean sameDay(Date day1, Date day2, TimeZone tz1, TimeZone tz2) {
 		Calendar cal1 = Calendar.getInstance();
+		cal1.setTimeZone(tz1);
 		Calendar cal2 = Calendar.getInstance();
+		cal2.setTimeZone(tz2);
 		cal1.setTime(day1);
 		cal2.setTime(day2);
 		boolean sameDay = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
@@ -99,7 +103,7 @@ public class SchedulePhoneFragment extends SherlockListFragment {
 								 int position,
 								 long id) {
 		ScheduleItem item = (ScheduleItem) l.getItemAtPosition(position);
-		if (item.isHeader())
+		if (item.isHeader() || item.getEvent().isMetaInformation())
 			return;
 		
 		Intent intent = new Intent(getActivity(), ScheduleDetailsActivity.class);

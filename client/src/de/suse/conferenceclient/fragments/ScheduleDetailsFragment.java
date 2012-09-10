@@ -18,6 +18,7 @@ import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
 import android.provider.CalendarContract.Instances;
 import android.text.Html;
+import android.text.format.DateFormat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -152,17 +153,11 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 		mTitleView.setText(mEvent.getTitle());
 		String startTime = "";
 		String endTime = "";
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(mEvent.getDate());
-		int hour = cal.get(GregorianCalendar.HOUR_OF_DAY);
-		if (hour < 10)
-			startTime = "0";
-		startTime = startTime + hour + ":00";
-		cal.setTime(mEvent.getEndDate());
-		hour = cal.get(GregorianCalendar.HOUR_OF_DAY);
-		if (hour < 10)
-			endTime = "0";
-		endTime = endTime + hour + ":00";
+		
+		java.text.DateFormat formatter = DateFormat.getTimeFormat(getActivity());
+		formatter.setTimeZone(mEvent.getTimeZone());
+		startTime = formatter.format(mEvent.getDate());
+		endTime = formatter.format(mEvent.getEndDate());
 		
 		String time = String.format("%s, %s - %s",
 									mEvent.getRoomName(),
@@ -176,16 +171,21 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 		LinearLayout speakerLayout = (LinearLayout) view.findViewById(R.id.speakersLayout);
 		speakerLayout.removeAllViews();
 		
-		for (Speaker speaker : speakerList) {
-			View newView = View.inflate(getActivity(), R.layout.speaker_view, null);
-			TextView v = (TextView) newView.findViewById(R.id.nameTextView);
-			v.setText(speaker.getName());
-			v = (TextView) newView.findViewById(R.id.companyTextView);
-			v.setText(speaker.getCompany());
-			v = (TextView) newView.findViewById(R.id.biographyView);
-			v.setText(speaker.getBio());
-			newView.setPadding(0, 10, 0, 0);
-			speakerLayout.addView(newView);
+		if (speakerList.size() == 0) {
+			TextView v = (TextView) view.findViewById(R.id.speakerLayoutTextView);
+			v.setVisibility(View.GONE);
+		} else {
+			for (Speaker speaker : speakerList) {
+				View newView = View.inflate(getActivity(), R.layout.speaker_view, null);
+				TextView v = (TextView) newView.findViewById(R.id.nameTextView);
+				v.setText(speaker.getName());
+				v = (TextView) newView.findViewById(R.id.companyTextView);
+				v.setText(speaker.getCompany());
+				v = (TextView) newView.findViewById(R.id.biographyView);
+				v.setText(Html.fromHtml(speaker.getBio()));
+				newView.setPadding(0, 10, 0, 0);
+				speakerLayout.addView(newView);
+			}
 		}
     }
 
@@ -212,8 +212,7 @@ public class ScheduleDetailsFragment extends SherlockFragment implements OnClick
 					intent.putExtra(Events.TITLE, mEvent.getTitle());
 					intent.putExtra(Events.EVENT_LOCATION, mEvent.getRoomName());
 					// TODO The conference should specify the timezone
-					TimeZone timeZone = TimeZone.getDefault();
-					intent.putExtra(Events.EVENT_TIMEZONE, timeZone.getID());
+					intent.putExtra(Events.EVENT_TIMEZONE, mEvent.getTimeZone());
 					intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, mEvent.getDate().getTime());
 					intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, mEvent.getEndDate().getTime());
 					intent.setData(CalendarContract.Events.CONTENT_URI);

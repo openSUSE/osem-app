@@ -3,8 +3,10 @@ package de.suse.conferenceclient.fragments;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -66,63 +68,52 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 
 		List<ScheduleItem> items = new ArrayList<ScheduleItem>();
 		this.mEventList = db.getScheduleTitles(mConferenceId);
+		Collections.sort(mEventList);
 
 		if (mEventList.size() > 0) {
 			ScheduleItem newItem = new ScheduleItem(buildHeaderText(mEventList.get(0)));
 			items.add(newItem);
 			Event event;
 			Event previousEvent = null;
-			Event nextEvent = null;
 			
 			int eventLen = mEventList.size();
 			for (int i = 0; i < eventLen; i++) {
 				event = mEventList.get(i);
-				if (i + 1 != eventLen)
-					nextEvent = mEventList.get(i + 1);
-				else
-					nextEvent = null;
 				
 				conflict = false;
 				isEmpty = true;
 				Log.d("SUSEConferences", "Event: " + event.getDate());
 				if (previousEvent != null) {
 					// If the time slot is the same as the one before,
-					// and the event is *not* in My Schedule, skip it
-					if (sameTime(previousEvent.getDate(), event.getDate())) {
-						if (!event.isInMySchedule()) {
-							previousEvent = event;
+					// and the event is *not* in My Schedule or meta information, skip it
+					if (sameTime(previousEvent.getDate(), event.getDate(), previousEvent.getTimeZone(), event.getTimeZone())) {
+						if (!event.isInMySchedule() && !event.isMetaInformation()) {
 							continue;
 						}
 					}
-										
+					
 					// Now, check if the times overlap *and* both events are 
 					// in the schedule
 					if (timesOverlap(previousEvent.getDate(),
 									 previousEvent.getEndDate(),
 									 event.getDate(),
-									 event.getEndDate()) && previousEvent.isInMySchedule() && event.isInMySchedule()) {
+									 event.getEndDate()) && previousEvent.isInMySchedule()
+									 && event.isInMySchedule()) {
 						conflict = true;
 						items.get(items.size() - 1).setConflict(true);
 					}
 					
 					// If we've hit a new day, add a header item to the list
-					if (!sameDay(previousEvent.getDate(), event.getDate())) {
+					if (!sameDay(previousEvent.getDate(), event.getDate(), previousEvent.getTimeZone(), event.getTimeZone())) {
 						ScheduleItem newHeader= new ScheduleItem(buildHeaderText(event));
 						items.add(newHeader);
 					}
 				}
 				
-				// Duplicate slots
-				if (nextEvent != null) {
-					if (sameTime(nextEvent.getDate(), event.getDate()) && !event.isInMySchedule()) {
-						continue;
-					}
-				}
-				
 				previousEvent = event;
+
 				if (event.isInMySchedule()) {
 					isEmpty = false;
-					Log.d("SUSEConferences", "Event id in My Sched: " + event.getSqlId());
 				}
 				
 				ScheduleItem newEvent = new ScheduleItem(event, isEmpty);
@@ -134,6 +125,7 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 	}
 	
 	private String buildHeaderText(Event event) {
+		mHeaderFormatter.setTimeZone(event.getTimeZone());
 		return mHeaderFormatter.format(event.getDate());
 	}
 	
@@ -141,9 +133,11 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		return (s1.before(e2) && s2.before(e1));
 	}
 	
-	private boolean sameDay(Date day1, Date day2) {
+	private boolean sameDay(Date day1, Date day2, TimeZone tz1, TimeZone tz2) {
 		Calendar cal1 = Calendar.getInstance();
+		cal1.setTimeZone(tz1);
 		Calendar cal2 = Calendar.getInstance();
+		cal2.setTimeZone(tz2);
 		cal1.setTime(day1);
 		cal2.setTime(day2);
 		boolean sameDay = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
@@ -151,11 +145,13 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		return sameDay;
 	}
 
-	private boolean sameTime(Date day1, Date day2) {
+	private boolean sameTime(Date day1, Date day2, TimeZone tz1, TimeZone tz2) {
 		Calendar cal = Calendar.getInstance();
+		cal.setTimeZone(tz1);
 		cal.setTime(day1);
 		int hour = cal.get(Calendar.HOUR_OF_DAY);
 		int minute = cal.get(Calendar.MINUTE);
+		cal.setTimeZone(tz2);
 		cal.setTime(day2);
 		int hour2 = cal.get(Calendar.HOUR_OF_DAY);
 		int minute2 = cal.get(Calendar.MINUTE);
@@ -168,7 +164,7 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 								 int position,
 								 long id) {
 		ScheduleItem item = (ScheduleItem) l.getItemAtPosition(position);
-		if (item.isHeader() || item.isEmpty())
+		if (item.isHeader() || item.isEmpty() || item.getEvent().isMetaInformation())
 			return;
 		
 		Intent intent = new Intent(getActivity(), ScheduleDetailsActivity.class);
