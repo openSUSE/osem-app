@@ -51,6 +51,8 @@ public class WhatsOnAdapter extends ArrayAdapter<Event> {
 		} else {
 			root = convertView;
 		}
+		
+    	mTimeFormatter.setTimeZone(event.getTimeZone());
 		TextView title = (TextView) root.findViewById(R.id.titleTextView);
 		TextView room = (TextView) root.findViewById(R.id.roomTextView);
 		TextView date = (TextView) root.findViewById(R.id.dateTextView);

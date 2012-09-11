@@ -87,6 +87,7 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setRetainInstance(true);
+		getActivity().getActionBar().setTitle("Schedule");
 	}
 	
     @Override
@@ -138,6 +139,7 @@ public class ScheduleFragment extends SherlockFragment implements OnEventClickLi
 
 		for (Event event : mEventList) {
 			cal.setTime(event.getDate());
+			cal.setTimeZone(event.getTimeZone());
 			String month = cal.getDisplayName(GregorianCalendar.MONTH, GregorianCalendar.SHORT, Locale.getDefault());
 			String day = String.valueOf(cal.get(GregorianCalendar.DAY_OF_MONTH));
 			String dayMonth = month + " " + day;

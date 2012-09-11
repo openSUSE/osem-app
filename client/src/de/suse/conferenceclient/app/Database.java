@@ -6,6 +6,7 @@ package de.suse.conferenceclient.app;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -240,11 +241,9 @@ public class Database {
 	}
 		
 	public List<Event> getNextTwoEvents(long conferenceId) {
-		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
-				   + "rooms.name, events.track_id, events.abstract FROM events INNER JOIN rooms ON rooms._id = events.room_id "
-				   + "WHERE events.date >= datetime(\'now\', \'localtime\') AND events.conference_id = " + conferenceId 
-				   + " ORDER BY julianday(events.date) ASC LIMIT 2";
-		return doEventsQuery(sql, conferenceId);
+		List<Event> eventList = getScheduleTitles(conferenceId);
+		Collections.sort(eventList);
+		return eventList.subList(0,2);
 	}
 	
 	public List<Event> getMyScheduleTitles(long conferenceId) {
@@ -291,6 +290,8 @@ public class Database {
 
 		List<Event> eventList = new ArrayList<Event>();		
 		Cursor c = db.rawQuery(sql, null);
+	    Log.d("SUSEConferences", "doEventsQuery:  " + sql);
+
 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
 			Event newEvent = new Event();
 			newEvent.setConferenceId(conferenceId);
@@ -323,7 +324,6 @@ public class Database {
 			    	newEvent.setColor(d.getString(1));
 			    	newEvent.setTrackName(d.getString(2));
 			    	if (d.getString(2).equalsIgnoreCase("meta")) {
-			    		Log.d("SUSEConferences", "This event is meta");
 			    		newEvent.setMetaInformation(true);
 			    	}
 			    }

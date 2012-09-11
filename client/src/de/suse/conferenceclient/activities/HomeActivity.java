@@ -331,15 +331,16 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				Log.d("SUSEConferences", "Track: " + track + ":" + trackId);
     				if (track.equals("meta")) {
     					Log.d("SUSEConferences", "Found a meta track");
+    					
     					// The "meta" track is used to insert information
-    					// into the schedule that automatically appears on "my schedule".
-    					// It only contains a title and start date
+    					// into the schedule that automatically appears on "my schedule",
+    					// and also isn't clickable.
     					db.insertEvent(guid,
     								   mConference.getSqlId(),
     								   roomId.longValue(),
     								   trackId.longValue(),
     								   event.getString("date"),
-    								   60,
+    								   event.getInt("length"),
     								   "",
     								   "",
     								   event.getString("title"),

@@ -103,7 +103,7 @@ public class ScheduleActivity extends SherlockFragmentActivity implements OnFavo
 		}
 		
 		mPager = (ScheduleViewPager) findViewById(R.id.agendaViewPager);
-		mAdapter = new SchedulePagerAdapter(fm, conferenceId, mMySchedule);
+		mAdapter = new SchedulePagerAdapter(fm, conferenceId, mMySchedule, mPager);
 		mPager.setAdapter(mAdapter);
 		mPager.setOnPageChangeListener(this);
 		mPager.setPagingEnabled(false);
@@ -112,7 +112,8 @@ public class ScheduleActivity extends SherlockFragmentActivity implements OnFavo
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+        if (!mAdapter.back())
+        	overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
     }
 
     @Override
@@ -160,10 +161,13 @@ public class ScheduleActivity extends SherlockFragmentActivity implements OnFavo
 	public static class SchedulePagerAdapter extends FragmentPagerAdapter {
 		private long mConferenceId;
 		private boolean mMySchedule;
-		public SchedulePagerAdapter(FragmentManager fm, long conferenceId, boolean mySchedule) {
+		private ScheduleViewPager mPager;
+		
+		public SchedulePagerAdapter(FragmentManager fm, long conferenceId, boolean mySchedule, ScheduleViewPager pager) {
 			super(fm);
 			this.mConferenceId = conferenceId;
 			this.mMySchedule = mySchedule;
+			this.mPager = pager;
 		}
  
 		@Override
@@ -180,6 +184,14 @@ public class ScheduleActivity extends SherlockFragmentActivity implements OnFavo
 			return 2;
 		}
 		
+		public boolean back() {
+			int position = mPager.getCurrentItem();
+			if (position == 0)
+				return false;
+			
+			mPager.setCurrentItem(0, true);
+			return true;
+		}
 	}
 
 	@Override

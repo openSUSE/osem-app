@@ -3,30 +3,15 @@
  */
 package de.suse.conferenceclient.views;
 
+import android.text.format.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
-import org.afree.chart.AFreeChart;
-import org.afree.chart.ChartFactory;
-import org.afree.chart.ChartRenderingInfo;
-import org.afree.chart.axis.DateAxis;
-import org.afree.chart.axis.SymbolAxis;
-import org.afree.chart.labels.StandardCategoryItemLabelGenerator;
-import org.afree.chart.labels.StandardXYItemLabelGenerator;
-import org.afree.chart.labels.XYItemLabelGenerator;
-import org.afree.chart.plot.PlotOrientation;
-import org.afree.chart.plot.XYPlot;
-import org.afree.chart.renderer.xy.XYBarRenderer;
-import org.afree.data.xy.XYDataset;
-import org.afree.data.xy.XYIntervalSeries;
-import org.afree.data.xy.XYIntervalSeriesCollection;
-import org.afree.graphics.SolidColor;
-import org.afree.graphics.geom.RectShape;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.models.Event;
@@ -42,6 +27,7 @@ import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -97,7 +83,7 @@ public class ScheduleView extends View {
 	    }
 	}
 	
-	private class DisplayItem {
+	private class DisplayItem implements Comparable<DisplayItem> {
 		float mX, mY;
 		String mLabel;
 		int mLength;
@@ -172,6 +158,11 @@ public class ScheduleView extends View {
 			mGuid = guid;
 		}
 
+		@Override
+		public int compareTo(DisplayItem another) {
+			return mLabel.compareTo(another.getLabel());
+		}
+
 
 	}
 	private Paint mHourPainter, mRoomPainter, mLinePainter;
@@ -185,9 +176,10 @@ public class ScheduleView extends View {
 	private List<DisplayItem> mEventDisplayList;
 	
 	// Pixel width of "one minute" on the timeline
-	private int MAGIC_MULTIPLIER = 4;
+	private int MAGIC_MULTIPLIER = 6;
 	private int MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
 	private int EVENT_BOX_HEIGHT = 30;
+	private int SUSE_GREEN = 0;
 	private boolean mVertical;
 	private RectF mHourHeader;
 	private float mWindowWidth = 0;
@@ -218,6 +210,7 @@ public class ScheduleView extends View {
 		super(context, attrs);
 		// TODO draw a different layout in portrait mode
 		mVertical = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT);
+		SUSE_GREEN = getResources().getColor(R.color.light_suse_green);
 		
 		mBoxPainter = new Paint();
 		mBoxPainter.setAntiAlias(true);
@@ -296,13 +289,18 @@ public class ScheduleView extends View {
 		mEventDisplayList.clear();
 		mStartDate = null;
 		mEndDate = null;
-		
+		java.text.DateFormat timeFormatter = DateFormat.getTimeFormat(getContext());
 		Calendar cal = new GregorianCalendar();
+
+		if (eventList.size() > 0) {
+			timeFormatter.setTimeZone(eventList.get(0).getTimeZone());
+			cal.setTimeZone(eventList.get(0).getTimeZone());
+		}
+		
 		HashMap<String, Integer> roomYMap = new HashMap<String, Integer>();
 		HashMap<String, Float> hourXMap = new HashMap<String, Float>();
 		
 		// Build up the list of rooms on the left
-		int roomY = 50;
 		for (Event event : mEventList) {		
 			if (mStartDate == null || mStartDate.after(event.getDate()))
 				mStartDate = event.getDate();
@@ -312,21 +310,27 @@ public class ScheduleView extends View {
 			
 			String room = event.getRoomName();
 			if (!roomYMap.containsKey(room)) {
-				
 				// Make sure that the time display doesn't overlap
 				float roomSize = mRoomPainter.measureText(room);
 				if (roomSize > mHourStartX)
 					mHourStartX = roomSize + 25;
 
-				roomYMap.put(room, roomY);
+				roomYMap.put(room, 0);
 				DisplayItem newRoom = new DisplayItem(room);
 				newRoom.setX(10);
-				newRoom.setY(roomY + (EVENT_BOX_HEIGHT / 2));
 				mRoomList.add(newRoom);
-				roomY += 50;
 			}
 		}
 		
+		// Now sort the rooms alphabetically, and assign the correct Y values
+		Collections.sort(mRoomList);
+		int roomY = 50;
+		for (DisplayItem room : mRoomList) {
+			roomYMap.put(room.getLabel(), roomY);
+			room.setY(roomY + (EVENT_BOX_HEIGHT / 2));
+			roomY += 50;
+		}
+
 		// Room texts are right-aligned
 		mRoomStartText = mHourStartX - 10;
 		
@@ -339,15 +343,12 @@ public class ScheduleView extends View {
 	    		Date date = i.next();
 	    		cal.setTime(date);
 	    		int hour = cal.get(Calendar.HOUR_OF_DAY);
-	    		String hourText = Integer.toString(hour);
+	    		String hourText = timeFormatter.format(date);
+	    		
 	    		float x = mHourStartX + (MAGIC_HOUR * hourCount);
 	    		float rx = x + MAGIC_HOUR;
 	    		
-	    		hourXMap.put(hourText, x);
-	    		if (hour < 10)
-	    			hourText = "0" + hourText;
-	    		hourText = hourText + ":00";
-	    		
+	    		hourXMap.put(Integer.toString(hour), x);    		
 	    		DisplayItem newHour = new DisplayItem(hourText);
 	    		// The time is centered, so put it in the middle of the box
 	    		newHour.setX(x + MAGIC_HOUR / 2);
@@ -417,7 +418,7 @@ public class ScheduleView extends View {
 		canvas.drawRoundRect(colorBox, 5, 5, mBoxColorPainter);
 		
 		// Outline box
-		mBoxPainter.setColor(getResources().getColor(R.color.light_suse_green));
+		mBoxPainter.setColor(SUSE_GREEN);
 		mBoxPainter.setStyle(Paint.Style.STROKE);
 		canvas.drawRoundRect(box, 5, 5, mBoxPainter);
 
@@ -474,9 +475,12 @@ public class ScheduleView extends View {
             	float translatedX = event.getX() - mTranslateX;
             	
             	for (DisplayItem eventItem : mEventDisplayList) {
-            		if (eventItem.inBox(translatedX, event.getY()))
+            		if (eventItem.inBox(translatedX, event.getY())) {
+            			if (eventItem.getEvent().isMetaInformation())
+            				break;
             			if (mListener != null)
             				mListener.clicked(eventItem.getEvent());
+            		}
             	}
 
             	return true;
