@@ -11,36 +11,23 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.app.SherlockActivity;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
 import de.suse.conferenceclient.app.Database;
-import de.suse.conferenceclient.app.ScheduleViewPager;
-import de.suse.conferenceclient.dialogs.ScheduleItemDetailDialog;
-import de.suse.conferenceclient.dialogs.ScheduleItemDetailDialog.OnFavoriteListener;
-import de.suse.conferenceclient.fragments.NewsFeedFragment;
-import de.suse.conferenceclient.fragments.ScheduleDetailsFragment;
-import de.suse.conferenceclient.fragments.ScheduleDetailsFragment.OnDetailsListener;
-import de.suse.conferenceclient.fragments.ScheduleFragment;
-import de.suse.conferenceclient.fragments.ScheduleFragment.OnEventListener;
-import de.suse.conferenceclient.fragments.ScheduleFragment.OnGetEventsListener;
 import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.views.ScheduleView;
 import de.suse.conferenceclient.views.ScheduleView.OnEventClickListener;
@@ -49,159 +36,153 @@ import de.suse.conferenceclient.views.ScheduleView.OnEventClickListener;
  * @author Matt Barringer <mbarringer@suse.de>
  *
  */
-public class ScheduleActivity extends SherlockFragmentActivity implements OnFavoriteListener,
-				OnEventListener, OnGetEventsListener, OnPageChangeListener, OnDetailsListener {
+@SuppressLint("NewApi")
+public class ScheduleActivity extends SherlockActivity implements OnEventClickListener {
 	public static int FULL_SCHEDULE = 0;
 	public static int MY_SCHEDULE = 1;
-	
-    private Database db;
-    private long conferenceId;
-    private int mType;
-    
-    private HashMap<String, List<Event>> dailyEvents;
-    private TextView mActiveDay;
-    private TextView mAgendaTitle;
-    private boolean mMySchedule = false;
-    private Event mCurrentEvent = null;
-    private List<Event> mEventList;
-    private ScheduleDetailsFragment mDetailsFragment;
-    private ScheduleViewPager mPager;
-    private ScheduleFragment mScheduleFragment;
-    private SchedulePagerAdapter mAdapter;
-    
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putLong("conferenceId", this.conferenceId);
-        outState.putInt("type", this.mType);
-    }
-    
-	@Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        setContentView(R.layout.activity_agenda);
-        ActionBar bar = getSupportActionBar();
-      	FragmentManager fm = getSupportFragmentManager();
+	private Database db;
+	private long mConferenceId;
+	private int mType;
 
-      	this.db = SUSEConferences.getDatabase();
-      	if (savedInstanceState != null) {
-      		this.conferenceId = savedInstanceState.getLong("conferenceId", -1);
-      		this.mType = savedInstanceState.getInt("type", 0);
-        } else {
-        	this.conferenceId = getIntent().getLongExtra("conferenceId", -1);
-        	this.mType = getIntent().getIntExtra("type", 0);
-        }
-      	
-		if (this.mType == FULL_SCHEDULE) {
-			mEventList = db.getScheduleTitles(conferenceId);
-	        bar.setTitle(getString(R.string.fullSchedule));
+	private HashMap<String, List<Event>> dailyEvents;
+	private List<TextView> dailyTextViews;
+	private TextView mActiveDay;
+	private int mDarkText, mLightText;
+	private ScheduleView mScheduleView;
+	private TextView mAgendaTitle;
+	private boolean mMySchedule = false;
+	private List<Event> mEventList;
+
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putLong("conferenceId", this.mConferenceId);
+		outState.putInt("type", this.mType);
+	}
+
+	@SuppressLint("NewApi")
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.fragment_agenda);
+		mScheduleView = (ScheduleView) findViewById(R.id.scheduleView);
+		mScheduleView.setOnEventClickListener(this);
+		mAgendaTitle = (TextView) findViewById(R.id.agendaTextView);
+		dailyEvents = new HashMap<String, List<Event>>();
+		dailyTextViews = new ArrayList<TextView>();
+		mDarkText = getResources().getColor(R.color.dark_suse_green);
+		mLightText = getResources().getColor(R.color.light_suse_green);
+
+		ActionBar bar = getSupportActionBar();
+		this.db = SUSEConferences.getDatabase();
+
+		if (savedInstanceState != null) {
+			this.mConferenceId = savedInstanceState.getLong("conferenceId", -1);
+			this.mType = savedInstanceState.getInt("type", FULL_SCHEDULE);
 		} else {
-			mEventList = db.getMyScheduleTitles(conferenceId);
-	        bar.setTitle(getString(R.string.mySchedule));
-	        mMySchedule = true;
+			this.mConferenceId = getIntent().getLongExtra("conferenceId", -1);
+			this.mType = getIntent().getIntExtra("type", FULL_SCHEDULE);
 		}
-		
-		mPager = (ScheduleViewPager) findViewById(R.id.agendaViewPager);
-		mAdapter = new SchedulePagerAdapter(fm, conferenceId, mMySchedule, mPager);
-		mPager.setAdapter(mAdapter);
-		mPager.setOnPageChangeListener(this);
-		mPager.setPagingEnabled(false);
-    }
-	
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        if (!mAdapter.back())
-        	overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
-    }
-
-    @Override
-    public void startActivity(Intent intent) {
-        super.startActivity(intent);
-        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
-    }
-
-    @Override
-    public void finish() {
-        super.finish();
-        overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
-    }
-
-	@Override
-	public void onFavoriteToggle(boolean checked, Event event) {
-		mScheduleFragment.toggleFavorite(checked, event);
-	}
-
-	@Override
-	public void eventClicked(Event event) {
-		mCurrentEvent = event;
-		mPager.setPagingEnabled(true);
-		mPager.setCurrentItem(1, true);
-	}
-
-	@Override
-	public void onPageScrollStateChanged(int state) {
-		if (state == ViewPager.SCROLL_STATE_IDLE) {
-			if (mPager.getCurrentItem() == 0)
-				mPager.setPagingEnabled(false);
+		mEventList = db.getScheduleTitles(mConferenceId);
+		if (this.mType == FULL_SCHEDULE) {
+			bar.setTitle(getString(R.string.fullSchedule));
+		} else {
+			bar.setTitle(getString(R.string.mySchedule));
+			mMySchedule = true;
 		}
+
+		setEventList(mEventList);
 	}
 
-	@Override
-	public void onPageScrolled(int arg0, float arg1, int arg2) {
-		// Don't care
-	}
+	public void toggleFavorite(boolean checked, Event event) {
+		if (mMySchedule) {
+			String text = mActiveDay.getText().toString();
+			List<Event> eventList = dailyEvents.get(text);
 
-	@Override
-	public void onPageSelected(int arg0) {
-		// Don't care	
-	}
-	
-	public static class SchedulePagerAdapter extends FragmentPagerAdapter {
-		private long mConferenceId;
-		private boolean mMySchedule;
-		private ScheduleViewPager mPager;
-		
-		public SchedulePagerAdapter(FragmentManager fm, long conferenceId, boolean mySchedule, ScheduleViewPager pager) {
-			super(fm);
-			this.mConferenceId = conferenceId;
-			this.mMySchedule = mySchedule;
-			this.mPager = pager;
-		}
- 
-		@Override
-		public Fragment getItem(int index) {
-			if (index == 0) {
-				return new ScheduleFragment(mConferenceId, mMySchedule);
+			if (checked) {
+				eventList.add(event);
 			} else {
-				return new ScheduleDetailsFragment();
+				eventList.remove(event);
+				mEventList.remove(event);
+			}
+			// TODO orientation
+			mScheduleView.setEvents(eventList, (mType == FULL_SCHEDULE));
+		}
+	}
+
+	public void setEventList(List<Event> eventList) {
+		if (eventList != null)
+			mEventList = eventList;
+
+		Log.d("SUSEConferences", "setEventList");
+		GregorianCalendar cal = new GregorianCalendar();
+		LinearLayout daysLayout = (LinearLayout) findViewById(R.id.datesLayout);
+		this.db = SUSEConferences.getDatabase();
+
+		for (Event event : mEventList) {
+			cal.setTime(event.getDate());
+			cal.setTimeZone(event.getTimeZone());
+			String month = cal.getDisplayName(GregorianCalendar.MONTH, GregorianCalendar.SHORT, Locale.getDefault());
+			String day = String.valueOf(cal.get(GregorianCalendar.DAY_OF_MONTH));
+			String dayMonth = month + " " + day;
+
+			if (!dailyEvents.containsKey(dayMonth)) {
+				List<Event> newList = new ArrayList<Event>();
+				newList.add(event);
+				dailyEvents.put(dayMonth, newList);
+			} else {
+				List<Event> list = dailyEvents.get(dayMonth);
+				list.add(event);
 			}
 		}
 
-		@Override
-		public int getCount() {
-			return 2;
+		// Now sort the date keys so they look appropriate
+		Vector<String> dateVector = new Vector<String>(dailyEvents.keySet()); 
+		Collections.sort(dateVector);
+		for (String day : dateVector) {
+			TextView newDay = new TextView(this);
+			newDay.setText(day);
+			newDay.setTextSize(25);
+			newDay.setClickable(true);
+			newDay.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					setDay((TextView) v);
+				}
+			});
+
+			newDay.setPadding(0, 0, 10, 0);
+			daysLayout.addView(newDay);
+			dailyTextViews.add(newDay);
 		}
-		
-		public boolean back() {
-			int position = mPager.getCurrentItem();
-			if (position == 0)
-				return false;
-			
-			mPager.setCurrentItem(0, true);
-			return true;
+
+		if (dailyTextViews.size() > 0)
+			setDay(dailyTextViews.get(0));
+	}
+
+	private void setDay(TextView day) {
+		mActiveDay = day;
+		day.setTextColor(mDarkText);
+		for (TextView view : dailyTextViews) {
+			if (view != day) {
+				view.setTextColor(mLightText);
+			}
 		}
+
+		String text = day.getText().toString();
+		if (mMySchedule)
+			mAgendaTitle.setText(getResources().getString(R.string.myAgendaFor) + " " + text);
+		else
+			mAgendaTitle.setText(getResources().getString(R.string.agendaFor) + " " + text);
+
+		// TODO orientation for the calendar
+		mScheduleView.setEvents(dailyEvents.get(text), (mType == FULL_SCHEDULE));
 	}
 
 	@Override
-	public List<Event> getEvents() {
-		return mEventList;
+	public void clicked(Event event) {
+		Intent intent = new Intent(this, ScheduleDetailsActivity.class);
+		intent.putExtra("eventId", event.getSqlId());
+		intent.putExtra("conferenceId", mConferenceId);
+		startActivity(intent);
 	}
-
-	@Override
-	public Event getCurrentEvent() {
-		return mCurrentEvent;
-	}
-
 }

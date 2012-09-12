@@ -22,6 +22,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "description VARCHAR, "
 			+ "year INTEGER, "
 			+ "venue_id INTEGER,"
+			+ "social_tag VARCHAR, "
 			+ "dateRange VARCHAR)";
 	
 	private static final String venueTableCreate = "CREATE TABLE venues (" 

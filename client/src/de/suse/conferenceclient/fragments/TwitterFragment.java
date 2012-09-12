@@ -3,18 +3,11 @@
  */
 package de.suse.conferenceclient.fragments;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.SocketException;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -25,7 +18,6 @@ import com.actionbarsherlock.app.SherlockListFragment;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.adapters.SocialItemAdapter;
-import de.suse.conferenceclient.app.HTTPWrapper;
 import de.suse.conferenceclient.app.SocialWrapper;
 import de.suse.conferenceclient.models.SocialItem;
 
@@ -33,6 +25,7 @@ import de.suse.conferenceclient.models.SocialItem;
  * @author Matt Barringer <mbarringer@suse.de>
  *
  */
+@SuppressLint("NewApi")
 public class TwitterFragment extends SherlockListFragment {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -47,7 +40,7 @@ public class TwitterFragment extends SherlockListFragment {
 		@Override
 		protected List<SocialItem> doInBackground(String... params) {
 			String searchTag = params[0];
-			return SocialWrapper.getTwitterItems(getActivity(), searchTag);
+			return SocialWrapper.getTwitterItems(getActivity(), searchTag, 0);
 		}
 		
 		protected void onPostExecute(List<SocialItem> items) {

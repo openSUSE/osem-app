@@ -26,6 +26,7 @@ import de.suse.conferenceclient.fragments.NewsFeedPhoneFragment;
 import de.suse.conferenceclient.fragments.SchedulePhoneFragment;
 import de.suse.conferenceclient.fragments.WhatsOnFragment;
 import de.suse.conferenceclient.models.Conference;
+import de.suse.conferenceclient.models.Venue;
 import de.suse.conferenceclient.tasks.GetConferencesTask;
 import de.suse.conferenceclient.views.WheelView;
 
@@ -60,7 +61,6 @@ public class HomeActivity extends SherlockFragmentActivity implements
 	private TabAdapter mTabsAdapter;
 	private NewsFeedFragment mNewsFeedFragment;
 	private WhatsOnFragment mWhatsOnFragment;
-	private ImageView mWheelView;
 	private long mConferenceId = -1;
 	private ProgressDialog mDialog;
 	private static Matrix mMatrix;
@@ -111,14 +111,16 @@ public class HomeActivity extends SherlockFragmentActivity implements
     	if (mDialog != null)
         	mDialog.dismiss();
       setContentView(R.layout.activity_home);
+      Database db = SUSEConferences.getDatabase();
+      Conference conference = db.getConference(mConferenceId);
+
       mPhonePager= (ViewPager) findViewById(R.id.phonePager);
-      if (mPhonePager !=  null) {
-      	// Phone layout
+      if (mPhonePager !=  null) { // Phone layout
       	ActionBar bar = getSupportActionBar();
       	bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
       	Bundle args = new Bundle();
       	args.putLong("conferenceId", this.mConferenceId);
-      	args.putString("socialTag", "opensuse");
+      	args.putString("socialTag", conference.getSocialTag());
       	mTabsAdapter = new TabAdapter(this, mPhonePager);
       	mTabsAdapter.addTab(
       			bar.newTab().setText(getString(R.string.mySchedule)),
@@ -129,14 +131,17 @@ public class HomeActivity extends SherlockFragmentActivity implements
       	mTabsAdapter.addTab(
       			bar.newTab().setText(getString(R.string.newsFeed)),
       			NewsFeedPhoneFragment.class, args);
-      } else {
+      } else { // Tablet layout
     	mIsTablet = true;
-      	// Tablet layout
+    	TextView t = (TextView) findViewById(R.id.conferenceNameTextView);
+    	t.setText(conference.getName());
+    	t = (TextView) findViewById(R.id.locationTextView);
+    	t.setText(conference.getDateRange());
       	FragmentManager fm = getSupportFragmentManager();
       	WheelView view = (WheelView) findViewById(R.id.wheelView);
       	view.setOnLaunchListener(this);
       	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
-      	mNewsFeedFragment.setSearch("#opensuse");
+      	mNewsFeedFragment.setSearch(conference.getSocialTag());
       	
       	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.upcomingFragment);
       	mWhatsOnFragment.setConferenceId(mConferenceId);
@@ -172,53 +177,24 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		task.execute();
     	} else {
     		mConferenceId = id;
-    	}
 
-    	SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
-        SharedPreferences.Editor editor = settings.edit();
-        editor.putLong("active_conference", mConferenceId);
-        editor.commit();
-        
-        SUSEConferences app = ((SUSEConferences) getApplicationContext());
-        app.setActiveId(mConferenceId);
-        if (id != -1)
-        	setView();
+    		SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
+    		SharedPreferences.Editor editor = settings.edit();
+    		editor.putLong("active_conference", mConferenceId);
+    		editor.commit();
+
+    		SUSEConferences app = ((SUSEConferences) getApplicationContext());
+    		app.setActiveId(mConferenceId);
+    		if (id != -1)
+    			setView();
+    	}
     }
-    
-    /*
-     * OnTouchListener for the wheel
-     */
-    private class WheelOnTouchListener implements OnTouchListener {
-        
-        private double startAngle;
-     
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-     
-            switch (event.getAction()) {
-                 
-                case MotionEvent.ACTION_DOWN:
-                	Log.d("SUSEConferences", "Rotating");
-                    mMatrix.postRotate(10);
-                    mWheelView.setImageMatrix(mMatrix);
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    break;
-                     
-                case MotionEvent.ACTION_UP:
-                     
-                    break;
-            }       
-             
-            return true;
-        }
-         
-    }
+
     /*
      * Downloads all of the data about a conference and stores it
      * in SQLite.
      */
-    private class CacheConferenceTask extends AsyncTask<Void, Void, Void> {    	
+    private class CacheConferenceTask extends AsyncTask<Void, Void, Long> {    	
     	private Conference mConference;
     	private Database db;
     	
@@ -228,7 +204,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     	}
 
     	@Override
-    	protected Void doInBackground(Void... params) {
+    	protected Long doInBackground(Void... params) {
     		String url = mConference.getUrl();
     		String eventsUrl = url + "/events.json";
     		String roomsUrl = url + "/rooms.json";
@@ -240,7 +216,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		HashMap<String, Long> speakerMap = new HashMap<String, Long>();
     		
     		try {
-				Log.d("SUSEConferences", "Venues");
+				Log.d("SUSEConferences", "Venues: " + venueUrl);
 
     			JSONObject venueReply = HTTPWrapper.get(venueUrl);
     			JSONObject venue = venueReply.getJSONObject("venue");
@@ -384,11 +360,18 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			// TODO Auto-generated catch block
     			e.printStackTrace();
     		}
-    		return null;
+    		return mConference.getSqlId();
     	}
 
-    	protected void onPostExecute(Void v) {
-    		Log.d("SUSEConferences", "OnPostExecute");
+    	protected void onPostExecute(Long v) {
+    		SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
+    		SharedPreferences.Editor editor = settings.edit();
+    		editor.putLong("active_conference", v.longValue());
+    		editor.commit();
+
+    		SUSEConferences app = ((SUSEConferences) getApplicationContext());
+    		app.setActiveId(v.longValue());
+
         	setView();
     	}
 

@@ -17,13 +17,11 @@ import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.models.Speaker;
 import de.suse.conferenceclient.models.Venue;
 import de.suse.conferenceclient.models.Venue.MapPoint;
-import android.annotation.TargetApi;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.text.TextUtils;
 import android.util.Log;
 
 /**
@@ -63,6 +61,23 @@ public class Database {
 		db.update("conferences", values, "_id = " + conferenceId, null);		
 	}
 	
+	public Conference getConference(long conferenceId) {
+		Conference newConference = null;
+		String sql = "SELECT guid, name, description, year, social_tag, dateRange FROM conferences WHERE _id=" + conferenceId;
+		Cursor c = db.rawQuery(sql, null);
+		if (c.moveToFirst()) {
+			newConference = new Conference();
+			newConference.setGuid(c.getString(0));
+			newConference.setName(c.getString(1));
+			newConference.setDescription(c.getString(2));
+			newConference.setYear(c.getInt(3));
+			newConference.setSocialTag(c.getString(4));
+			newConference.setDateRange(c.getString(5));
+			newConference.setSqlId(conferenceId);
+		}
+		
+		return newConference;
+	}
 	public long getConferenceVenue(long conferenceId) {
 		long id = -1;
 		String sql = "SELECT venue_id FROM conferences WHERE _id=" + conferenceId;
@@ -141,6 +156,7 @@ public class Database {
 		values.put("year", conference.getYear());
 		values.put("dateRange", conference.getDateRange());
 		values.put("description", conference.getDescription());
+		values.put("social_tag", conference.getSocialTag());
 		long insertId = db.insert("conferences", null, values);
 		return insertId;
 	}
@@ -243,26 +259,16 @@ public class Database {
 	public List<Event> getNextTwoEvents(long conferenceId) {
 		List<Event> eventList = getScheduleTitles(conferenceId);
 		Collections.sort(eventList);
-		return eventList.subList(0,2);
+		if (eventList.size() >= 2)
+			return eventList.subList(0,2);
+		else
+			return eventList;
 	}
 	
 	public List<Event> getMyScheduleTitles(long conferenceId) {
-		// First get the list of IDs we need
-		// TODO subqueries?
-		String eventsSql = "SELECT event_id FROM myEvents WHERE conference_id=" + conferenceId;
-		Cursor c = db.rawQuery(eventsSql, null);
-		List<String> idList = new ArrayList<String>();
-		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-			idList.add(c.getString(0));
-		}
-		
-		String ids = TextUtils.join(",", idList);
-		if (ids.length() == 0)
-			return new ArrayList<Event>();
-		
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
 				   + "rooms.name, events.track_id, events.abstract, events.my_schedule FROM events INNER JOIN rooms ON rooms._id = events.room_id "
-				   + "WHERE events.my_schedule=1 ORDER BY julianday(events.date) ASC";
+				   + "WHERE events.my_schedule=1 AND events.conference_id = " + conferenceId + " ORDER BY julianday(events.date) ASC";
 		return doEventsQuery(sql, conferenceId);
 	}
 	

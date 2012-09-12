@@ -26,7 +26,7 @@ import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.models.SocialItem;
 
 public class SocialWrapper {
-	public static List<SocialItem> getTwitterItems(Context context, String tag) {
+	public static List<SocialItem> getTwitterItems(Context context, String tag, int maximum) {
 		String twitterSearch = "http://search.twitter.com/search.json?q=" + tag;
 		List<SocialItem> socialItems = new ArrayList<SocialItem>();
 		SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
@@ -36,6 +36,9 @@ public class SocialWrapper {
 			JSONObject result = HTTPWrapper.get(twitterSearch);
 			JSONArray items = result.getJSONArray("results");
 			int len = items.length();
+			if ((len > 0) && (maximum > 0) && (len > maximum))
+				len = maximum;
+			
 			for (int i = 0; i < len; i++) {
 				JSONObject jsonItem = items.getJSONObject(i);
 				Bitmap image = HTTPWrapper.getImage(jsonItem.getString("profile_image_url"));			
@@ -83,7 +86,7 @@ public class SocialWrapper {
 		return socialItems;
 	}
 
-	public static List<SocialItem> getGooglePlusItems(Context context, String tag) {
+	public static List<SocialItem> getGooglePlusItems(Context context, String tag, int maximum) {
 		String twitterSearch = "https://www.googleapis.com/plus/v1/activities?orderBy=recent&query=" + tag + "&key=" + Config.PLUS_KEY;
 		List<SocialItem> socialItems = new ArrayList<SocialItem>();
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
@@ -96,6 +99,9 @@ public class SocialWrapper {
 			JSONObject result = HTTPWrapper.get(twitterSearch);
 			JSONArray items = result.getJSONArray("items");
 			int len = items.length();
+			if ((len > 0) && (maximum > 0) && (len > maximum))
+				len = maximum;
+
 			for (int i = 0; i < len; i++) {
 				JSONObject jsonItem = items.getJSONObject(i);
 				JSONObject actorItem = jsonItem.getJSONObject("actor");

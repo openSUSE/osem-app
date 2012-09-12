@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -35,6 +36,7 @@ import de.suse.conferenceclient.models.SocialItem;
  * @author Matt Barringer <mbarringer@suse.de>
  *
  */
+@SuppressLint("NewApi")
 public class GooglePlusFragment extends SherlockListFragment {
 	private String mSearchTag;
 	
@@ -52,7 +54,7 @@ public class GooglePlusFragment extends SherlockListFragment {
 		@Override
 		protected List<SocialItem> doInBackground(String... params) {
 			String searchTag = params[0];
-			return SocialWrapper.getGooglePlusItems(getActivity(), searchTag);
+			return SocialWrapper.getGooglePlusItems(getActivity(), searchTag, 0);
 		}
 		
 		protected void onPostExecute(List<SocialItem> items) {

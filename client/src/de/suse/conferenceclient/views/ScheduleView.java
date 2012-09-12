@@ -25,6 +25,8 @@ import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.text.Layout;
+import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.format.DateFormat;
@@ -91,6 +93,7 @@ public class ScheduleView extends View {
 		int mTrackColor;
 		Event mEvent;
 		private String mGuid;
+		private StaticLayout mLayout;
 		
 		public DisplayItem(String label) {
 			this.mX = 0;
@@ -98,6 +101,16 @@ public class ScheduleView extends View {
 			this.mLabel = label;
 		}
 		
+		public void setLayout(TextPaint painter, int boxSize) {
+			mLayout = new StaticLayout(mLabel,
+									painter,
+									boxSize,
+									Layout.Alignment.ALIGN_NORMAL,
+									1, 5.0f, false);
+		}
+		public StaticLayout getLayout() {
+			return mLayout;
+		}
 		public boolean inBox(float x, float y) {
 			return mBox.contains(x, y);
 		}
@@ -180,18 +193,25 @@ public class ScheduleView extends View {
 	private int MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
 	private int EVENT_BOX_HEIGHT = 30;
 	private int SUSE_GREEN = 0;
+	private final int TRACK_COLOR_BOX_WIDTH = 20;
 	private boolean mVertical;
 	private RectF mHourHeader;
 	private float mWindowWidth = 0;
 	private float mWindowHeight = 0;
-	private float mHourStartX = 0;
-	private float mHourStartY = 30;
-	private float mMaximumScrollwidth = 0;
-	private float mEndTimeEdge = 0;
+	private float mLeftColumnStartX = 0;
+	private float mLeftColumnStartY = 30;
+	private float mTopRowItemStartX = 0;
+	private float mTopRowItemStartY = 30;
+	private float mMaximumScrollWidth = 0;
+	private float mMaximumScrollHeight = 0;
+	private float mEndRightEdge = 0;
+	private float mEndBottomEdge = 0;
 	private float mHourHeaderHeight = 40;
 	private float mRoomStartText = 0;
 	private float mTranslateX = 0;
+	private float mTranslateY = 0;
 	private float mStartX = 0;
+	private float mStartY = 0;
 	private OnEventClickListener mListener = null;
 	private GestureDetector mGestureDetector;
 	Date mStartDate, mEndDate;
@@ -210,6 +230,12 @@ public class ScheduleView extends View {
 		super(context, attrs);
 		// TODO draw a different layout in portrait mode
 		mVertical = (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT);
+		if (mVertical) {
+			mLeftColumnStartX = 30;
+			mLeftColumnStartY = 60;
+			MAGIC_MULTIPLIER = 4;
+			MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
+		}
 		SUSE_GREEN = getResources().getColor(R.color.light_suse_green);
 		
 		mBoxPainter = new Paint();
@@ -274,14 +300,14 @@ public class ScheduleView extends View {
 		mStartDate = null;
 		mEndDate = null;
 		mGestureDetector = new GestureDetector(context, new TouchDetector());
-		setEvents(new ArrayList<Event>(), mVertical);
+		setEvents(new ArrayList<Event>(), true);
 	}
 	
 	public void setOnEventClickListener(OnEventClickListener listener) {
 		this.mListener = listener;
 	}
 	
-	public void setEvents(List<Event> eventList, boolean vertical) {
+	public void setEvents(List<Event> eventList, boolean fullSchedule) {
 		mEventList = eventList;
 		mEventMap.clear();
 		mTimeList.clear();
@@ -289,6 +315,119 @@ public class ScheduleView extends View {
 		mEventDisplayList.clear();
 		mStartDate = null;
 		mEndDate = null;
+
+		if (mVertical) {
+			setVerticalView(eventList, fullSchedule);
+		} else {
+			setHorizontalView(eventList, fullSchedule);
+		}
+		invalidate();
+	}
+
+	private void setVerticalView(List<Event> eventList, boolean fullSchedule) {
+		HashMap<String, Float> roomMap = new HashMap<String, Float>();
+		HashMap<String, Float> hourMap = new HashMap<String, Float>();
+		mRoomPainter.setTextAlign(Paint.Align.CENTER);
+
+		java.text.DateFormat timeFormatter = DateFormat.getTimeFormat(getContext());
+		Calendar cal = new GregorianCalendar();
+		float boxSize = 100;
+		if (eventList.size() > 0) {
+			timeFormatter.setTimeZone(eventList.get(0).getTimeZone());
+			cal.setTimeZone(eventList.get(0).getTimeZone());
+		}
+
+		// Room titles along the top
+		for (Event event : mEventList) {		
+			if (mStartDate == null || mStartDate.after(event.getDate()))
+				mStartDate = event.getDate();
+
+			if (mEndDate == null || mEndDate.before(event.getEndDate()))
+				mEndDate = event.getEndDate();
+			
+			String room = event.getRoomName();
+			if (!roomMap.containsKey(room)) {
+				roomMap.put(room, mTopRowItemStartX);
+				DisplayItem newRoom = new DisplayItem(room);
+				float roomWidth = mRoomPainter.measureText(room);
+				if (roomWidth > boxSize)
+					boxSize = roomWidth;
+				newRoom.setX(0);
+				newRoom.setY(mTopRowItemStartY);
+				mRoomList.add(newRoom);
+			}
+		}
+
+		// Build up the times on the left
+		if (mStartDate != null && mEndDate != null) {
+			Iterator<Date> i = new HourIterator(mStartDate, mEndDate);
+			int hourCount = 0;
+	    	while(i.hasNext())
+	    	{
+	    		Date date = i.next();
+	    		cal.setTime(date);
+	    		int hour = cal.get(Calendar.HOUR_OF_DAY);
+	    		String hourText = timeFormatter.format(date);
+	    		float hourTextSize = mHourPainter.measureText(hourText);
+	    		if (hourTextSize > mTopRowItemStartX) {
+	    			mTopRowItemStartX = hourTextSize + 20;
+	    		}
+	    		float x = mLeftColumnStartX;
+	    		float y = mLeftColumnStartY + (MAGIC_HOUR * hourCount);
+
+	    		hourMap.put(Integer.toString(hour), y);    		
+	    		DisplayItem newHour = new DisplayItem(hourText);
+	    		newHour.setX(x);
+	    		newHour.setY(y);
+	    		newHour.setBox(new RectF(x, y, 50, 50));
+
+	    		mTimeList.add(newHour);
+	    		hourCount++;
+	    	}
+	    	
+	    	mEndBottomEdge = mLeftColumnStartY + (MAGIC_HOUR * hourCount);
+		}
+		
+		mTopRowItemStartX = mTopRowItemStartX + boxSize;
+		Collections.sort(mRoomList);
+		for (DisplayItem room : mRoomList) {
+			roomMap.put(room.getLabel(), mTopRowItemStartX);
+			room.setX(mTopRowItemStartX + (boxSize / 2));
+			mTopRowItemStartX = mTopRowItemStartX + boxSize;
+		}
+		
+		mEndRightEdge = mTopRowItemStartX;
+        mMaximumScrollWidth = mTopRowItemStartX;
+        
+		for (Event event : mEventList) {
+			cal.setTime(event.getDate());
+			int minute = cal.get(Calendar.MINUTE);
+			float y = hourMap.get(Integer.toString(cal.get(Calendar.HOUR_OF_DAY)));
+			y += (minute * MAGIC_MULTIPLIER);
+			
+			float x = roomMap.get(event.getRoomName());
+			DisplayItem newEvent = new DisplayItem(event.getTitle());
+			newEvent.setX(x);
+			newEvent.setY(y);
+			newEvent.setEvent(event);
+			newEvent.setGuid(event.getGuid());
+			int length = event.getLength();
+			newEvent.setLength(length);
+			
+			float boxX = x;
+			float boxY = y;
+			float boxRx = x + boxSize;
+			float boxRy = y + (length * MAGIC_MULTIPLIER) - 10;
+
+			newEvent.setBox(new RectF(boxX, boxY, boxRx, boxRy));
+			newEvent.setLayout(mLabelTextPainter, (int) boxSize - TRACK_COLOR_BOX_WIDTH - 20);
+			newEvent.setTrackColor(Color.parseColor(event.getColor()));
+			if (fullSchedule || event.isInMySchedule() || event.isMetaInformation())
+				mEventDisplayList.add(newEvent);
+		}
+
+	}
+	private void setHorizontalView(List<Event> eventList, boolean fullSchedule) {
 		java.text.DateFormat timeFormatter = DateFormat.getTimeFormat(getContext());
 		Calendar cal = new GregorianCalendar();
 
@@ -296,10 +435,12 @@ public class ScheduleView extends View {
 			timeFormatter.setTimeZone(eventList.get(0).getTimeZone());
 			cal.setTimeZone(eventList.get(0).getTimeZone());
 		}
-		
-		HashMap<String, Integer> roomYMap = new HashMap<String, Integer>();
-		HashMap<String, Float> hourXMap = new HashMap<String, Float>();
-		
+
+		HashMap<String, Integer> roomMap = new HashMap<String, Integer>();
+		HashMap<String, Float> hourMap = new HashMap<String, Float>();
+		// Room texts are right-aligned
+		mRoomStartText = mLeftColumnStartX - 10;
+
 		// Build up the list of rooms on the left
 		for (Event event : mEventList) {		
 			if (mStartDate == null || mStartDate.after(event.getDate()))
@@ -309,15 +450,15 @@ public class ScheduleView extends View {
 				mEndDate = event.getEndDate();
 			
 			String room = event.getRoomName();
-			if (!roomYMap.containsKey(room)) {
+			if (!roomMap.containsKey(room)) {
 				// Make sure that the time display doesn't overlap
 				float roomSize = mRoomPainter.measureText(room);
-				if (roomSize > mHourStartX)
-					mHourStartX = roomSize + 25;
+				if (roomSize > mLeftColumnStartX)
+					mLeftColumnStartX = roomSize + 25;
 
-				roomYMap.put(room, 0);
+				roomMap.put(room, 0);
 				DisplayItem newRoom = new DisplayItem(room);
-				newRoom.setX(10);
+				newRoom.setX(mRoomStartText);
 				mRoomList.add(newRoom);
 			}
 		}
@@ -326,13 +467,11 @@ public class ScheduleView extends View {
 		Collections.sort(mRoomList);
 		int roomY = 50;
 		for (DisplayItem room : mRoomList) {
-			roomYMap.put(room.getLabel(), roomY);
+			roomMap.put(room.getLabel(), roomY);
 			room.setY(roomY + (EVENT_BOX_HEIGHT / 2));
 			roomY += 50;
 		}
 
-		// Room texts are right-aligned
-		mRoomStartText = mHourStartX - 10;
 		
 		// Now build up the timeline list
 		if (mStartDate != null && mEndDate != null) {
@@ -345,19 +484,19 @@ public class ScheduleView extends View {
 	    		int hour = cal.get(Calendar.HOUR_OF_DAY);
 	    		String hourText = timeFormatter.format(date);
 	    		
-	    		float x = mHourStartX + (MAGIC_HOUR * hourCount);
+	    		float x = mLeftColumnStartX + (MAGIC_HOUR * hourCount);
 	    		float rx = x + MAGIC_HOUR;
 	    		
-	    		hourXMap.put(Integer.toString(hour), x);    		
+	    		hourMap.put(Integer.toString(hour), x);    		
 	    		DisplayItem newHour = new DisplayItem(hourText);
 	    		// The time is centered, so put it in the middle of the box
 	    		newHour.setX(x + MAGIC_HOUR / 2);
-	    		newHour.setY(mHourStartY);
-	    		newHour.setBox(new RectF(x, mHourStartY, rx, mHourStartY + mHourHeaderHeight));
+	    		newHour.setY(mLeftColumnStartY);
+	    		newHour.setBox(new RectF(x, mLeftColumnStartY, rx, mLeftColumnStartY + mHourHeaderHeight));
 	    		// Don't let the user scroll too far right
 	    		if (!i.hasNext()) {
-	    			mEndTimeEdge = rx;
-	    	        mMaximumScrollwidth = mEndTimeEdge - mWindowWidth;
+	    			mEndRightEdge = rx;
+	    	        mMaximumScrollWidth = mEndRightEdge - mWindowWidth;
 	    	        // This is really only useful for My Schedule - 
 	    	        // if the user un-favorites an item that's far to the right,
 	    	        // we want to cleanly reset their scroll width
@@ -372,10 +511,10 @@ public class ScheduleView extends View {
 		for (Event event : mEventList) {
 			cal.setTime(event.getDate());
 			int minute = cal.get(Calendar.MINUTE);
-			float x = hourXMap.get(Integer.toString(cal.get(Calendar.HOUR_OF_DAY)));
+			float x = hourMap.get(Integer.toString(cal.get(Calendar.HOUR_OF_DAY)));
 			x += (minute * MAGIC_MULTIPLIER);
 			
-			int y = roomYMap.get(event.getRoomName());
+			int y = roomMap.get(event.getRoomName());
 			DisplayItem newEvent = new DisplayItem(event.getTitle());
 			newEvent.setX(x);
 			newEvent.setY(y);
@@ -391,24 +530,23 @@ public class ScheduleView extends View {
 			newEvent.setBox(new RectF(boxX, boxY, boxRx, boxRy));
 			
 			newEvent.setTrackColor(Color.parseColor(event.getColor()));
-			mEventDisplayList.add(newEvent);
+			if (fullSchedule || event.isInMySchedule() || event.isMetaInformation())
+				mEventDisplayList.add(newEvent);
 		}
-		
-		invalidate();
 	}
-
 	@Override
     public void onSizeChanged (int w, int h, int oldw, int oldh){
         super.onSizeChanged(w, h, oldw, oldh);
         mWindowWidth = w;
-        mWindowHeight = w;
-        mMaximumScrollwidth = mEndTimeEdge - mWindowWidth;
-		mHourHeader.set(0, 0, mEndTimeEdge, mHourHeaderHeight);
+        mWindowHeight = h;
+        mMaximumScrollWidth = mEndRightEdge - mWindowWidth;
+        mMaximumScrollHeight = mEndBottomEdge - mWindowHeight;
+		mHourHeader.set(0, 0, mEndRightEdge, mHourHeaderHeight);
     }
 	
 	private void drawEvent(Canvas canvas, DisplayItem event) {
 		RectF box = event.getBox();
-		RectF colorBox = new RectF(box.left, box.top, box.left + 20, box.bottom);
+		RectF colorBox = new RectF(box.left, box.top, box.left + TRACK_COLOR_BOX_WIDTH, box.bottom);
 		
 		// Background
 		canvas.drawRoundRect(box, 5, 5, mBoxBackgroundPainter);
@@ -422,10 +560,18 @@ public class ScheduleView extends View {
 		mBoxPainter.setStyle(Paint.Style.STROKE);
 		canvas.drawRoundRect(box, 5, 5, mBoxPainter);
 
+		Log.d("SUSEConferences", "CenterX: " + box.centerX());
 		// Text
-		float avail = box.right - box.left - 40;
-		String label = (String) TextUtils.ellipsize(event.getLabel(), mLabelTextPainter, avail, TextUtils.TruncateAt.END);
-		canvas.drawText(label, box.centerX(), box.centerY() + 5, mLabelTextPainter);
+		if (mVertical) {
+			canvas.save();
+			canvas.translate(box.centerX(), box.top + 10);
+			event.getLayout().draw(canvas);
+			canvas.restore();
+		} else {
+			float avail = box.right - box.left - 40;
+			String label = (String) TextUtils.ellipsize(event.getLabel(), mLabelTextPainter, avail, TextUtils.TruncateAt.END);
+			canvas.drawText(label, box.centerX(), box.centerY(), mLabelTextPainter);
+		}
 	}
 	
 	private void drawHour(Canvas canvas, DisplayItem event) {
@@ -441,7 +587,7 @@ public class ScheduleView extends View {
 		if (canvas == null) return;
 		
 		canvas.save();
-        canvas.translate(mTranslateX, 0);
+        canvas.translate(mTranslateX, mTranslateY);
         
 		// Set the header background
 		canvas.drawRect(mHourHeader, mHeaderPainter);
@@ -450,7 +596,7 @@ public class ScheduleView extends View {
 			drawHour(canvas, hourItem);
 		}
 		for (DisplayItem roomItem : mRoomList) {
-			canvas.drawText(roomItem.getLabel(), mRoomStartText, roomItem.getY(), mRoomPainter);
+			canvas.drawText(roomItem.getLabel(), roomItem.getX(), roomItem.getY(), mRoomPainter);
 		}
 		
 		for (DisplayItem eventItem : mEventDisplayList) {
@@ -466,6 +612,7 @@ public class ScheduleView extends View {
             public boolean onDown(MotionEvent event)
             {
                     mStartX =  event.getX();
+                    mStartY = event.getY();
                     return true;
             }
 			
@@ -473,9 +620,10 @@ public class ScheduleView extends View {
             public boolean onSingleTapUp(MotionEvent event)
             {
             	float translatedX = event.getX() - mTranslateX;
+            	float translatedY = event.getY() - mTranslateY;
             	
             	for (DisplayItem eventItem : mEventDisplayList) {
-            		if (eventItem.inBox(translatedX, event.getY())) {
+            		if (eventItem.inBox(translatedX, translatedY)) {
             			if (eventItem.getEvent().isMetaInformation())
             				break;
             			if (mListener != null)
@@ -496,16 +644,27 @@ public class ScheduleView extends View {
                 break;
             
             float transX = mTranslateX - (mStartX - event.getX());
-
-            // Keep them from going too far right            
-            if (transX > -mMaximumScrollwidth)
+            float transY = mTranslateY - (mStartY - event.getY());
+            
+            // Keep them from going too far right
+            if (transX > -mMaximumScrollWidth)
             	mTranslateX = transX;
+            
+            // Or too far below
+            if (transY > -mMaximumScrollHeight)
+            	mTranslateY = transY;
             
             // Don't let the user go too far left
             if (mTranslateX > 0)
             	mTranslateX = 0;
 
+            // Or too far above
+            if (mTranslateY > 0)
+            	mTranslateY = 0;
+            
             mStartX = event.getX();
+            mStartY = event.getY();
+            
             invalidate();
         	break;
 	    default:

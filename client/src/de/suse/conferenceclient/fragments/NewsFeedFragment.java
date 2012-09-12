@@ -1,31 +1,30 @@
 package de.suse.conferenceclient.fragments;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.SocketException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.graphics.Bitmap;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ListView;
 
 import com.actionbarsherlock.app.SherlockListFragment;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.adapters.SocialItemAdapter;
-import de.suse.conferenceclient.adapters.WhatsOnAdapter;
-import de.suse.conferenceclient.app.HTTPWrapper;
-import de.suse.conferenceclient.models.Conference;
-import de.suse.conferenceclient.models.Event;
+import de.suse.conferenceclient.app.SocialWrapper;
 import de.suse.conferenceclient.models.SocialItem;
 
 public class NewsFeedFragment extends SherlockListFragment {
 	public String mSearchTag = "";
+	protected int mFeedNumber = 2;
+	
+	public void NewsFeedFragment() {}
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -33,26 +32,48 @@ public class NewsFeedFragment extends SherlockListFragment {
 	
 	public void setSearch(String searchTag) {
 		mSearchTag = searchTag;
-		GetSearchTask task = new GetSearchTask();
+		SocialTask task = new SocialTask();
 		task.execute(searchTag);
 	}
 	
-	private class GetSearchTask extends AsyncTask<String, Void, List<SocialItem>> {
-
+	protected class SocialTask extends AsyncTask<String, Void, List<SocialItem>> {
 		@Override
 		protected List<SocialItem> doInBackground(String... params) {
 			String searchTag = params[0];
-			String twitterSearch = "http://search.twitter.com/search.json?q=" + searchTag;
-			List<SocialItem> socialItems = new ArrayList<SocialItem>();
-			
-			return socialItems;
+			List<SocialItem> twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
+			twitterItems.addAll(SocialWrapper.getGooglePlusItems(getActivity(), searchTag, mFeedNumber));
+			Collections.sort(twitterItems, Collections.reverseOrder());
+			if (mFeedNumber > 0)
+				if (twitterItems.size() >= mFeedNumber)
+					return twitterItems.subList(0, mFeedNumber);
+			return twitterItems;
 		}
 		
 		protected void onPostExecute(List<SocialItem> items) {
 			SocialItemAdapter adapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
 			setListAdapter(adapter);
 		}
+	}
 
+	@Override
+	public void onListItemClick (ListView l,
+								 View v,
+								 int position,
+								 long id) {
+		SocialItem item = (SocialItem) l.getItemAtPosition(position);
+		if (item.getLink().equals(""))
+			return;
+
+		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(item.getLink()));
+		startActivity(intent);
+	}
+	
+	@Override
+	public void onCreateOptionsMenu(Menu menu,  MenuInflater inflater) {
+		super.onCreateOptionsMenu(menu, inflater);
+		menu.add(Menu.NONE, R.id.socialRefreshItem, Menu.NONE, getString(R.string.refresh))
+		 .setIcon(R.drawable.refresh)
+    	 .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
 	}
 
 }

@@ -38,7 +38,7 @@ public class GetConferencesTask extends AsyncTask<Void, Void, ArrayList<Conferen
 	protected ArrayList<Conference> doInBackground(Void... params) {
 		JSONObject reply = null;
 		ArrayList<Conference> ret = new ArrayList<Conference>();
-		
+	
 		try {
 			reply = HTTPWrapper.get(mUrl);
 			JSONArray conferences = reply.getJSONArray("conferences");
@@ -53,6 +53,7 @@ public class GetConferencesTask extends AsyncTask<Void, Void, ArrayList<Conferen
 				newCon.setName(jsonCon.getString("name"));
 				newCon.setDateRange(jsonCon.getString("date_range"));
 				newCon.setUrl(jsonCon.getString("url"));
+				newCon.setSocialTag(jsonCon.getString("socialtag"));
 				ret.add(newCon);
 			}
 		} catch (IllegalStateException e) {

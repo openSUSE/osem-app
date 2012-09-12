@@ -16,7 +16,7 @@ public class Conference {
 	private int mYear = 2012;
 	private String mDateRange = "";
 	private String mUrl = "";
-	
+	private String mSocialTag = "";
 	
 	public Conference() {
 	}
@@ -75,6 +75,13 @@ public class Conference {
 	
 	public void setUrl(String url) {
 		this.mUrl = url;
+	}
+	public String getSocialTag() {
+		return mSocialTag;
+	}
+
+	public void setSocialTag(String socialTag) {
+		mSocialTag = socialTag;
 	}
 
 }
