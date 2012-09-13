@@ -195,11 +195,12 @@ public class ScheduleView extends View {
 	private int SUSE_GREEN = 0;
 	private final int TRACK_COLOR_BOX_WIDTH = 20;
 	private boolean mVertical;
-	private RectF mHourHeader;
+	private RectF mTopHeader, mLeftBox;
 	private float mWindowWidth = 0;
 	private float mWindowHeight = 0;
 	private float mLeftColumnStartX = 0;
 	private float mLeftColumnStartY = 30;
+	private float mLeftColumnWidth = 0;
 	private float mTopRowItemStartX = 0;
 	private float mTopRowItemStartY = 30;
 	private float mMaximumScrollWidth = 0;
@@ -233,7 +234,7 @@ public class ScheduleView extends View {
 		if (mVertical) {
 			mLeftColumnStartX = 30;
 			mLeftColumnStartY = 60;
-			MAGIC_MULTIPLIER = 4;
+			MAGIC_MULTIPLIER = 6;
 			MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
 		}
 		SUSE_GREEN = getResources().getColor(R.color.light_suse_green);
@@ -262,7 +263,7 @@ public class ScheduleView extends View {
 		mHeaderPainter = new Paint();
 		mHeaderPainter.setAntiAlias(true);
 		mHeaderPainter.setStyle(Paint.Style.FILL);
-		mHeaderPainter.setColor(getResources().getColor(R.color.light_suse_grey));
+		mHeaderPainter.setColor(getResources().getColor(R.color.suse_grey));
 
 		mHourPainter = new Paint();
 		mHourPainter.setAntiAlias(true);
@@ -273,7 +274,7 @@ public class ScheduleView extends View {
 		
 		mRoomPainter = new Paint();
 		mRoomPainter.setAntiAlias(true);
-		mRoomPainter.setTextSize(15);
+		mRoomPainter.setTextSize(20);
 		mRoomPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		mRoomPainter.setTextAlign(Paint.Align.RIGHT);
 
@@ -294,8 +295,9 @@ public class ScheduleView extends View {
 		mEventMap = new HashMap<String, Event>();
 		mTimeList = new ArrayList<DisplayItem>();
 		mRoomList = new ArrayList<DisplayItem>();
-		mHourHeader = new RectF(0,0, getWidth(), mHourHeaderHeight);
-		
+		mTopHeader = new RectF(0,0, getWidth(), mHourHeaderHeight);
+		mLeftBox = new RectF(0,0, mTopRowItemStartX, getHeight());
+
 		mEventDisplayList = new ArrayList<DisplayItem>();
 		mStartDate = null;
 		mEndDate = null;
@@ -328,7 +330,11 @@ public class ScheduleView extends View {
 		HashMap<String, Float> roomMap = new HashMap<String, Float>();
 		HashMap<String, Float> hourMap = new HashMap<String, Float>();
 		mRoomPainter.setTextAlign(Paint.Align.CENTER);
-
+		mTopRowItemStartX = 0;
+		mTopRowItemStartY = 30;
+		mLeftColumnStartX = 30;
+		mLeftColumnStartY = 60;
+		
 		java.text.DateFormat timeFormatter = DateFormat.getTimeFormat(getContext());
 		Calendar cal = new GregorianCalendar();
 		float boxSize = 100;
@@ -384,6 +390,7 @@ public class ScheduleView extends View {
 	    		mTimeList.add(newHour);
 	    		hourCount++;
 	    	}
+	    	mLeftColumnWidth = mTopRowItemStartX;
 	    	
 	    	mEndBottomEdge = mLeftColumnStartY + (MAGIC_HOUR * hourCount);
 		}
@@ -461,6 +468,8 @@ public class ScheduleView extends View {
 				newRoom.setX(mRoomStartText);
 				mRoomList.add(newRoom);
 			}
+	    	mLeftColumnWidth = mLeftColumnStartX;
+
 		}
 		
 		// Now sort the rooms alphabetically, and assign the correct Y values
@@ -541,7 +550,9 @@ public class ScheduleView extends View {
         mWindowHeight = h;
         mMaximumScrollWidth = mEndRightEdge - mWindowWidth;
         mMaximumScrollHeight = mEndBottomEdge - mWindowHeight;
-		mHourHeader.set(0, 0, mEndRightEdge, mHourHeaderHeight);
+		mTopHeader.set(0, 0, mEndRightEdge, mHourHeaderHeight);
+		mLeftBox.set(0,0, mLeftColumnWidth, h);
+		Log.d("SUSEConferences", "mLeftBox is now "+ mLeftBox);
     }
 	
 	private void drawEvent(Canvas canvas, DisplayItem event) {
@@ -588,21 +599,38 @@ public class ScheduleView extends View {
 		
 		canvas.save();
         canvas.translate(mTranslateX, mTranslateY);
-        
-		// Set the header background
-		canvas.drawRect(mHourHeader, mHeaderPainter);
 
-		for (DisplayItem hourItem : mTimeList) {
-			drawHour(canvas, hourItem);
-		}
-		for (DisplayItem roomItem : mRoomList) {
-			canvas.drawText(roomItem.getLabel(), roomItem.getX(), roomItem.getY(), mRoomPainter);
-		}
-		
 		for (DisplayItem eventItem : mEventDisplayList) {
 			drawEvent(canvas, eventItem);
 		}
 		canvas.restore();
+
+		// Set the header background
+		canvas.drawRect(mTopHeader, mHeaderPainter);
+
+		canvas.save();
+		if (mVertical)
+			canvas.translate(0, mTranslateY);
+		else
+			canvas.translate(mTranslateX, 0);
+		for (DisplayItem hourItem : mTimeList) {
+			drawHour(canvas, hourItem);
+		}
+
+		canvas.restore();
+		canvas.drawRect(mLeftBox, mHeaderPainter);
+
+		canvas.save();
+		if (mVertical)
+			canvas.translate(mTranslateX, 0);
+		else
+			canvas.translate(0, mTranslateY);
+
+		for (DisplayItem roomItem : mRoomList) {
+			canvas.drawText(roomItem.getLabel(), roomItem.getX(), roomItem.getY(), mRoomPainter);
+		}
+		canvas.restore();
+		
 	}
 
 	// Touch handling
