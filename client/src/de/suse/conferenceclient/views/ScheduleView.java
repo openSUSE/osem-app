@@ -194,8 +194,8 @@ public class ScheduleView extends View {
 	private int EVENT_BOX_HEIGHT = 30;
 	private int SUSE_GREEN = 0;
 	private final int TRACK_COLOR_BOX_WIDTH = 20;
-	private boolean mVertical;
-	private RectF mTopHeader, mLeftBox;
+	private boolean mVertical, mIsMoving;
+	private RectF mTopHeader, mLeftBox, mTopLeftBox;
 	private float mWindowWidth = 0;
 	private float mWindowHeight = 0;
 	private float mLeftColumnStartX = 0;
@@ -238,6 +238,7 @@ public class ScheduleView extends View {
 			MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
 		}
 		SUSE_GREEN = getResources().getColor(R.color.light_suse_green);
+		mIsMoving = false;
 		
 		mBoxPainter = new Paint();
 		mBoxPainter.setAntiAlias(true);
@@ -297,7 +298,7 @@ public class ScheduleView extends View {
 		mRoomList = new ArrayList<DisplayItem>();
 		mTopHeader = new RectF(0,0, getWidth(), mHourHeaderHeight);
 		mLeftBox = new RectF(0,0, mTopRowItemStartX, getHeight());
-
+		mTopLeftBox = new RectF(0,0, 0,0);
 		mEventDisplayList = new ArrayList<DisplayItem>();
 		mStartDate = null;
 		mEndDate = null;
@@ -395,7 +396,7 @@ public class ScheduleView extends View {
 	    	mEndBottomEdge = mLeftColumnStartY + (MAGIC_HOUR * hourCount);
 		}
 		
-		mTopRowItemStartX = mTopRowItemStartX + boxSize;
+//		mTopRowItemStartX = mTopRowItemStartX + boxSize;
 		Collections.sort(mRoomList);
 		for (DisplayItem room : mRoomList) {
 			roomMap.put(room.getLabel(), mTopRowItemStartX);
@@ -435,6 +436,10 @@ public class ScheduleView extends View {
 
 	}
 	private void setHorizontalView(List<Event> eventList, boolean fullSchedule) {
+		mLeftColumnStartX = 0;
+		mLeftColumnStartY = 30;
+		mLeftColumnWidth = 0;
+
 		java.text.DateFormat timeFormatter = DateFormat.getTimeFormat(getContext());
 		Calendar cal = new GregorianCalendar();
 
@@ -460,9 +465,11 @@ public class ScheduleView extends View {
 			if (!roomMap.containsKey(room)) {
 				// Make sure that the time display doesn't overlap
 				float roomSize = mRoomPainter.measureText(room);
-				if (roomSize > mLeftColumnStartX)
+				if (roomSize > mLeftColumnStartX) {
 					mLeftColumnStartX = roomSize + 25;
-
+					mRoomStartText = mLeftColumnStartX - 10;
+				}
+				
 				roomMap.put(room, 0);
 				DisplayItem newRoom = new DisplayItem(room);
 				newRoom.setX(mRoomStartText);
@@ -477,6 +484,7 @@ public class ScheduleView extends View {
 		int roomY = 50;
 		for (DisplayItem room : mRoomList) {
 			roomMap.put(room.getLabel(), roomY);
+			room.setX(mRoomStartText);
 			room.setY(roomY + (EVENT_BOX_HEIGHT / 2));
 			roomY += 50;
 		}
@@ -552,7 +560,8 @@ public class ScheduleView extends View {
         mMaximumScrollHeight = mEndBottomEdge - mWindowHeight;
 		mTopHeader.set(0, 0, mEndRightEdge, mHourHeaderHeight);
 		mLeftBox.set(0,0, mLeftColumnWidth, h);
-		Log.d("SUSEConferences", "mLeftBox is now "+ mLeftBox);
+		mTopLeftBox.set(0,0, mLeftColumnWidth, mHourHeaderHeight);
+		Log.d("SUSEConferences", "mTopLeftBox is now "+ mTopLeftBox);
     }
 	
 	private void drawEvent(Canvas canvas, DisplayItem event) {
@@ -586,17 +595,12 @@ public class ScheduleView extends View {
 	}
 	
 	private void drawHour(Canvas canvas, DisplayItem event) {
-		
 		RectF displayBox = event.getBox();
 		canvas.drawText(event.getLabel(), event.getX(), event.getY(), mHourPainter);
 		canvas.drawLine(displayBox.left, displayBox.top, displayBox.left, canvas.getHeight(), mLinePainter);
 	}
 
-	@Override
-	public void onDraw(Canvas canvas) {
-		super.onDraw(canvas);
-		if (canvas == null) return;
-		
+	private void drawVertical(Canvas canvas) {
 		canvas.save();
         canvas.translate(mTranslateX, mTranslateY);
 
@@ -605,31 +609,65 @@ public class ScheduleView extends View {
 		}
 		canvas.restore();
 
-		// Set the header background
+		// Set the header backgrounds
 		canvas.drawRect(mTopHeader, mHeaderPainter);
-
+		canvas.drawRect(mLeftBox, mHeaderPainter);
 		canvas.save();
-		if (mVertical)
-			canvas.translate(0, mTranslateY);
-		else
-			canvas.translate(mTranslateX, 0);
+		canvas.translate(0, mTranslateY);
 		for (DisplayItem hourItem : mTimeList) {
 			drawHour(canvas, hourItem);
 		}
-
 		canvas.restore();
-		canvas.drawRect(mLeftBox, mHeaderPainter);
-
 		canvas.save();
-		if (mVertical)
-			canvas.translate(mTranslateX, 0);
-		else
-			canvas.translate(0, mTranslateY);
-
+		canvas.translate(mTranslateX, 0);
 		for (DisplayItem roomItem : mRoomList) {
 			canvas.drawText(roomItem.getLabel(), roomItem.getX(), roomItem.getY(), mRoomPainter);
 		}
 		canvas.restore();
+		canvas.save();
+		// Finally, a cosmetic fix so the hours don't scroll past the time header, and the time
+		// doesn't scroll past the room column
+		canvas.drawRect(mTopLeftBox, mHeaderPainter);
+		canvas.restore();
+	}
+	
+	
+	private void drawHorizontal(Canvas canvas) {
+		canvas.save();
+        canvas.translate(mTranslateX, mTranslateY);
+
+		for (DisplayItem eventItem : mEventDisplayList) {
+			drawEvent(canvas, eventItem);
+		}
+		canvas.restore();
+
+		// Set the header backgrounds
+		canvas.drawRect(mTopHeader, mHeaderPainter);
+		canvas.save();
+		canvas.translate(mTranslateX, 0);
+		for (DisplayItem hourItem : mTimeList) {
+			drawHour(canvas, hourItem);
+		}
+		canvas.restore();
+
+		canvas.drawRect(mLeftBox, mHeaderPainter);
+		canvas.save();
+		canvas.translate(0, mTranslateY);
+		for (DisplayItem roomItem : mRoomList) {
+			canvas.drawText(roomItem.getLabel(), roomItem.getX(), roomItem.getY(), mRoomPainter);
+		}
+		canvas.restore();
+		
+
+	}
+	@Override
+	public void onDraw(Canvas canvas) {
+		super.onDraw(canvas);
+		if (canvas == null) return;
+		if (mVertical)
+			drawVertical(canvas);
+		else
+			drawHorizontal(canvas);
 		
 	}
 
@@ -639,14 +677,18 @@ public class ScheduleView extends View {
 			@Override
             public boolean onDown(MotionEvent event)
             {
-                    mStartX =  event.getX();
-                    mStartY = event.getY();
-                    return true;
+				mStartX =  event.getX();
+				mStartY = event.getY();
+				return true;
             }
 			
             @Override
             public boolean onSingleTapUp(MotionEvent event)
             {
+            	Log.d("SUSEConferences", "singleTapUp");
+            	if (mIsMoving) {
+            		return true;
+            	}
             	float translatedX = event.getX() - mTranslateX;
             	float translatedY = event.getY() - mTranslateY;
             	
@@ -671,6 +713,8 @@ public class ScheduleView extends View {
             if (event.getPointerCount() > 1)
                 break;
             
+            Log.d("SUSEConferences", "ACTION_MOVE");
+            mIsMoving = true;
             float transX = mTranslateX - (mStartX - event.getX());
             float transY = mTranslateY - (mStartY - event.getY());
             
@@ -692,10 +736,16 @@ public class ScheduleView extends View {
             
             mStartX = event.getX();
             mStartY = event.getY();
-            
+
             invalidate();
         	break;
-	    default:
+        case MotionEvent.ACTION_UP:
+        	if (mIsMoving) {
+        		mIsMoving = false;
+        		break;
+        	}
+        	mIsMoving = false;
+        default:
 	    	mGestureDetector.onTouchEvent(event);
 	    	break;
 

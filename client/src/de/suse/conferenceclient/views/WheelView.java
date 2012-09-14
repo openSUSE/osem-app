@@ -123,6 +123,9 @@ public class WheelView extends View {
             break;
         case MotionEvent.ACTION_UP:
             startDirection = direction;
+            if (startDirection > -1 && startDirection < 1) {
+            	jitter();
+            }
             snap();
             break;
         }
@@ -194,7 +197,11 @@ public class WheelView extends View {
 
 	    this.invalidate();
 	}
-	
+	private void jitter() {
+		// TODO Implement a 'jitter' effect to show that
+		// the user should rotate the wheel
+		me.post(new Jitter());
+	}
 	// TODO there must be a better way to do this!
 	private void snap() {
 		int rounded = Math.round(startDirection);
@@ -257,6 +264,19 @@ public class WheelView extends View {
     		}
     	}
 
+	}
+	private class Jitter implements Runnable {
+		public Jitter() { 
+			startDirection = 10;
+		}
+		
+		@Override
+		public void run() {
+			if (startDirection > 0.0f)
+				startDirection -= 1f;
+			invalidate();
+			me.post(this);
+		}
 	}
 	private class WheelAnimation implements Runnable {
 		
