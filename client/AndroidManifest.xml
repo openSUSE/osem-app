@@ -9,7 +9,12 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_CALENDAR"/>
     <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
-    
+    <uses-feature android:name="android.hardware.camera" 
+              android:required="false"/>
+    <uses-feature android:name="android.hardware.bluetooth"
+              android:required="false"/>
+    <uses-feature android:name="android.hardware.telephony"
+              android:required="false"/>
     <application
         android:name=".SUSEConferences"
         android:icon="@drawable/ic_launcher"

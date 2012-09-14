@@ -42,7 +42,8 @@ import android.view.View;
  *
  */
 
-// TODO scrolling along the Y axis does not work
+// TODO snap to times
+// TODO scroll to current time when applicable
 
 public class ScheduleView extends View {
 	public interface OnEventClickListener {

@@ -2,4 +2,6 @@
     <resources>
         <item name="mapsOptionMenuItem" type="id"/>
         <item name="socialRefreshItem" type="id"/>
+        <item name="aboutItem" type="id"/>
+        <item name="settingsItem" type="id"/>
     </resources>

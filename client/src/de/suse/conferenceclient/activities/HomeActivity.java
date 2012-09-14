@@ -79,7 +79,6 @@ public class HomeActivity extends SherlockFragmentActivity implements
         	Log.d("SUSEConferences", "Conference ID is NOT -1");
         	setView();
         }
-        
     }
     
     @Override
@@ -89,6 +88,12 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			.setIcon(R.drawable.icon_venue_off)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
     	}
+    	
+		menu.add(Menu.NONE, R.id.settingsItem, Menu.NONE, getString(R.string.menu_settings))
+        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		menu.add(Menu.NONE, R.id.aboutItem, Menu.NONE, getString(R.string.menu_about))
+        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -145,7 +150,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
       	
       	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.upcomingFragment);
       	mWhatsOnFragment.setConferenceId(mConferenceId);
-      			
+
 		ImageButton mapButton = (ImageButton) findViewById(R.id.mapButton);
 		mapButton.setOnClickListener(this);
       }
