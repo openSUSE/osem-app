@@ -8,14 +8,18 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.models.Event;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Canvas;
@@ -35,6 +39,7 @@ import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 
 /**
@@ -45,9 +50,14 @@ import android.view.View;
 // TODO snap to times
 // TODO scroll to current time when applicable
 
+@TargetApi(11)
 public class ScheduleView extends View {
 	public interface OnEventClickListener {
 		public void clicked(Event event);
+	}
+	
+	public enum SnapTo {
+		UP, DOWN, LEFT, RIGHT;
 	}
 	
 	private class HourIterator
@@ -183,12 +193,19 @@ public class ScheduleView extends View {
 	private Paint mBoxPainter, mLabelPainter, mBoxColorPainter;
 	private Paint mHeaderPainter, mBoxBackgroundPainter;
 	private TextPaint mLabelTextPainter;
-	
+    final EnumSet<SnapTo> mSnapDirections = EnumSet.noneOf(SnapTo.class);
+
 	private List<Event> mEventList;
 	private List<DisplayItem> mTimeList;
 	private List<DisplayItem> mRoomList;
 	private List<DisplayItem> mEventDisplayList;
-	
+	private NavigableMap<Float, Float> mSnapToXMap;
+	private NavigableMap<Float, Float> mSnapToYMap;
+	private HashMap<String, Event> mEventMap;
+	private boolean mSnapRight = false;
+	private boolean mSnapBottom = false;
+	private ScaleGestureDetector mScaleDetector;
+
 	// Pixel width of "one minute" on the timeline
 	private int MAGIC_MULTIPLIER = 6;
 	private int MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
@@ -196,6 +213,7 @@ public class ScheduleView extends View {
 	private int SUSE_GREEN = 0;
 	private final int TRACK_COLOR_BOX_WIDTH = 20;
 	private boolean mVertical, mIsMoving;
+	private float mScale = 1.0f;
 	private RectF mTopHeader, mLeftBox, mTopLeftBox;
 	private float mWindowWidth = 0;
 	private float mWindowHeight = 0;
@@ -214,11 +232,12 @@ public class ScheduleView extends View {
 	private float mTranslateY = 0;
 	private float mStartX = 0;
 	private float mStartY = 0;
+	private float mMoveBeginX = 0;
+	private float mMoveBeginY = 0;
 	private OnEventClickListener mListener = null;
 	private GestureDetector mGestureDetector;
 	Date mStartDate, mEndDate;
 	
-	private HashMap<String, Event> mEventMap;
 	
 	public ScheduleView(Context context) {
 		super(context);
@@ -303,7 +322,11 @@ public class ScheduleView extends View {
 		mEventDisplayList = new ArrayList<DisplayItem>();
 		mStartDate = null;
 		mEndDate = null;
+		mSnapToXMap = new TreeMap<Float, Float>();
+		mSnapToYMap = new TreeMap<Float, Float>();
 		mGestureDetector = new GestureDetector(context, new TouchDetector());
+		mScaleDetector = new ScaleGestureDetector(context, new ScaleDetector());
+
 		setEvents(new ArrayList<Event>(), true);
 	}
 	
@@ -317,6 +340,10 @@ public class ScheduleView extends View {
 		mTimeList.clear();
 		mRoomList.clear();
 		mEventDisplayList.clear();
+		mSnapToXMap.clear();
+		mSnapToYMap.clear();
+		mSnapToXMap.put(0.0f, 0.0f);
+		mSnapToYMap.put(0.0f, 0.0f);
 		mStartDate = null;
 		mEndDate = null;
 
@@ -387,6 +414,7 @@ public class ScheduleView extends View {
 	    		DisplayItem newHour = new DisplayItem(hourText);
 	    		newHour.setX(x);
 	    		newHour.setY(y);
+	    		Log.d("SUSEConferences", "Added to SnapY: " + -y);
 	    		newHour.setBox(new RectF(x, y, 50, 50));
 
 	    		mTimeList.add(newHour);
@@ -427,7 +455,13 @@ public class ScheduleView extends View {
 			float boxY = y;
 			float boxRx = x + boxSize;
 			float boxRy = y + (length * MAGIC_MULTIPLIER) - 10;
-
+			Log.d("SUSEConferences", "Adding " + (-x) + "," + (-y) + " for " + event.getTitle());
+			float translateMatchX = -x + mLeftColumnWidth;
+			float translateMatchY = -y + mHourHeaderHeight;
+			
+    		mSnapToYMap.put(translateMatchY, translateMatchY);
+			mSnapToXMap.put(translateMatchX, translateMatchX);
+			
 			newEvent.setBox(new RectF(boxX, boxY, boxRx, boxRy));
 			newEvent.setLayout(mLabelTextPainter, (int) boxSize - TRACK_COLOR_BOX_WIDTH - 20);
 			newEvent.setTrackColor(Color.parseColor(event.getColor()));
@@ -562,7 +596,6 @@ public class ScheduleView extends View {
 		mTopHeader.set(0, 0, mEndRightEdge, mHourHeaderHeight);
 		mLeftBox.set(0,0, mLeftColumnWidth, h);
 		mTopLeftBox.set(0,0, mLeftColumnWidth, mHourHeaderHeight);
-		Log.d("SUSEConferences", "mTopLeftBox is now "+ mTopLeftBox);
     }
 	
 	private void drawEvent(Canvas canvas, DisplayItem event) {
@@ -581,7 +614,6 @@ public class ScheduleView extends View {
 		mBoxPainter.setStyle(Paint.Style.STROKE);
 		canvas.drawRoundRect(box, 5, 5, mBoxPainter);
 
-		Log.d("SUSEConferences", "CenterX: " + box.centerX());
 		// Text
 		if (mVertical) {
 			canvas.save();
@@ -604,6 +636,7 @@ public class ScheduleView extends View {
 	private void drawVertical(Canvas canvas) {
 		canvas.save();
         canvas.translate(mTranslateX, mTranslateY);
+		canvas.scale(mScale, mScale);
 
 		for (DisplayItem eventItem : mEventDisplayList) {
 			drawEvent(canvas, eventItem);
@@ -615,12 +648,16 @@ public class ScheduleView extends View {
 		canvas.drawRect(mLeftBox, mHeaderPainter);
 		canvas.save();
 		canvas.translate(0, mTranslateY);
+		canvas.scale(mScale, mScale);
+
 		for (DisplayItem hourItem : mTimeList) {
 			drawHour(canvas, hourItem);
 		}
 		canvas.restore();
 		canvas.save();
 		canvas.translate(mTranslateX, 0);
+		canvas.scale(mScale, mScale);
+
 		for (DisplayItem roomItem : mRoomList) {
 			canvas.drawText(roomItem.getLabel(), roomItem.getX(), roomItem.getY(), mRoomPainter);
 		}
@@ -671,6 +708,21 @@ public class ScheduleView extends View {
 			drawHorizontal(canvas);
 		
 	}
+	
+	private class ScaleDetector extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+		@Override
+		public boolean onScale(ScaleGestureDetector detector)
+		{
+			if (detector.isInProgress())
+			{
+				Log.d("SUSEConferences", "Scaling...");
+				mScale *= detector.getScaleFactor();
+				mScale = Math.max(0.2f, Math.min(mScale, 1.0f));
+				invalidate();
+			}
+			return true;
+		}
+	}
 
 	// Touch handling
     private class TouchDetector extends SimpleOnGestureListener
@@ -680,13 +732,14 @@ public class ScheduleView extends View {
             {
 				mStartX =  event.getX();
 				mStartY = event.getY();
+				mMoveBeginX = mStartX;
+				mMoveBeginY = mStartY;
 				return true;
             }
 			
             @Override
             public boolean onSingleTapUp(MotionEvent event)
             {
-            	Log.d("SUSEConferences", "singleTapUp");
             	if (mIsMoving) {
             		return true;
             	}
@@ -711,13 +764,28 @@ public class ScheduleView extends View {
     {               
     	switch(event.getAction()) {
         case MotionEvent.ACTION_MOVE:
+			if (mScaleDetector.isInProgress())
+			{
+				mScaleDetector.onTouchEvent(event);
+				break;
+			}
+
             if (event.getPointerCount() > 1)
                 break;
             
-            Log.d("SUSEConferences", "ACTION_MOVE");
             mIsMoving = true;
             float transX = mTranslateX - (mStartX - event.getX());
             float transY = mTranslateY - (mStartY - event.getY());
+            
+            if (transX <= mTranslateX) // Moving right
+            	mSnapRight = true;
+            else
+            	mSnapRight = false;
+            
+            if (transY <= mTranslateY)
+            	mSnapBottom = true;
+            else
+            	mSnapBottom = false;
             
             // Keep them from going too far right
             if (transX > -mMaximumScrollWidth)
@@ -743,15 +811,56 @@ public class ScheduleView extends View {
         case MotionEvent.ACTION_UP:
         	if (mIsMoving) {
         		mIsMoving = false;
+        		Log.d("SUSEConferences", "mStartX: " + mStartX + " mStartY: " + mStartY);
+        		Log.d("SUSEConferences", "mMoveBeginX: " + mMoveBeginX + " mMoveBeginY: " + mMoveBeginY);
+        		Float nearX = null;
+        		Float nearY = null;
+
+        		if ((mStartX - mMoveBeginX) < -60) {
+        			Log.d("SUSEConferences", "Grab lower key for X");
+        			nearX = mSnapToXMap.lowerKey(mTranslateX);
+        		} else
+        			nearX = mSnapToXMap.higherKey(mTranslateX);
+        		
+        		if ((mStartY - mMoveBeginY) < -60) {
+        			Log.d("SUSEConferences", "Grab lower key for Y");
+        			nearY = mSnapToYMap.lowerKey(mTranslateY);
+        		} else
+        			nearY = mSnapToYMap.higherKey(mTranslateY);
+
+//        		if (mSnapRight)
+//        			nearX = mSnapToXMap.lowerKey(mTranslateX);
+//        		else
+//        			nearX = mSnapToXMap.higherKey(mTranslateX);
+//        		
+//        		Log.d("SUSEConferences", "mSnapBottom: " + mSnapBottom);
+//        		if (mSnapBottom)
+//        			nearY = mSnapToYMap.lowerKey(mTranslateY);
+//        		else
+//        			nearY = mSnapToYMap.higherKey(mTranslateY);
+//
+//        		
+        		if (nearX == null)
+        			nearX = 0.0f;
+        		if (nearY == null)
+        			nearY = 0.0f;
+        		Log.d("SUSEConferences", "translateX: " + mTranslateX + "nearX: " + nearX);
+        		Log.d("SUSEConferences", "translateY: " + mTranslateY + "nearY: " + nearY);
+        		mTranslateX = nearX;
+        		mTranslateY = nearY;
+        		
+        		invalidate();
         		break;
         	}
         	mIsMoving = false;
         default:
 	    	mGestureDetector.onTouchEvent(event);
+			mScaleDetector.onTouchEvent(event);
+
 	    	break;
 
     	}
     	return true;
     }
-    
+
 }
