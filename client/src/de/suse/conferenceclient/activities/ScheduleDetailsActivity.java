@@ -1,11 +1,17 @@
 package de.suse.conferenceclient.activities;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -26,6 +32,7 @@ import com.actionbarsherlock.app.SherlockActivity;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
+import de.suse.conferenceclient.app.AlarmReceiver;
 import de.suse.conferenceclient.app.Database;
 import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.models.Speaker;
@@ -84,11 +91,6 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 		if (event.isInMySchedule())
 			mFavoriteButton.setChecked(true);
 
-		// Check if this event is in the calendar
-		if (android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-			if (findEventId() >= 0)
-				mCalendarButton.setChecked(true);
-		}
 
 		mTitleView.setText(mEvent.getTitle());
 		String startTime = "";
@@ -127,6 +129,20 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 				speakerLayout.addView(newView);
 			}
 		}
+		// Check if this event is in the calendar
+		if (android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			if (findEventId() >= 0)
+				mCalendarButton.setChecked(true);
+		} else {
+			Intent intent = generateAlarmIntent();
+			PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 
+																	intent.getStringExtra("intentId").hashCode(), 
+																	intent, 
+																	PendingIntent.FLAG_NO_CREATE);
+			if (pendingIntent != null)
+				mCalendarButton.setChecked(true);
+		}
+
 	}
 
 	@SuppressLint({ "NewApi", "NewApi" })
@@ -151,7 +167,6 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 					intent.setType("vnd.android.cursor.item/event");
 					intent.putExtra(Events.TITLE, mEvent.getTitle());
 					intent.putExtra(Events.EVENT_LOCATION, mEvent.getRoomName());
-					// TODO The conference should specify the timezone
 					intent.putExtra(Events.EVENT_TIMEZONE, mEvent.getTimeZone());
 					intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, mEvent.getDate().getTime());
 					intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, mEvent.getEndDate().getTime());
@@ -161,10 +176,35 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 					long id = findEventId();
 					removeEvent(id);
 				}
+			} else {
+				AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+				Intent intent = generateAlarmIntent();
+				PendingIntent pendingIntent = PendingIntent.getBroadcast(this, intent.getStringExtra("intentId").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+				
+				if (button.isChecked()) {
+					// Add an alarm to notify the user 5 minutes before the talk
+					manager.set(AlarmManager.RTC_WAKEUP, mEvent.getDate().getTime() - 300000 , pendingIntent);
+				} else {
+					manager.cancel(pendingIntent);
+				}
 			}
 		}
 	}
 
+	private Intent generateAlarmIntent() {
+		Intent intent = new Intent(ScheduleDetailsActivity.this, AlarmReceiver.class);
+		Calendar cal = GregorianCalendar.getInstance();
+		cal.setTime(mEvent.getDate());
+		// This is used to keep track of the alarm intents, the hashCode() is used as the PendingIntent id
+		String id = mEvent.getTitle() + mEvent.getRoomName() + mTitleTime.getText().toString();
+		intent.putExtra("intentId", id);
+		intent.putExtra("title", mEvent.getTitle());
+		intent.putExtra("room", mEvent.getRoomName());
+		intent.putExtra("timetext", mTitleTime.getText().toString());
+		intent.putExtra("milliseconds", cal.getTimeInMillis());
+		return intent;
+	}
+	
 	@TargetApi(14)
 	private long findEventId() {
 		long id = -1;
