@@ -36,6 +36,7 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
     private List<Event> mEventList;
     private DateFormat mHeaderFormatter;
     private PhoneScheduleAdapter mAdapter;
+    
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mHeaderFormatter = DateFormat.getDateInstance(DateFormat.LONG);		

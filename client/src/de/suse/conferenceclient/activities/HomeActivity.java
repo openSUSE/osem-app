@@ -83,11 +83,11 @@ public class HomeActivity extends SherlockFragmentActivity implements
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-    	if (!mIsTablet) {
+//    	if (!mIsTablet) {
     		menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
     			.setIcon(R.drawable.icon_venue_off)
                 .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-    	}
+//    	}
     	
 		menu.add(Menu.NONE, R.id.settingsItem, Menu.NONE, getString(R.string.menu_settings))
         .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -137,22 +137,50 @@ public class HomeActivity extends SherlockFragmentActivity implements
       			bar.newTab().setText(getString(R.string.newsFeed)),
       			NewsFeedPhoneFragment.class, args);
       } else { // Tablet layout
-    	mIsTablet = true;
-    	TextView t = (TextView) findViewById(R.id.conferenceNameTextView);
-    	t.setText(conference.getName());
-    	t = (TextView) findViewById(R.id.locationTextView);
-    	t.setText(conference.getDateRange());
-      	FragmentManager fm = getSupportFragmentManager();
-      	WheelView view = (WheelView) findViewById(R.id.wheelView);
-      	view.setOnLaunchListener(this);
-      	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
-      	mNewsFeedFragment.setSearch(conference.getSocialTag());
-      	
-      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.upcomingFragment);
-      	mWhatsOnFragment.setConferenceId(mConferenceId);
+//    	mIsTablet = true;
+//    	TextView t = (TextView) findViewById(R.id.conferenceNameTextView);
+//    	t.setText(conference.getName());
+//    	t = (TextView) findViewById(R.id.locationTextView);
+//    	t.setText(conference.getDateRange());
+//      	FragmentManager fm = getSupportFragmentManager();
+//      	WheelView view = (WheelView) findViewById(R.id.wheelView);
+//      	view.setOnLaunchListener(this);
+//      	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
+//      	mNewsFeedFragment.setSearch(conference.getSocialTag());
+//      	
+//      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.upcomingFragment);
+//      	mWhatsOnFragment.setConferenceId(mConferenceId);
+//
+//		ImageButton mapButton = (ImageButton) findViewById(R.id.mapButton);
+//		mapButton.setOnClickListener(this);
 
-		ImageButton mapButton = (ImageButton) findViewById(R.id.mapButton);
-		mapButton.setOnClickListener(this);
+    	FragmentManager fm = getSupportFragmentManager();
+      	Bundle args = new Bundle();
+      	args.putLong("conferenceId", this.mConferenceId);
+      	args.putString("socialTag", conference.getSocialTag());
+
+    	MySchedulePhoneFragment mySched = new MySchedulePhoneFragment();
+      	mySched.setArguments(args);
+    	fm.beginTransaction()
+        .add(R.id.myScheduleFragmentLayout, mySched).commit();
+
+    	SchedulePhoneFragment sched = new SchedulePhoneFragment();
+    	sched.setArguments(args);
+    	fm.beginTransaction()
+        .add(R.id.scheduleFragmentLayout, sched).commit();
+
+    	TextView upcoming = (TextView) findViewById(R.id.upcomingTextView);
+    	if (upcoming != null) {
+	    	WhatsOnFragment upcomingFeed = new WhatsOnFragment();
+	    	upcomingFeed.setArguments(args);
+	    	fm.beginTransaction()
+	    	.add(R.id.upcomingLayout, upcomingFeed).commit();
+	
+	    	NewsFeedPhoneFragment newsFeed = new NewsFeedPhoneFragment();
+	    	newsFeed.setArguments(args);
+	    	fm.beginTransaction()
+	    	.add(R.id.socialLayout, newsFeed).commit();
+    	}
       }
     }
     
@@ -402,13 +430,13 @@ public class HomeActivity extends SherlockFragmentActivity implements
 	}
 	@Override
 	public void onClick(View v) {
-		if (v.getId() == R.id.mapButton) {
-	    	Database db = SUSEConferences.getDatabase();
-			long venueId = db.getConferenceVenue(mConferenceId);
-			Intent intent = new Intent(HomeActivity.this, VenueMapsActivity.class);
-			intent.putExtra("venueId", venueId);
-			startActivity(intent);
-		}
+//		if (v.getId() == R.id.mapButton) {
+//	    	Database db = SUSEConferences.getDatabase();
+//			long venueId = db.getConferenceVenue(mConferenceId);
+//			Intent intent = new Intent(HomeActivity.this, VenueMapsActivity.class);
+//			intent.putExtra("venueId", venueId);
+//			startActivity(intent);
+//		}
 	}
 
 }

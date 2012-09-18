@@ -3,6 +3,8 @@ package de.suse.conferenceclient.fragments;
 import java.util.List;
 
 import android.os.Bundle;
+import android.util.Log;
+
 import com.actionbarsherlock.app.SherlockListFragment;
 
 import de.suse.conferenceclient.R;
@@ -14,10 +16,16 @@ import de.suse.conferenceclient.models.Event;
 public class WhatsOnFragment extends SherlockListFragment {
 	private long mConferenceId;
 	
-	public WhatsOnFragment() {}
+	public WhatsOnFragment() {
+		Log.d("SUSEConferences", "WhatsOn create");
+	}
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+    	Log.d("SUSEConferences", "onCrearte whatsOnFrag");
+
+		Bundle args = getArguments();
+		this.mConferenceId = args.getLong("conferenceId");
 	}
 	
 	public void setConferenceId(long id) {
@@ -27,6 +35,7 @@ public class WhatsOnFragment extends SherlockListFragment {
     @Override
     public void onStart() {
     	super.onStart();
+    	Log.d("SUSEConferences", "onStart whatsOnFrag");
         loadEvents();
     }
 

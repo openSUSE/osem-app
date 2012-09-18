@@ -1,6 +1,8 @@
 package de.suse.conferenceclient.fragments;
 
 import android.os.Bundle;
+import android.util.Log;
+
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
@@ -18,16 +20,9 @@ public class NewsFeedPhoneFragment extends NewsFeedFragment {
 
 		Bundle args = getArguments();
 		String tag = args.getString("socialTag");
-		
+		Log.d("SUSEConferences", "NewsFeedPhoneFragment searching for " + tag);
 		SocialTask task = new SocialTask();
 		task.execute(tag);
-	}
-	
-	@Override
-	public void onCreateOptionsMenu(Menu menu,  MenuInflater inflater) {
-		super.onCreateOptionsMenu(menu, inflater);
-		menu.add(Menu.NONE, R.id.socialRefreshItem, Menu.NONE, getString(R.string.refresh))
-		 .setIcon(R.drawable.refresh)
-    	 .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+		
 	}
 }

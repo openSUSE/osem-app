@@ -6,8 +6,8 @@
     <string name="title_activity_home">SUSE Conferences</string>
     <string name="title_activity_info">Conference Information</string>
     
-    <string name="mySchedule">My Schedule</string>
-    <string name="fullSchedule">Full Schedule</string>
+    <string name="mySchedule">MY SCHEDULE</string>
+    <string name="fullSchedule">FULL SCHEDULE</string>
     <string name="whatsOn">What\'s On</string>
     <string name="newsFeed">NEWS FEED</string>
     <string name="agendaFor">Agenda for</string>

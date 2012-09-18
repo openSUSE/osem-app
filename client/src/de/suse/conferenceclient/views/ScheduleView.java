@@ -96,6 +96,7 @@ public class ScheduleView extends View {
 	    }
 	}
 	
+
 	private class DisplayItem implements Comparable<DisplayItem> {
 		float mX, mY;
 		String mLabel;
@@ -199,6 +200,8 @@ public class ScheduleView extends View {
 	private List<DisplayItem> mTimeList;
 	private List<DisplayItem> mRoomList;
 	private List<DisplayItem> mEventDisplayList;
+	private List<float[]> mLineList;
+	
 	private NavigableMap<Float, Float> mSnapToXMap;
 	private NavigableMap<Float, Float> mSnapToYMap;
 	private HashMap<String, Event> mEventMap;
@@ -254,7 +257,7 @@ public class ScheduleView extends View {
 		if (mVertical) {
 			mLeftColumnStartX = 30;
 			mLeftColumnStartY = 60;
-			MAGIC_MULTIPLIER = 6;
+			MAGIC_MULTIPLIER = 5;
 			MAGIC_HOUR = 60 * MAGIC_MULTIPLIER;
 		}
 		SUSE_GREEN = getResources().getColor(R.color.light_suse_green);
@@ -288,27 +291,27 @@ public class ScheduleView extends View {
 
 		mHourPainter = new Paint();
 		mHourPainter.setAntiAlias(true);
-		mHourPainter.setTextSize(20);
+		mHourPainter.setTextSize(15);
 		mHourPainter.setTextAlign(Paint.Align.CENTER);
 		mHourPainter.setTypeface(Typeface.DEFAULT_BOLD);
 		mHourPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		
 		mRoomPainter = new Paint();
 		mRoomPainter.setAntiAlias(true);
-		mRoomPainter.setTextSize(20);
+		mRoomPainter.setTextSize(15);
 		mRoomPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		mRoomPainter.setTextAlign(Paint.Align.RIGHT);
 
 		mLabelPainter = new Paint();
 		mLabelPainter.setAntiAlias(true);
-		mLabelPainter.setTextSize(15);
+		mLabelPainter.setTextSize(12);
 		mLabelPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		mLabelPainter.setTypeface(Typeface.DEFAULT_BOLD);
 		mLabelPainter.setTextAlign(Paint.Align.CENTER);
 		
 		mLabelTextPainter = new TextPaint();
 		mLabelTextPainter.setAntiAlias(true);
-		mLabelTextPainter.setTextSize(15);
+		mLabelTextPainter.setTextSize(12);
 		mLabelTextPainter.setTypeface(Typeface.DEFAULT_BOLD);
 		mLabelTextPainter.setColor(getResources().getColor(R.color.dark_suse_green));
 		mLabelTextPainter.setTextAlign(Paint.Align.CENTER);
@@ -316,6 +319,7 @@ public class ScheduleView extends View {
 		mEventMap = new HashMap<String, Event>();
 		mTimeList = new ArrayList<DisplayItem>();
 		mRoomList = new ArrayList<DisplayItem>();
+		mLineList = new ArrayList<float[]>();
 		mTopHeader = new RectF(0,0, getWidth(), mHourHeaderHeight);
 		mLeftBox = new RectF(0,0, mTopRowItemStartX, getHeight());
 		mTopLeftBox = new RectF(0,0, 0,0);
@@ -339,6 +343,7 @@ public class ScheduleView extends View {
 		mEventMap.clear();
 		mTimeList.clear();
 		mRoomList.clear();
+		mLineList.clear();
 		mEventDisplayList.clear();
 		mSnapToXMap.clear();
 		mSnapToYMap.clear();
@@ -346,7 +351,8 @@ public class ScheduleView extends View {
 		mSnapToYMap.put(0.0f, 0.0f);
 		mStartDate = null;
 		mEndDate = null;
-
+		mTranslateX = 0;
+		mTranslateY = 0;
 		if (mVertical) {
 			setVerticalView(eventList, fullSchedule);
 		} else {
@@ -393,6 +399,7 @@ public class ScheduleView extends View {
 			}
 		}
 
+		
 		// Build up the times on the left
 		if (mStartDate != null && mEndDate != null) {
 			Iterator<Date> i = new HourIterator(mStartDate, mEndDate);
@@ -414,7 +421,6 @@ public class ScheduleView extends View {
 	    		DisplayItem newHour = new DisplayItem(hourText);
 	    		newHour.setX(x);
 	    		newHour.setY(y);
-	    		Log.d("SUSEConferences", "Added to SnapY: " + -y);
 	    		newHour.setBox(new RectF(x, y, 50, 50));
 
 	    		mTimeList.add(newHour);
@@ -431,6 +437,10 @@ public class ScheduleView extends View {
 			roomMap.put(room.getLabel(), mTopRowItemStartX);
 			room.setX(mTopRowItemStartX + (boxSize / 2));
 			mTopRowItemStartX = mTopRowItemStartX + boxSize;
+			float[] newLineItem = new float[2];
+			newLineItem[0] = mTopRowItemStartX;
+			newLineItem[1] = room.getY();
+			mLineList.add(newLineItem);
 		}
 		
 		mEndRightEdge = mTopRowItemStartX;
@@ -456,9 +466,9 @@ public class ScheduleView extends View {
 			float boxRx = x + boxSize;
 			float boxRy = y + (length * MAGIC_MULTIPLIER) - 10;
 			Log.d("SUSEConferences", "Adding " + (-x) + "," + (-y) + " for " + event.getTitle());
+			
 			float translateMatchX = -x + mLeftColumnWidth;
 			float translateMatchY = -y + mHourHeaderHeight;
-			
     		mSnapToYMap.put(translateMatchY, translateMatchY);
 			mSnapToXMap.put(translateMatchX, translateMatchX);
 			
@@ -580,7 +590,6 @@ public class ScheduleView extends View {
 			float boxRx = x + (length * MAGIC_MULTIPLIER) - 10;
 			float boxRy = y + EVENT_BOX_HEIGHT;
 			newEvent.setBox(new RectF(boxX, boxY, boxRx, boxRy));
-			
 			newEvent.setTrackColor(Color.parseColor(event.getColor()));
 			if (fullSchedule || event.isInMySchedule() || event.isMetaInformation())
 				mEventDisplayList.add(newEvent);
@@ -646,6 +655,7 @@ public class ScheduleView extends View {
 		// Set the header backgrounds
 		canvas.drawRect(mTopHeader, mHeaderPainter);
 		canvas.drawRect(mLeftBox, mHeaderPainter);
+		
 		canvas.save();
 		canvas.translate(0, mTranslateY);
 		canvas.scale(mScale, mScale);
@@ -653,6 +663,8 @@ public class ScheduleView extends View {
 		for (DisplayItem hourItem : mTimeList) {
 			drawHour(canvas, hourItem);
 		}
+		
+
 		canvas.restore();
 		canvas.save();
 		canvas.translate(mTranslateX, 0);
@@ -661,6 +673,11 @@ public class ScheduleView extends View {
 		for (DisplayItem roomItem : mRoomList) {
 			canvas.drawText(roomItem.getLabel(), roomItem.getX(), roomItem.getY(), mRoomPainter);
 		}
+
+		for (float[] item : mLineList) {
+			canvas.drawLine(item[0], item[1], item[0], mWindowHeight, mHeaderPainter);
+		}
+
 		canvas.restore();
 		canvas.save();
 		// Finally, a cosmetic fix so the hours don't scroll past the time header, and the time
@@ -715,10 +732,10 @@ public class ScheduleView extends View {
 		{
 			if (detector.isInProgress())
 			{
-				Log.d("SUSEConferences", "Scaling...");
-				mScale *= detector.getScaleFactor();
-				mScale = Math.max(0.2f, Math.min(mScale, 1.0f));
-				invalidate();
+//				Log.d("SUSEConferences", "Scaling...");
+//				mScale *= detector.getScaleFactor();
+//				mScale = Math.max(0.2f, Math.min(mScale, 1.0f));
+//				invalidate();
 			}
 			return true;
 		}
@@ -776,17 +793,7 @@ public class ScheduleView extends View {
             mIsMoving = true;
             float transX = mTranslateX - (mStartX - event.getX());
             float transY = mTranslateY - (mStartY - event.getY());
-            
-            if (transX <= mTranslateX) // Moving right
-            	mSnapRight = true;
-            else
-            	mSnapRight = false;
-            
-            if (transY <= mTranslateY)
-            	mSnapBottom = true;
-            else
-            	mSnapBottom = false;
-            
+
             // Keep them from going too far right
             if (transX > -mMaximumScrollWidth)
             	mTranslateX = transX;
@@ -811,42 +818,28 @@ public class ScheduleView extends View {
         case MotionEvent.ACTION_UP:
         	if (mIsMoving) {
         		mIsMoving = false;
-        		Log.d("SUSEConferences", "mStartX: " + mStartX + " mStartY: " + mStartY);
-        		Log.d("SUSEConferences", "mMoveBeginX: " + mMoveBeginX + " mMoveBeginY: " + mMoveBeginY);
         		Float nearX = null;
         		Float nearY = null;
 
         		if ((mStartX - mMoveBeginX) < -60) {
-        			Log.d("SUSEConferences", "Grab lower key for X");
         			nearX = mSnapToXMap.lowerKey(mTranslateX);
         		} else
         			nearX = mSnapToXMap.higherKey(mTranslateX);
         		
         		if ((mStartY - mMoveBeginY) < -60) {
-        			Log.d("SUSEConferences", "Grab lower key for Y");
         			nearY = mSnapToYMap.lowerKey(mTranslateY);
         		} else
         			nearY = mSnapToYMap.higherKey(mTranslateY);
-
-//        		if (mSnapRight)
-//        			nearX = mSnapToXMap.lowerKey(mTranslateX);
-//        		else
-//        			nearX = mSnapToXMap.higherKey(mTranslateX);
-//        		
-//        		Log.d("SUSEConferences", "mSnapBottom: " + mSnapBottom);
-//        		if (mSnapBottom)
-//        			nearY = mSnapToYMap.lowerKey(mTranslateY);
-//        		else
-//        			nearY = mSnapToYMap.higherKey(mTranslateY);
-//
-//        		
+        		
         		if (nearX == null)
         			nearX = 0.0f;
         		if (nearY == null)
         			nearY = 0.0f;
-        		Log.d("SUSEConferences", "translateX: " + mTranslateX + "nearX: " + nearX);
-        		Log.d("SUSEConferences", "translateY: " + mTranslateY + "nearY: " + nearY);
-        		mTranslateX = nearX;
+        		
+        		Log.d("SUSEConferences", "WE have: " + nearX + " vs " + -mMaximumScrollWidth);
+        		if (nearX < (mTranslateX * 2))
+        			mTranslateX = nearX;
+ 
         		mTranslateY = nearY;
         		
         		invalidate();

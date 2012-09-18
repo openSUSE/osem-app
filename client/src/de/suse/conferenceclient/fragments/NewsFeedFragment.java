@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
@@ -39,6 +40,7 @@ public class NewsFeedFragment extends SherlockListFragment {
 	protected class SocialTask extends AsyncTask<String, Void, List<SocialItem>> {
 		@Override
 		protected List<SocialItem> doInBackground(String... params) {
+			Log.d("SUSEConferences", "Fetching social feed");
 			String searchTag = params[0];
 			List<SocialItem> twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
 			twitterItems.addAll(SocialWrapper.getGooglePlusItems(getActivity(), searchTag, mFeedNumber));
