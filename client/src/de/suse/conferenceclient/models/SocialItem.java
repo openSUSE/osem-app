@@ -4,9 +4,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import android.graphics.Bitmap;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
-public class SocialItem implements Comparable<SocialItem> {
+public class SocialItem implements Comparable<SocialItem>, Parcelable {
 	public static final int TWITTER = 0;
 	public static final int GOOGLE = 1;
 	
@@ -98,4 +100,57 @@ public class SocialItem implements Comparable<SocialItem> {
 		Log.d("SUSEConferences", "compareTo: " + mDate + " vs " + another.getDate());
 		return mDate.compareTo(another.getDate());
 	}
+
+    public int describeContents() {
+        return 0;
+    }
+
+    /*
+     * 	private int mType;
+	private String mUserName;
+	private Bitmap mUserImage;
+	private Bitmap mTypeIcon;
+	private String mMessage;
+	private String mDatestamp;
+	private String mLink;
+	private String mTitle;
+	private Date mDate;
+(non-Javadoc)
+     * @see android.os.Parcelable#writeToParcel(android.os.Parcel, int)
+     */
+    public void writeToParcel(Parcel out, int flags) {
+        out.writeInt(this.mType);
+        out.writeString(this.mUserName);
+        out.writeString(this.mMessage);
+        out.writeString(this.mDatestamp);
+        out.writeString(this.mLink);
+        out.writeString(this.mTitle);
+        mUserImage.writeToParcel(out, flags);
+        mTypeIcon.writeToParcel(out, flags);
+        out.writeLong(this.mDate.getTime());
+    }
+
+    public static final Parcelable.Creator<SocialItem> CREATOR
+            = new Parcelable.Creator<SocialItem>() {
+        public SocialItem createFromParcel(Parcel in) {
+            return new SocialItem(in);
+        }
+
+        public SocialItem[] newArray(int size) {
+            return new SocialItem[size];
+        }
+    };
+    
+    private SocialItem(Parcel in) {
+        this.mType = in.readInt();
+        this.mUserName = in.readString();
+        this.mMessage = in.readString();
+        this.mDatestamp = in.readString();
+        this.mLink = in.readString();
+        this.mTitle = in.readString();
+        this.mUserImage = Bitmap.CREATOR.createFromParcel(in);
+        this.mTypeIcon = Bitmap.CREATOR.createFromParcel(in);
+        this.mDate = new Date(in.readLong());
+    }
+
 }

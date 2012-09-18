@@ -1,12 +1,15 @@
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" >
+        android:padding="20dip"
+        android:layout_height="fill_parent"
+        android:background="#ffffff" >
 
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
+            android:paddingRight="5dip"
             android:orientation="vertical" >
 
 				<TextView
@@ -31,6 +34,8 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
+             android:paddingRight="5dip"
+            
             android:orientation="vertical" >
 
 				<TextView
@@ -48,46 +53,26 @@
 			    android:background="@drawable/fragment_box" >
 			</FrameLayout>           	
         </LinearLayout>
-            <RelativeLayout
-                            android:layout_weight="1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" >
+        <RelativeLayout
+        android:id="@+id/newsFeedHorizontalLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" >
 
-				<TextView
-				    android:id="@+id/upcomingTextView"
-				    android:layout_width="wrap_content"
-				    android:layout_height="wrap_content"
-				    android:layout_alignParentLeft="true"
-				    android:layout_alignParentTop="true"
-				    android:text="@string/upcoming"
-				    android:textAppearance="?android:attr/textAppearanceSmall"
-				    android:textColor="@color/dark_suse_green" />
-           	   
-                <FrameLayout
-                    android:id="@+id/upcomingLayout"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/upcomingTextView"
-                    android:background="@drawable/fragment_box" >
-                </FrameLayout>
-                
-				<TextView
-				    android:id="@+id/newsFeedTextView"
-				    android:layout_width="wrap_content"
-				    android:layout_height="wrap_content"
-				    android:layout_below="@+id/upcomingLayout"
-				    android:text="@string/newsFeed"
-				    android:textAppearance="?android:attr/textAppearanceSmall"
-				    android:textColor="@color/dark_suse_green" />
-                
-			<FrameLayout
-			    android:id="@+id/socialLayout"
-			    android:layout_width="fill_parent"
-			    android:layout_height="fill_parent"
-			    android:layout_below="@+id/newsFeedTextView"
-			    android:background="@drawable/fragment_box" >
-			</FrameLayout>
+        <TextView
+            android:id="@+id/newsFeedTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/newsFeed"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/dark_suse_green" />
 
-            </RelativeLayout>
-
-    </LinearLayout>
+        <FrameLayout
+            android:id="@+id/socialLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_below="@+id/newsFeedTextView"
+            android:background="@drawable/fragment_box" >
+        </FrameLayout>
+    </RelativeLayout>
+</LinearLayout>

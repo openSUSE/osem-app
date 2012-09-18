@@ -32,6 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignLeft="@+id/userNameTextView"
+            android:layout_alignRight="@+id/userNameTextView"
             android:layout_below="@+id/userNameTextView"
             android:text="Small Text"
             android:textAppearance="?android:attr/textAppearanceSmall" />
@@ -42,6 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_alignLeft="@+id/messageTextView"
             android:layout_below="@+id/messageTextView"
+            android:layout_toLeftOf="@+id/typeIcon"
             android:text="Small Text"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textStyle="italic" />

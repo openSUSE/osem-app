@@ -21,14 +21,15 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.Html;
 import android.text.format.DateUtils;
+import android.util.Log;
 import de.suse.conferenceclient.Config;
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.models.SocialItem;
 
 public class SocialWrapper {
-	public static List<SocialItem> getTwitterItems(Context context, String tag, int maximum) {
+	public static ArrayList<SocialItem> getTwitterItems(Context context, String tag, int maximum) {
 		String twitterSearch = "http://search.twitter.com/search.json?q=" + tag;
-		List<SocialItem> socialItems = new ArrayList<SocialItem>();
+		ArrayList<SocialItem> socialItems = new ArrayList<SocialItem>();
 		SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 		Bitmap icon = BitmapFactory.decodeResource(context.getResources(),
                 R.drawable.twitter_icon);
@@ -86,9 +87,10 @@ public class SocialWrapper {
 		return socialItems;
 	}
 
-	public static List<SocialItem> getGooglePlusItems(Context context, String tag, int maximum) {
+	public static ArrayList<SocialItem> getGooglePlusItems(Context context, String tag, int maximum) {
 		String twitterSearch = "https://www.googleapis.com/plus/v1/activities?orderBy=recent&query=" + tag + "&key=" + Config.PLUS_KEY;
-		List<SocialItem> socialItems = new ArrayList<SocialItem>();
+		Log.d("SUSEConferences", "Google search: " + twitterSearch);
+		ArrayList<SocialItem> socialItems = new ArrayList<SocialItem>();
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'");
 		formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
 

@@ -23,7 +23,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "year INTEGER, "
 			+ "venue_id INTEGER,"
 			+ "social_tag VARCHAR, "
-			+ "dateRange VARCHAR)";
+			+ "dateRange VARCHAR, "
+			+ "lastUpdated INTEGER DEFAULT 0)";
 	
 	private static final String venueTableCreate = "CREATE TABLE venues (" 
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "

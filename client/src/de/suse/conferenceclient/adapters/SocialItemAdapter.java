@@ -1,5 +1,6 @@
 package de.suse.conferenceclient.adapters;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.suse.conferenceclient.R;
@@ -16,10 +17,10 @@ import android.widget.TextView;
 public class SocialItemAdapter extends ArrayAdapter<SocialItem> {
 	private LayoutInflater mInflater;
 	private int mResource;
-	private List<SocialItem> mItems;
+	private ArrayList<SocialItem> mItems;
 	
 	public SocialItemAdapter(Context context, int textViewResourceId,
-			List<SocialItem> objects) {
+			ArrayList<SocialItem> objects) {
 		super(context, textViewResourceId, objects);
 		this.mInflater = LayoutInflater.from(context);
 		this.mResource = textViewResourceId;

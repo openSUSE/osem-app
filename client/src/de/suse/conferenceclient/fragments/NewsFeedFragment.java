@@ -1,5 +1,6 @@
 package de.suse.conferenceclient.fragments;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,38 +23,58 @@ import de.suse.conferenceclient.app.SocialWrapper;
 import de.suse.conferenceclient.models.SocialItem;
 
 public class NewsFeedFragment extends SherlockListFragment {
-	public String mSearchTag = "";
-	protected int mFeedNumber = 2;
-	
+	private String mSearchTag = "";
+	// In the future, this may be used to present a short list of recent items
+	protected int mFeedNumber = 0;
+	private SocialItemAdapter mAdapter;
+	private ArrayList<SocialItem> mItems;
 	public void NewsFeedFragment() {}
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		if (savedInstanceState != null) {
+			Log.d("SUSEConferences", "bundle is NOT null");
+			this.mSearchTag = savedInstanceState.getString("searchTag");
+			this.mFeedNumber = savedInstanceState.getInt("feedNumber");
+			this.mItems = savedInstanceState.getParcelableArrayList("items");
+			mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, mItems);
+			setListAdapter(mAdapter);
+		} else {
+			Log.d("SUSEConferences", "bundle IS null");
+			Bundle args = getArguments();
+			mSearchTag = args.getString("socialTag");
+			SocialTask task = new SocialTask();
+			task.execute(mSearchTag);
+		}
 	}
 	
-	public void setSearch(String searchTag) {
-		mSearchTag = searchTag;
-		SocialTask task = new SocialTask();
-		task.execute(searchTag);
+	@Override
+	public void onSaveInstanceState(Bundle savedInstanceState) {
+		  super.onSaveInstanceState(savedInstanceState);
+		  savedInstanceState.putString("searchTag", this.mSearchTag);
+		  savedInstanceState.putInt("feedNumber", this.mFeedNumber);
+		  savedInstanceState.putParcelableArrayList("items", mItems);
 	}
 	
-	protected class SocialTask extends AsyncTask<String, Void, List<SocialItem>> {
+	protected class SocialTask extends AsyncTask<String, Void, ArrayList<SocialItem>> {
 		@Override
-		protected List<SocialItem> doInBackground(String... params) {
+		protected ArrayList<SocialItem> doInBackground(String... params) {
 			Log.d("SUSEConferences", "Fetching social feed");
 			String searchTag = params[0];
-			List<SocialItem> twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
+			ArrayList<SocialItem> twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
 			twitterItems.addAll(SocialWrapper.getGooglePlusItems(getActivity(), searchTag, mFeedNumber));
 			Collections.sort(twitterItems, Collections.reverseOrder());
-			if (mFeedNumber > 0)
-				if (twitterItems.size() >= mFeedNumber)
-					return twitterItems.subList(0, mFeedNumber);
+//			if (mFeedNumber > 0)
+//				if (twitterItems.size() >= mFeedNumber)
+//					return (ArrayList<SocialItem>) twitterItems.subList(0, mFeedNumber);
 			return twitterItems;
 		}
 		
-		protected void onPostExecute(List<SocialItem> items) {
-			SocialItemAdapter adapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
-			setListAdapter(adapter);
+		@SuppressWarnings("ucd")
+		protected void onPostExecute(ArrayList<SocialItem> items) {
+			mItems = items;
+			mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
+			setListAdapter(mAdapter);
 		}
 	}
 

@@ -8,19 +8,10 @@
     
     <string name="mySchedule">MY SCHEDULE</string>
     <string name="fullSchedule">FULL SCHEDULE</string>
-    <string name="whatsOn">What\'s On</string>
     <string name="newsFeed">NEWS FEED</string>
-    <string name="agendaFor">Agenda for</string>
-    <string name="myAgendaFor">My Agenda for</string>
     <string name="speakers">SPEAKERS</string>
-    <string name="upcoming">UPCOMING</string>
-    <string name="maps">Maps</string>
-    <string name="afterHours">After Hours</string>
-    <string name="info">Info</string>
-    <string name="venueAndMaps">VENUE AND MAPS</string>
     <string name="twitter">Twitter</string>
     <string name="googlePlus">Google+</string>
-    <string name="planet">Planet OpenSUSE</string>
     <string name="mapsOptionMenuItem">Maps</string>
     <string name="refresh">Refresh</string>
 </resources>

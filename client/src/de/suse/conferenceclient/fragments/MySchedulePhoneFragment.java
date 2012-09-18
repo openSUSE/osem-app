@@ -25,10 +25,6 @@ import de.suse.conferenceclient.app.Database;
 import de.suse.conferenceclient.models.Event;
 
 public class MySchedulePhoneFragment extends SherlockListFragment {
-	public interface OnGetEventsListener {
-		public List<Event> getEvents();
-	}
-	
 	public MySchedulePhoneFragment() { }
 
 	private Database db;

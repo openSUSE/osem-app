@@ -4,4 +4,5 @@
         <item name="socialRefreshItem" type="id"/>
         <item name="aboutItem" type="id"/>
         <item name="settingsItem" type="id"/>
+        <item name="checkForUpdates" type="id"/>
     </resources>

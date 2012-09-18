@@ -78,6 +78,24 @@ public class Database {
 		
 		return newConference;
 	}
+	
+	public long getLastUpdateTime(long conferenceId) {
+		long time = 0;
+		String sql = "SELECT lastUpdated FROM conferences WHERE _id=" + conferenceId;
+		Cursor c = db.rawQuery(sql, null);
+		if (c.moveToFirst()) {
+			time = c.getLong(0);
+		}
+		c.close();
+		return time;
+	}
+	
+	public void setLastUpdateTime(long conferenceId, long time) {
+		String sql = "_id=" + conferenceId;
+		ContentValues values = new ContentValues();
+		values.put("lastUpdated", time);
+		db.update("conferences", values, sql, null);
+	}
 	public long getConferenceVenue(long conferenceId) {
 		long id = -1;
 		String sql = "SELECT venue_id FROM conferences WHERE _id=" + conferenceId;

@@ -21,7 +21,6 @@ import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
 import de.suse.conferenceclient.activities.HomeActivity;
 import de.suse.conferenceclient.activities.ScheduleDetailsActivity;
-import de.suse.conferenceclient.activities.SocialActivity;
 import de.suse.conferenceclient.adapters.PhoneScheduleAdapter;
 import de.suse.conferenceclient.adapters.PhoneScheduleAdapter.ScheduleItem;
 import de.suse.conferenceclient.app.Database;

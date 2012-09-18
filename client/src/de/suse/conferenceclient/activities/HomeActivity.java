@@ -18,49 +18,41 @@ import com.actionbarsherlock.view.MenuItem;
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
 import de.suse.conferenceclient.adapters.TabAdapter;
+import de.suse.conferenceclient.app.AboutDialog;
 import de.suse.conferenceclient.app.Database;
 import de.suse.conferenceclient.app.HTTPWrapper;
 import de.suse.conferenceclient.fragments.MySchedulePhoneFragment;
 import de.suse.conferenceclient.fragments.NewsFeedFragment;
-import de.suse.conferenceclient.fragments.NewsFeedPhoneFragment;
 import de.suse.conferenceclient.fragments.SchedulePhoneFragment;
-import de.suse.conferenceclient.fragments.WhatsOnFragment;
 import de.suse.conferenceclient.models.Conference;
-import de.suse.conferenceclient.models.Venue;
 import de.suse.conferenceclient.tasks.GetConferencesTask;
-import de.suse.conferenceclient.views.WheelView;
 
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Matrix;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
-import android.text.Html;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.ImageView.ScaleType;
-import android.widget.ListView;
+import android.widget.Toast;
 
 public class HomeActivity extends SherlockFragmentActivity implements 
-		GetConferencesTask.ConferenceListListener, WheelView.OnLaunch, OnClickListener {
+		GetConferencesTask.ConferenceListListener {
 
 	private ViewPager mPhonePager;
 	private TabAdapter mTabsAdapter;
 	private NewsFeedFragment mNewsFeedFragment;
-	private WhatsOnFragment mWhatsOnFragment;
 	private long mConferenceId = -1;
 	private ProgressDialog mDialog;
 	private static Matrix mMatrix;
@@ -69,28 +61,47 @@ public class HomeActivity extends SherlockFragmentActivity implements
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         mDialog = null;
         mConferenceId = ((SUSEConferences) getApplicationContext()).getActiveId();
         if (mConferenceId == -1) {
         	Log.d("SUSEConferences", "Conference ID is -1");
-        	loadConferences();
+        	if (!hasInternet()) {
+        		Log.d("SUSEConferences", "Info is null");
+        		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        		builder.setMessage("Please enable internet access and try again.");
+        		builder.setCancelable(false);
+        		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        		           public void onClick(DialogInterface dialog, int id) {
+        		        	   Log.d("SUSEConferences", "Exiting");
+        		               HomeActivity.this.finish();
+        		           }
+        		       });
+        		builder.show();
+        	} else {
+        		loadConferences();
+        	}
         } else {
         	Log.d("SUSEConferences", "Conference ID is NOT -1");
-        	setView();
+        	if (savedInstanceState != null)
+        		setView(false);
+        	else
+        		setView(true);
         }
     }
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-//    	if (!mIsTablet) {
+    	if (hasInternet()) {
     		menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
-    			.setIcon(R.drawable.icon_venue_off)
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-//    	}
+    		.setIcon(R.drawable.icon_venue_off)
+    		.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+    	}
     	
-		menu.add(Menu.NONE, R.id.settingsItem, Menu.NONE, getString(R.string.menu_settings))
-        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+//    	menu.add(Menu.NONE, R.id.checkForUpdates, Menu.NONE, getString(R.string.menu_checkForUpdates))
+//    	.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+//		menu.add(Menu.NONE, R.id.settingsItem, Menu.NONE, getString(R.string.menu_settings))
+//        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		menu.add(Menu.NONE, R.id.aboutItem, Menu.NONE, getString(R.string.menu_about))
         .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 
@@ -105,12 +116,20 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		i.putExtra("venueId", mConferenceId);
     		startActivity(i);
     		return true;
+    	case R.id.aboutItem:
+            AboutDialog about = new AboutDialog(this);
+            about.setTitle("About");
+            about.show();
+            return true;
+//    	case R.id.checkForUpdates:
+//    		checkForUpdates();
+//    		return true;
     	}
     	
     	return super.onOptionsItemSelected(menuItem);
     }
 
-    private void setView() {
+    private void setView(boolean attachFragments) {
     	if (mMatrix == null)
     		mMatrix = new Matrix();
     	if (mDialog != null)
@@ -119,74 +138,63 @@ public class HomeActivity extends SherlockFragmentActivity implements
       Database db = SUSEConferences.getDatabase();
       Conference conference = db.getConference(mConferenceId);
 
-      mPhonePager= (ViewPager) findViewById(R.id.phonePager);
-      if (mPhonePager !=  null) { // Phone layout
-      	ActionBar bar = getSupportActionBar();
-      	bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-      	Bundle args = new Bundle();
-      	args.putLong("conferenceId", this.mConferenceId);
-      	args.putString("socialTag", conference.getSocialTag());
-      	mTabsAdapter = new TabAdapter(this, mPhonePager);
-      	mTabsAdapter.addTab(
-      			bar.newTab().setText(getString(R.string.mySchedule)),
-      			MySchedulePhoneFragment.class, args);
-      	mTabsAdapter.addTab(
-      			bar.newTab().setText(getString(R.string.fullSchedule)),
-      			SchedulePhoneFragment.class, args);
-      	mTabsAdapter.addTab(
-      			bar.newTab().setText(getString(R.string.newsFeed)),
-      			NewsFeedPhoneFragment.class, args);
-      } else { // Tablet layout
-//    	mIsTablet = true;
-//    	TextView t = (TextView) findViewById(R.id.conferenceNameTextView);
-//    	t.setText(conference.getName());
-//    	t = (TextView) findViewById(R.id.locationTextView);
-//    	t.setText(conference.getDateRange());
-//      	FragmentManager fm = getSupportFragmentManager();
-//      	WheelView view = (WheelView) findViewById(R.id.wheelView);
-//      	view.setOnLaunchListener(this);
-//      	mNewsFeedFragment = (NewsFeedFragment) fm.findFragmentById(R.id.newsFeedFragment);
-//      	mNewsFeedFragment.setSearch(conference.getSocialTag());
-//      	
-//      	mWhatsOnFragment = (WhatsOnFragment) fm.findFragmentById(R.id.upcomingFragment);
-//      	mWhatsOnFragment.setConferenceId(mConferenceId);
-//
-//		ImageButton mapButton = (ImageButton) findViewById(R.id.mapButton);
-//		mapButton.setOnClickListener(this);
+      if (attachFragments) {
+    	  mPhonePager= (ViewPager) findViewById(R.id.phonePager);
+    	  if (mPhonePager !=  null) { // Phone layout
+    		  ActionBar bar = getSupportActionBar();
+    		  bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+    		  Bundle args = new Bundle();
+    		  args.putLong("conferenceId", this.mConferenceId);
+    		  args.putString("socialTag", conference.getSocialTag());
+    		  mTabsAdapter = new TabAdapter(this, mPhonePager);
+    		  mTabsAdapter.addTab(
+    				  bar.newTab().setText(getString(R.string.mySchedule)),
+    				  MySchedulePhoneFragment.class, args);
+    		  mTabsAdapter.addTab(
+    				  bar.newTab().setText(getString(R.string.fullSchedule)),
+    				  SchedulePhoneFragment.class, args);
+    		  if (hasInternet())
+    			  mTabsAdapter.addTab(
+    					  bar.newTab().setText(getString(R.string.newsFeed)),
+    					  NewsFeedFragment.class, args);
+    	  } else { // Tablet layout
+    		  FragmentManager fm = getSupportFragmentManager();
+    		  Bundle args = new Bundle();
+    		  args.putLong("conferenceId", this.mConferenceId);
+    		  args.putString("socialTag", conference.getSocialTag());
 
-    	FragmentManager fm = getSupportFragmentManager();
-      	Bundle args = new Bundle();
-      	args.putLong("conferenceId", this.mConferenceId);
-      	args.putString("socialTag", conference.getSocialTag());
+    		  MySchedulePhoneFragment mySched = new MySchedulePhoneFragment();
+    		  mySched.setArguments(args);
+    		  fm.beginTransaction()
+    		  .add(R.id.myScheduleFragmentLayout, mySched).commit();
 
-    	MySchedulePhoneFragment mySched = new MySchedulePhoneFragment();
-      	mySched.setArguments(args);
-    	fm.beginTransaction()
-        .add(R.id.myScheduleFragmentLayout, mySched).commit();
+    		  SchedulePhoneFragment sched = new SchedulePhoneFragment();
+    		  sched.setArguments(args);
+    		  fm.beginTransaction()
+    		  .add(R.id.scheduleFragmentLayout, sched).commit();
 
-    	SchedulePhoneFragment sched = new SchedulePhoneFragment();
-    	sched.setArguments(args);
-    	fm.beginTransaction()
-        .add(R.id.scheduleFragmentLayout, sched).commit();
-
-    	TextView upcoming = (TextView) findViewById(R.id.upcomingTextView);
-    	if (upcoming != null) {
-	    	WhatsOnFragment upcomingFeed = new WhatsOnFragment();
-	    	upcomingFeed.setArguments(args);
-	    	fm.beginTransaction()
-	    	.add(R.id.upcomingLayout, upcomingFeed).commit();
-	
-	    	NewsFeedPhoneFragment newsFeed = new NewsFeedPhoneFragment();
-	    	newsFeed.setArguments(args);
-	    	fm.beginTransaction()
-	    	.add(R.id.socialLayout, newsFeed).commit();
-    	}
+    		  if (hasInternet()) {
+    			  NewsFeedFragment newsFeed = new NewsFeedFragment();
+    			  newsFeed.setArguments(args);
+    			  fm.beginTransaction().add(R.id.socialLayout, newsFeed).commit();
+    		  }
+    	  }
+      }
+      
+      if (!hasInternet()) {
+    	  RelativeLayout horizontal = (RelativeLayout) findViewById(R.id.newsFeedHorizontalLayout);
+    	  if (horizontal != null)
+    		  horizontal.setVisibility(View.GONE);
+    	  FrameLayout socialLayout = (FrameLayout) findViewById(R.id.socialLayout);
+    	  socialLayout.setVisibility(View.GONE);
+    	  TextView labelView = (TextView) findViewById(R.id.newsFeedTextView);
+    	  labelView.setVisibility(View.GONE);
       }
     }
-    
-    private void loadConferences() {
-    	 mDialog = ProgressDialog.show(HomeActivity.this, "", 
-                "Loading. Please wait...", true);
+
+    private void loadConferences() {    	
+    	mDialog = ProgressDialog.show(HomeActivity.this, "", 
+    			"Loading. Please wait...", true);
     	GetConferencesTask task = new GetConferencesTask("http://incoherent.de/suseconferenceapp", this);
     	task.execute();
     }
@@ -219,10 +227,99 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		SUSEConferences app = ((SUSEConferences) getApplicationContext());
     		app.setActiveId(mConferenceId);
     		if (id != -1)
-    			setView();
+    			setView(true);
     	}
     }
 
+//    private void checkForUpdates() {
+//    	if (!hasInternet()) {
+//    		Toast.makeText(this, "You don't have internet access!", 3).show();
+//    		return;
+//    	}
+//    }
+    private boolean hasInternet() {
+    	boolean ret = true;
+    	ConnectivityManager manager =  (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+    	NetworkInfo info = manager.getActiveNetworkInfo();
+    	if (info == null || !info.isConnected())
+    		ret = false;
+    		
+    	return ret;
+    }
+    
+    /*
+     * Check the server for schedule updates
+     */
+//    private class ScheduleUpdatesTask extends AsyncTask<Void, Void, Integer> {
+//    	private Conference mConference;
+//    	private Database mDb;
+//    	
+//    	public ScheduleUpdatesTask(Conference conference) {
+//    		this.mConference = conference;
+//    		this.mDb = SUSEConferences.getDatabase();
+//    	}
+//    	
+//    	private void handleAdd(JSONObject object) throws JSONException {
+//    		
+//    	}
+//
+//    	private void handleEdit(JSONObject object) throws JSONException {
+//    		String room = null;
+//    		String guid = object.getString("guid");
+//    		if (object.has("room"))
+//    			room = object.getString("room");
+//    			
+//    	}
+//    	
+//    	private void handleDelete(JSONObject object) throws JSONException {
+//    		
+//    	}
+//
+//    	@Override
+//    	protected Integer doInBackground(Void... params) {
+//    		String url = mConference.getUrl();
+//    		String updatesUrl = url + "/updates.json";
+//    		long lastUpdateTime = mDb.getLastUpdateTime(mConference.getSqlId());
+//    		long newUpdateTime = lastUpdateTime;
+//    		try {
+//				JSONObject updateReply = HTTPWrapper.get(updatesUrl);
+//				if (updateReply == null)
+//					return 0;
+//				JSONArray updateArray = updateReply.getJSONArray("updates");
+//				int len = updateArray.length();
+//				for (int i = 0; i < len; i++) {
+//					JSONObject update = updateArray.getJSONObject(i);
+//					long time = update.getLong("timestamp");
+//					if (time > lastUpdateTime) {
+//						newUpdateTime = time;
+//						String type = update.getString("type");
+//						if (type.equals("edit"))
+//							handleEdit(update);
+//						
+//					}
+//				}
+//				
+//				mDb.setLastUpdateTime(mConference.getSqlId(), newUpdateTime);
+//			} catch (IllegalStateException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (SocketException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (UnsupportedEncodingException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			} catch (JSONException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//    		
+//    		return 0;
+//    	}
+//    }
     /*
      * Downloads all of the data about a conference and stores it
      * in SQLite.
@@ -405,38 +502,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		SUSEConferences app = ((SUSEConferences) getApplicationContext());
     		app.setActiveId(v.longValue());
 
-        	setView();
+        	setView(true);
     	}
-
     }
-
-	@Override
-	public void launchActivity(int activity) {
-		if (activity == WheelView.ACTIVITY_SCHEDULE) {
-			Intent intent = new Intent(HomeActivity.this, ScheduleActivity.class);
-			intent.putExtra("conferenceId", mConferenceId);
-			intent.putExtra("type", ScheduleActivity.FULL_SCHEDULE);
-			startActivity(intent);
-		} else if (activity == WheelView.ACTIVITY_MYSCHEDULE) {
-			Intent intent = new Intent(HomeActivity.this, ScheduleActivity.class);
-			intent.putExtra("conferenceId", mConferenceId);
-			intent.putExtra("type", ScheduleActivity.MY_SCHEDULE);
-			startActivity(intent);
-		} else if (activity == WheelView.ACTIVITY_SOCIAL) {
-			Intent intent = new Intent(HomeActivity.this, SocialActivity.class);
-			intent.putExtra("conferenceId", mConferenceId);
-			startActivity(intent);
-		}
-	}
-	@Override
-	public void onClick(View v) {
-//		if (v.getId() == R.id.mapButton) {
-//	    	Database db = SUSEConferences.getDatabase();
-//			long venueId = db.getConferenceVenue(mConferenceId);
-//			Intent intent = new Intent(HomeActivity.this, VenueMapsActivity.class);
-//			intent.putExtra("venueId", venueId);
-//			startActivity(intent);
-//		}
-	}
-
 }
