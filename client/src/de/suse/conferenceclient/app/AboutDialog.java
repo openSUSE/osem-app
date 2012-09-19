@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.text.Html;
+import android.text.util.Linkify;
 import android.widget.TextView;
 
 /**
@@ -36,7 +37,8 @@ public class AboutDialog extends Dialog {
             version.setText(versionName);
             TextView homePage = (TextView) findViewById(R.id.homePageLink);
             homePage.setLinksClickable(true);
-            homePage.setText(Html.fromHtml("<a href=https://github.com/mbarringer/suseconferenceclient>Home Page</a>"));
+            homePage.setText("https://github.com/mbarringer/suseconferenceclient");
+            Linkify.addLinks(homePage, Linkify.WEB_URLS);
     }
 
 }

@@ -17,11 +17,13 @@ import de.suse.conferenceclient.models.Event;
 import de.suse.conferenceclient.models.Speaker;
 import de.suse.conferenceclient.models.Venue;
 import de.suse.conferenceclient.models.Venue.MapPoint;
+import de.suse.conferenceclient.models.Venue.MapPolygon;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 import android.util.Log;
 
 /**
@@ -54,8 +56,10 @@ public class Database {
 		helper.close();
 	}
 	
+	public void clearDatabase() {
+		helper.clearDatabase(db);
+	}
 	public void setConferenceVenue(long venueId, long conferenceId) {
-		Log.d("SUSEConferences", "Setting venue_id to " + venueId + " where conference is " + conferenceId);
 		ContentValues values = new ContentValues();
 		values.put("venue_id", venueId);
 		db.update("conferences", values, "_id = " + conferenceId, null);		
@@ -111,11 +115,15 @@ public class Database {
 		Venue venue = null;
 		String sql = "SELECT name, address, info_text FROM venues WHERE _id=" + venueId;
 		String pointSql = "SELECT type, lat, lon, name, address, description FROM points WHERE venue_id=" + venueId;
+		String polygonSql = "SELECT name, label, lineColor, fillColor, pointList FROM mapPolygons WHERE venue_id=" + venueId;
 		Cursor c = db.rawQuery(sql, null);
 		if (c.moveToFirst()) {
 			venue = new Venue(c.getString(0), c.getString(1), c.getString(2));
 		}
 		c.close();
+		
+		if (venue == null)
+			return null;
 		
 		c = db.rawQuery(pointSql, null);
 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
@@ -131,11 +139,36 @@ public class Database {
 				type = MapPoint.TYPE_DRINK;
 			else if (typeStr.equals("electronics"))
 				type = MapPoint.TYPE_ELECTRONICS;
+			if (typeStr.equals("party"))
+				type = MapPoint.TYPE_PARTY;
+			
 			MapPoint newPoint = venue.new MapPoint(type, lat, lon);
 			newPoint.setName(c.getString(3));
 			newPoint.setAddress(c.getString(4));
 			newPoint.setDescription(c.getString(5));			
 			venue.addPoint(newPoint);
+		}
+		c.close();
+		
+		c = db.rawQuery(polygonSql, null);
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			String name = c.getString(0);
+			String label = c.getString(1);
+			int lineColor = c.getInt(2);
+			int fillColor = c.getInt(3);
+			String points = c.getString(4);
+			
+			MapPolygon newPolygon = venue.new MapPolygon(name, label, lineColor, fillColor);
+			String[] splitStr = TextUtils.split(points, ";");
+			for (int i = 0; i < splitStr.length; i++) {
+				String[] coOrds = TextUtils.split(splitStr[i], ",");
+				int lon = getLatLon(coOrds[0]);
+				int lat = getLatLon(coOrds[1]);
+
+				MapPoint newMapPoint = venue.new MapPoint(MapPoint.TYPE_NONE, lat, lon); 
+				newPolygon.addPoint(newMapPoint);
+			}
+			venue.addPolygon(newPolygon);
 		}
 		return venue;
 	}
@@ -147,7 +180,6 @@ public class Database {
 	}
 	
 	public void toggleEventInMySchedule(long eventId, int val) {
-		Log.d("SUSEConferences", "Toggling " + eventId + " in My Schedule");
 		String sql = "_id=" + eventId;
 		ContentValues values = new ContentValues();
 		values.put("my_schedule", val);
@@ -207,6 +239,16 @@ public class Database {
 		db.insert("points", null, values);
 	}
 	
+	public void insertVenuePolygon(long venueId, String name, String label, int lineColor, int fillColor, String pointList) {
+		ContentValues values = new ContentValues();
+		values.put("venue_id", venueId);
+		values.put("name", name);
+		values.put("label", label);
+		values.put("lineColor", lineColor);
+		values.put("fillColor", fillColor);
+		values.put("pointList", pointList);
+		db.insert("mapPolygons", null, values);
+	}
 	public long insertRoom(String guid, String name, String description, long venueId) {
 		ContentValues values = new ContentValues();
 		values.put("guid", guid);
@@ -249,7 +291,6 @@ public class Database {
 							String title,
 							String abs,
 							String urlList) {
-		Log.d("SUSEConferences", "Inserting event: " + abs);
 		ContentValues values = new ContentValues();
 		values.put("guid", guid);
 		values.put("conference_id", conferenceId);
@@ -314,7 +355,6 @@ public class Database {
 
 		List<Event> eventList = new ArrayList<Event>();		
 		Cursor c = db.rawQuery(sql, null);
-	    Log.d("SUSEConferences", "doEventsQuery:  " + sql);
 
 		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
 			Event newEvent = new Event();
@@ -330,7 +370,6 @@ public class Database {
 			    TimeZone tz = TimeZone.getTimeZone("GMT"+tzOffset);
 			    newEvent.setTimeZone(tz);
 			    newEvent.setDate(date);
-
 			    GregorianCalendar cal = new GregorianCalendar();
 			    cal.setTime(date);
 			    cal.setTimeZone(tz);
@@ -368,7 +407,6 @@ public class Database {
 		        d.close();
 		        eventList.add(newEvent);
 			} catch (ParseException e) {  
-			    // TODO Auto-generated catch block  
 			    e.printStackTrace();  
 			}
 		}

@@ -13,8 +13,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class AlarmReceiver extends BroadcastReceiver {
- // TODO launch the event details activity on click
-	// TODO verify that the event times are correctly set to UTC
+	// TODO launch the event details activity on click
 	@SuppressWarnings({"deprecation" })
 	@Override
 	public void onReceive(Context context, Intent intent) {

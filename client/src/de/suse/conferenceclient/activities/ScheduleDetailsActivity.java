@@ -26,6 +26,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.actionbarsherlock.app.SherlockActivity;
@@ -70,6 +71,19 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 			mTrackView.setText(savedInstanceState.getString("track"));
 		} else {
 			setEvent(mEvent);
+		}
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		// Since we launch a Calendar intent when the user clicks the calendar button,
+		// check if they cancelled the calendar addition
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			if (findEventId() >= 0)
+				mCalendarButton.setChecked(true);
+			else
+				mCalendarButton.setChecked(false);
 		}
 	}
 
@@ -130,7 +144,7 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 			}
 		}
 		// Check if this event is in the calendar
-		if (android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			if (findEventId() >= 0)
 				mCalendarButton.setChecked(true);
 		} else {
@@ -145,6 +159,7 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 
 	}
 
+	// Suppress lint checks because of the ICS+ calls in the if block
 	@SuppressLint({ "NewApi", "NewApi" })
 	@Override
 	public void onClick(View v) {
@@ -152,29 +167,33 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 
 		if (v.getId() == R.id.favoriteButton) {
 			Log.d("SUSEConferences", "Toggling " + mEvent.getSqlId());
-			if (button.isChecked())
+			if (button.isChecked()) {
 				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 1);
-			else
+				Toast.makeText(this, "Added to My Schedule", 3).show();
+			} else {
 				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 0);
+				Toast.makeText(this, "Removed from My Schedule", 3).show();
+			}
 		} else {
 			// Before ICS, there was no reliable way to add events
 			// to the user's calendar.  So if this runs on API 14+,
 			// we'll use the built in.  If not, we'll add it to
 			// their Google Calendar.
-			if (android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			if (android.os.Build.VERSION.SDK_INT >=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 				if (button.isChecked()) {
 					Intent intent = new Intent(Intent.ACTION_INSERT);
 					intent.setType("vnd.android.cursor.item/event");
 					intent.putExtra(Events.TITLE, mEvent.getTitle());
 					intent.putExtra(Events.EVENT_LOCATION, mEvent.getRoomName());
-					intent.putExtra(Events.EVENT_TIMEZONE, mEvent.getTimeZone());
+					intent.putExtra(CalendarContract.Events.EVENT_TIMEZONE, mEvent.getTimeZone().getDisplayName());
 					intent.putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, mEvent.getDate().getTime());
 					intent.putExtra(CalendarContract.EXTRA_EVENT_END_TIME, mEvent.getEndDate().getTime());
 					intent.setData(CalendarContract.Events.CONTENT_URI);
 					startActivity(intent); 
 				} else {
 					long id = findEventId();
-					removeEvent(id);
+					if (id >= 0)
+						removeEvent(id);
 				}
 			} else {
 				AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -184,8 +203,10 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 				if (button.isChecked()) {
 					// Add an alarm to notify the user 5 minutes before the talk
 					manager.set(AlarmManager.RTC_WAKEUP, mEvent.getDate().getTime() - 300000 , pendingIntent);
+					Toast.makeText(this, "Alert set", 3).show();
 				} else {
 					manager.cancel(pendingIntent);
+					Toast.makeText(this, "Alert canceled", 3).show();
 				}
 			}
 		}

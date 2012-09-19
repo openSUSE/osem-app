@@ -42,6 +42,7 @@
             android:paddingLeft="15dip"
             android:paddingBottom="10dip"
             android:paddingRight="10dip"
+            android:paddingTop="5dip"
             android:text="Medium Text"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 

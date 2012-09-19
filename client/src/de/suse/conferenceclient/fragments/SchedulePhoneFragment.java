@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -19,7 +18,6 @@ import com.actionbarsherlock.app.SherlockListFragment;
 
 import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
-import de.suse.conferenceclient.activities.HomeActivity;
 import de.suse.conferenceclient.activities.ScheduleDetailsActivity;
 import de.suse.conferenceclient.adapters.PhoneScheduleAdapter;
 import de.suse.conferenceclient.adapters.PhoneScheduleAdapter.ScheduleItem;
@@ -37,19 +35,24 @@ public class SchedulePhoneFragment extends SherlockListFragment {
     private long mConferenceId;
     private List<Event> mEventList;
     private DateFormat mHeaderFormatter;
-
+    private int mScrollIndex = -1;
+    
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mHeaderFormatter = DateFormat.getDateInstance(DateFormat.LONG);
 		
 		Bundle args = getArguments();
 		this.mConferenceId = args.getLong("conferenceId");
-		this.db = SUSEConferences.getDatabase();
+		this.db = SUSEConferences.getDatabase();		
+	}
+
+	public List<ScheduleItem> getScheduleItems() {
 		this.mEventList = db.getScheduleTitles(mConferenceId);
+
 		List<ScheduleItem> items = new ArrayList<ScheduleItem>();
 		Collections.sort(mEventList);
-		
 		if (mEventList.size() > 0) {
+			Date now = new Date();
 			ScheduleItem newItem = new ScheduleItem(buildHeaderText(mEventList.get(0)));
 			items.add(newItem);
 			Event previousEvent = null;
@@ -60,30 +63,50 @@ public class SchedulePhoneFragment extends SherlockListFragment {
 						items.add(newHeader);
 					}
 				}
+				
 				previousEvent = event;
 				ScheduleItem newEvent = new ScheduleItem(event, false);
 				items.add(newEvent);
+				if (mScrollIndex == -1 && (event.getDate().after(now) || eventWithinRange(now, event))) {
+					Log.d("SUSEConferences", "Nearest date match: " + event.getTitle());
+					mScrollIndex = items.size() - 1;
+				}
 			}
 		}
-		
-		PhoneScheduleAdapter adapter = new PhoneScheduleAdapter(getActivity(),
-																true,
-																R.layout.schedule_list_item,
-																getResources().getColor(R.color.dark_suse_green),
-																getResources().getColor(R.color.suse_grey),
-																items);
-		setListAdapter(adapter);
-	}
 
+		return items;
+	}
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		getListView().setDrawSelectorOnTop(true);
+		// See if we are in the middle of the conference, and scroll to the upcoming
+		// talk.  Set it to > 1 so we show from the top in the case where the user is viewing
+		// the schedule before the conference starts
+		if (mScrollIndex > 1)
+			getListView().setSelection(mScrollIndex);
 	}
 	
+	public void onResume() {
+		super.onResume();
+		PhoneScheduleAdapter adapter = new PhoneScheduleAdapter(getActivity(),
+				true,
+				R.layout.schedule_list_item,
+				getResources().getColor(R.color.dark_suse_green),
+				getResources().getColor(R.color.suse_grey),
+				getScheduleItems());
+		setListAdapter(adapter);
+	}
+
+
 	private String buildHeaderText(Event event) {
 		return mHeaderFormatter.format(event.getDate());
 	}
 	
+	private boolean eventWithinRange(Date now, Event event) {
+		Date start = event.getDate();
+		Date end = event.getEndDate();
+		return !(now.before(start) || now.after(end));
+	}
 	private boolean sameDay(Date day1, Date day2, TimeZone tz1, TimeZone tz2) {
 		Calendar cal1 = Calendar.getInstance();
 		cal1.setTimeZone(tz1);

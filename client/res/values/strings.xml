@@ -5,7 +5,7 @@
     <string name="menu_about">About</string>
     <string name="title_activity_home">SUSE Conferences</string>
     <string name="title_activity_info">Conference Information</string>
-    
+    <string name="title_activity_map">Map</string>
     <string name="mySchedule">MY SCHEDULE</string>
     <string name="fullSchedule">FULL SCHEDULE</string>
     <string name="newsFeed">NEWS FEED</string>

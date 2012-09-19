@@ -5,7 +5,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
+import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,26 +39,23 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Matrix;
+import android.graphics.Color;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 public class HomeActivity extends SherlockFragmentActivity implements 
 		GetConferencesTask.ConferenceListListener {
 
 	private ViewPager mPhonePager;
 	private TabAdapter mTabsAdapter;
-	private NewsFeedFragment mNewsFeedFragment;
 	private long mConferenceId = -1;
 	private ProgressDialog mDialog;
-	private static Matrix mMatrix;
-	private boolean mIsTablet = false;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -130,14 +129,12 @@ public class HomeActivity extends SherlockFragmentActivity implements
     }
 
     private void setView(boolean attachFragments) {
-    	if (mMatrix == null)
-    		mMatrix = new Matrix();
     	if (mDialog != null)
         	mDialog.dismiss();
       setContentView(R.layout.activity_home);
       Database db = SUSEConferences.getDatabase();
       Conference conference = db.getConference(mConferenceId);
-
+      getSupportActionBar().setTitle(conference.getName());
       if (attachFragments) {
     	  mPhonePager= (ViewPager) findViewById(R.id.phonePager);
     	  if (mPhonePager !=  null) { // Phone layout
@@ -327,6 +324,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     private class CacheConferenceTask extends AsyncTask<Void, Void, Long> {    	
     	private Conference mConference;
     	private Database db;
+    	private String mErrorMessage = "";
     	
     	public CacheConferenceTask(Conference conference) {
     		this.mConference = conference;
@@ -341,13 +339,13 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		String speakersUrl = url + "/speakers.json";
     		String tracksUrl = url + "/tracks.json";
     		String venueUrl = url + "/venue.json";
+    		Long returnVal = null;
     		HashMap<String, Long> roomMap = new HashMap<String, Long>();
     		HashMap<String, Long> trackMap = new HashMap<String, Long>();
     		HashMap<String, Long> speakerMap = new HashMap<String, Long>();
     		
     		try {
 				Log.d("SUSEConferences", "Venues: " + venueUrl);
-
     			JSONObject venueReply = HTTPWrapper.get(venueUrl);
     			JSONObject venue = venueReply.getJSONObject("venue");
     			String infoUrl = url + "/" + venue.getString("info_text");
@@ -376,10 +374,36 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				} 
     				db.insertVenuePoint(venueId, lat, lon, type, name, addr, desc);
     			}
+    			
+    			if (venue.has("map_polygons")) {
+	    			JSONArray polygons = venue.getJSONArray("map_polygons");
+	    			int polygonLen = polygons.length();
+	    			for (int j = 0; j < polygonLen; j++) {
+	    				JSONObject polygon = polygons.getJSONObject(j);
+	    				String name = polygon.getString("name");
+	    				String label = polygon.getString("label");
+	    				String lineColorStr = polygon.getString("line_color");
+	    				String fillColorStr = "#00000000";
+	    				if (polygon.has("fill_color"))
+	    					fillColorStr = polygon.getString("fill_color");
+	    				
+	    				List<String> stringList = new ArrayList<String>();
+	    				JSONArray points = polygon.getJSONArray("points");
+	    				int pointsLen = points.length();
+	    				for (int k = 0; k < pointsLen; k++) {
+	    					String newPoint = points.getString(k);
+	    					stringList.add(newPoint);
+	    				}
+	    				String joined = TextUtils.join(";", stringList);	    				
+	    				int lineColor = Color.parseColor(lineColorStr);
+	    				int fillColor = Color.parseColor(fillColorStr);
+	    				db.insertVenuePolygon(venueId, name, label, lineColor, fillColor, joined);
+	    			}
+    			}
+    			
     			db.setConferenceVenue(venueId, mConferenceId);
     			
 				Log.d("SUSEConferences", "Rooms");
-
     			JSONObject roomsReply = HTTPWrapper.get(roomsUrl);
     			JSONArray rooms = roomsReply.getJSONArray("rooms");
     			int roomsLen = rooms.length();
@@ -407,7 +431,6 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				trackMap.put(guid, trackId);
     			}
 				Log.d("SUSEConferences", "Speakers");
-
     			JSONObject speakersReply = HTTPWrapper.get(speakersUrl);
     			JSONArray speakers = speakersReply.getJSONArray("speakers");
     			int speakersLen = speakers.length();
@@ -423,7 +446,6 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			}
 
 				Log.d("SUSEConferences", "Events");
-
     			JSONObject eventsReply = HTTPWrapper.get(eventsUrl);
     			JSONArray events = eventsReply.getJSONArray("events");
     			int eventsLen = events.length();
@@ -433,11 +455,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				String track = event.getString("track");
     				Long trackId = trackMap.get(track);
     				Long roomId = roomMap.get(event.getString("room"));
-
-    				Log.d("SUSEConferences", "Track: " + track + ":" + trackId);
     				if (track.equals("meta")) {
-    					Log.d("SUSEConferences", "Found a meta track");
-    					
     					// The "meta" track is used to insert information
     					// into the schedule that automatically appears on "my schedule",
     					// and also isn't clickable.
@@ -475,34 +493,65 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				}
     			}
     		} catch (IllegalStateException e) {
-    			// TODO Auto-generated catch block
     			e.printStackTrace();
+    			mErrorMessage = e.getLocalizedMessage();
+    			returnVal = Long.valueOf(-1);
     		} catch (SocketException e) {
-    			// TODO Auto-generated catch block
     			e.printStackTrace();
+    			mErrorMessage = e.getLocalizedMessage();
+    			returnVal = Long.valueOf(-1);
     		} catch (UnsupportedEncodingException e) {
-    			// TODO Auto-generated catch block
     			e.printStackTrace();
+    			mErrorMessage = e.getLocalizedMessage();
+    			returnVal = Long.valueOf(-1);
     		} catch (IOException e) {
-    			// TODO Auto-generated catch block
     			e.printStackTrace();
+    			mErrorMessage = e.getLocalizedMessage();
+    			returnVal = Long.valueOf(-1);
     		} catch (JSONException e) {
-    			// TODO Auto-generated catch block
     			e.printStackTrace();
-    		}
-    		return mConference.getSqlId();
+    			mErrorMessage = e.getLocalizedMessage();
+    			returnVal = Long.valueOf(-1);
+    		} 
+    		
+    		if (returnVal == null)
+    			returnVal = mConference.getSqlId();
+    		return returnVal;
     	}
 
-    	protected void onPostExecute(Long v) {
-    		SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
-    		SharedPreferences.Editor editor = settings.edit();
-    		editor.putLong("active_conference", v.longValue());
-    		editor.commit();
+    	// TODO Don't destroy the database once more than one conference is available
+    	protected void onPostExecute(Long id) {
+    		if (id == -1) {
+    			Log.d("SUSEConferences", "Error!");
+    			db.clearDatabase();
+    	    	if (mDialog != null)
+    	        	mDialog.dismiss();
 
-    		SUSEConferences app = ((SUSEConferences) getApplicationContext());
-    		app.setActiveId(v.longValue());
+	    		SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
+	    		SharedPreferences.Editor editor = settings.edit();
+	    		editor.putLong("active_conference", -1);
+	    		editor.commit();
 
-        	setView(true);
+        		AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
+        		builder.setMessage(mErrorMessage);
+        		builder.setCancelable(false);
+        		builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        		           public void onClick(DialogInterface dialog, int id) {
+        		               HomeActivity.this.finish();
+        		           }
+        		       });
+        		builder.show();
+    		} else {
+	    		SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
+	    		SharedPreferences.Editor editor = settings.edit();
+	    		editor.putLong("active_conference", id.longValue());
+	    		editor.commit();
+	
+	    		SUSEConferences app = ((SUSEConferences) getApplicationContext());
+	    		app.setActiveId(id.longValue());
+	
+	        	setView(true);
+    		}
     	}
     }
 }

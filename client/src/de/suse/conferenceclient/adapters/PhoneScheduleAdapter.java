@@ -1,7 +1,7 @@
 package de.suse.conferenceclient.adapters;
 
 import java.util.Calendar;
-import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import de.suse.conferenceclient.R;
@@ -13,7 +13,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.TextUtils.TruncateAt;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -90,6 +89,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 	private List<ScheduleItem> mItems;
     private java.text.DateFormat mTimeFormatter;
     private Boolean mFullSchedule = true;
+    private int mSUSEGreen;
 	public PhoneScheduleAdapter(Context context, boolean fullSchedule, int resource, int headerTextColor, int headerBackColor, List<ScheduleItem> itemList) {
 		super(context, resource, itemList);
 		this.mItems = itemList;
@@ -100,6 +100,7 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 		this.mHeaderTextColor = headerTextColor;
 		this.mHeaderBackColor = headerBackColor;
 		this.mTimeFormatter = DateFormat.getTimeFormat(context);
+		this.mSUSEGreen = context.getResources().getColor(R.color.dark_suse_green);
 	}
 	
 	@Override
@@ -110,9 +111,18 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
 	public void setList(List<ScheduleItem> list) {
 		mItems = list;
 	}
+	
+	private boolean eventWithinRange(Date now, Event event) {
+		Date start = event.getDate();
+		Date end = event.getEndDate();
+		return !(now.before(start) || now.after(end));
+	}
+
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
         View root;
+        int scheduleHour =0;
+        
         ScheduleItem item = mItems.get(position);
         Event event = item.getEvent();
         if (convertView == null) {
@@ -120,7 +130,8 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
         } else {
             root = convertView;
         }
-
+        
+        Date now = new Date();
         ImageView favoriteView = (ImageView) root.findViewById(R.id.eventFavorited);
         TextView titleText = (TextView) root.findViewById(R.id.titleTextView);
         TextView speakerText = (TextView) root.findViewById(R.id.speakerPhoneTextView);
@@ -150,10 +161,18 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
         	roomText.setVisibility(View.GONE);
         	timeLayout.setVisibility(View.VISIBLE);
         	timeText.setVisibility(View.VISIBLE);
-    		timeText.setTextColor(Color.BLACK);
+        	if (eventWithinRange(now, event))
+        		timeText.setTextColor(this.mSUSEGreen);
+        	else
+        		timeText.setTextColor(Color.BLACK);
         	mTimeFormatter.setTimeZone(event.getTimeZone());
         	String time = mTimeFormatter.format(event.getDate());
-        	if (!DateFormat.is24HourFormat(mContext) && mTimeFormatter.getCalendar().get(Calendar.HOUR) < 10)
+        	
+        	// While this means that the user's time locale preferences aren't
+        	// *strictly* respected, it's necessary to make all of the hours two digits
+        	// to maintain the column width
+        	scheduleHour = mTimeFormatter.getCalendar().get(Calendar.HOUR);
+        	if (!DateFormat.is24HourFormat(mContext) &&  scheduleHour < 10 && scheduleHour > 0)
         		time = "0" + time;
         	timeText.setText(time);
         } else {
@@ -165,14 +184,20 @@ public class PhoneScheduleAdapter extends ArrayAdapter<PhoneScheduleAdapter.Sche
         	
         	timeLayout.setVisibility(View.VISIBLE);
         	timeText.setVisibility(View.VISIBLE);
-        	if (item.conflicts()) {
-        		timeText.setTextColor(Color.RED);
+        	if (eventWithinRange(now, event)) {
+        		timeText.setTextColor(this.mSUSEGreen);
         	} else {
-        		timeText.setTextColor(Color.BLACK);
+	        	if (item.conflicts()) {
+	        		timeText.setTextColor(Color.RED);
+	        	} else {
+	        		timeText.setTextColor(Color.BLACK);
+	        	}
         	}
+
         	mTimeFormatter.setTimeZone(event.getTimeZone());
         	String time = mTimeFormatter.format(event.getDate());
-        	if (!DateFormat.is24HourFormat(mContext) && mTimeFormatter.getCalendar().get(Calendar.HOUR) < 10)
+        	scheduleHour = mTimeFormatter.getCalendar().get(Calendar.HOUR);
+        	if (!DateFormat.is24HourFormat(mContext) &&  scheduleHour < 10 && scheduleHour > 0)
         		time = "0" + time;
         	timeText.setText(time);
         	titleText.setTypeface(null, Typeface.NORMAL);

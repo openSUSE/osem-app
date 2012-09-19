@@ -16,6 +16,8 @@ public class Venue {
 		public static final int TYPE_FOOD = 1;
 		public static final int TYPE_DRINK = 2;
 		public static final int TYPE_ELECTRONICS = 3;
+		public static final int TYPE_PARTY = 4;
+		public static final int TYPE_NONE = 5;
 		
 		private int mType;
 		private String mName;
@@ -77,19 +79,63 @@ public class Venue {
 		public void setLon(int lon) {
 			mLon = lon;
 		}
+	}
+	
+	public class MapPolygon {
+		private List<MapPoint> mPoints;
+		private String mName = "";
+		private String mLabel = "";
+		private int mLineColor, mFillColor;
 		
+		public MapPolygon(String name, String label, int lineColor) {
+			this(name, label, lineColor, -1);
+		}
 		
+		public MapPolygon(String name, String label, int lineColor, int fillColor) {
+			mPoints = new ArrayList<MapPoint>();
+			this.mName = name;
+			this.mLabel = label;
+			this.mLineColor = lineColor;
+			this.mFillColor = fillColor;
+		}
+		
+		public void addPoint(MapPoint point) {
+			mPoints.add(point);
+		}
+		
+		public List<MapPoint> getPoints() {
+			return mPoints;
+		}
+		
+		public int getLineColor() {
+			return mLineColor;
+		}
+		
+		public int getFillColor() {
+			return mFillColor;
+		}
+		
+		public String getName() {
+			return mName;
+		}
+		
+		public String getLabel() {
+			return mLabel;
+		}
 	}
 	private String mName;
 	private String mAddress;
 	private String mInfo;
 	private List<MapPoint> mPoints;
-	
+	private List<MapPolygon> mPolygons;
+
+
 	public Venue(String name, String address, String info) {
 		this.mName = name;
 		this.mAddress = address;
 		this.mInfo = info;
 		this.mPoints = new ArrayList<MapPoint>();
+		this.mPolygons = new ArrayList<MapPolygon>();
 	}
 
 	public List<MapPoint> getPoints() {
@@ -98,6 +144,13 @@ public class Venue {
 	
 	public void addPoint(MapPoint point) {
 		mPoints.add(point);
+	}
+	public List<MapPolygon> getPolygons() {
+		return mPolygons;
+	}
+
+	public void addPolygon(MapPolygon polygon) {
+		mPolygons.add(polygon);
 	}
 	public String getName() {
 		return mName;

@@ -8,11 +8,4 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
-
-    <fragment
-        android:id="@+id/upcomingFragment"
-        android:name="de.suse.conferenceclient.fragments.WhatsOnFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-    
     </LinearLayout>

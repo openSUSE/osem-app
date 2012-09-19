@@ -43,6 +43,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "address VARCHAR, "
 			+ "description VARCHAR)";
 	
+	private static final String mapPolygonTableCreate = "CREATE TABLE mapPolygons ("
+			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+			+ "venue_id INTEGER, "
+			+ "name VARCHAR, "
+			+ "label VARCHAR, "
+			+ "lineColor INTEGER, "
+			+ "fillColor INTEGER, "
+			+ "pointList VARCHAR)";
+	
 	private static final String roomsTableCreate = "CREATE TABLE rooms ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
 			+ "guid VARCHAR, "
@@ -99,11 +108,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL(tracksTableCreate);
 		db.execSQL(speakerEventTableCreate);
 		db.execSQL(mapPointsTableCreate);
+		db.execSQL(mapPolygonTableCreate);
 	}
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 	}
 
+	public void clearDatabase(SQLiteDatabase db) {
+		db.execSQL("DELETE FROM conferences");
+		db.execSQL("DELETE FROM venues");
+		db.execSQL("DELETE FROM points");
+		db.execSQL("DELETE FROM mapPolygons");
+		db.execSQL("DELETE FROM rooms");
+		db.execSQL("DELETE FROM tracks");
+		db.execSQL("DELETE FROM speakers");
+		db.execSQL("DELETE FROM events");
+		db.execSQL("DELETE FROM eventSpeakers");
+
+	}
 
 }

@@ -2,27 +2,14 @@ package de.suse.conferenceclient.activities;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.location.Address;
-import android.location.Geocoder;
 import android.os.Bundle;
-import android.text.Html;
 import android.util.Log;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.ScrollView;
-import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockActivity;
 import com.google.android.maps.GeoPoint;
-import com.google.android.maps.ItemizedOverlay;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
-import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.OverlayItem;
 
@@ -30,8 +17,10 @@ import de.suse.conferenceclient.R;
 import de.suse.conferenceclient.SUSEConferences;
 import de.suse.conferenceclient.app.Database;
 import de.suse.conferenceclient.app.MapOverlay;
+import de.suse.conferenceclient.app.MapPolygonOverlay;
 import de.suse.conferenceclient.models.Venue;
 import de.suse.conferenceclient.models.Venue.MapPoint;
+import de.suse.conferenceclient.models.Venue.MapPolygon;
 import de.suse.conferenceclient.views.AreaMapView;
 import de.suse.conferenceclient.views.AreaMapView.AreaZoomListener;
 
@@ -58,20 +47,29 @@ public class VenueMapsActivity extends MapActivity implements AreaZoomListener {
 		mMapView = (AreaMapView) findViewById(R.id.mapView);
 		mMapView.setBuiltInZoomControls(true);
 		mMapView.setZoomListener(this);
-
+		mMapView.setSatellite(true);
 		List<Overlay> overlays = mMapView.getOverlays();
 
+		
 		Drawable venueDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.venue_marker));
 		Drawable foodDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.food_marker));
 		Drawable drinkDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.drink_marker));
 		Drawable elecDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.electronics_marker));
+		Drawable partyDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.party_marker));
 		mMapOverlays = new MapOverlay(VenueMapsActivity.this, venueDrawable);
 
+		if (venue == null)
+			return;
+		
 		MapController controller =  mMapView.getController();
 		for (MapPoint point : venue.getPoints()) {
 			GeoPoint mapPoint = new GeoPoint(point.getLat(), point.getLon());
-			OverlayItem overlay = new OverlayItem(mapPoint, point.getName(), point.getAddress());
-
+			OverlayItem overlay = null;
+			if (point.getType() == MapPoint.TYPE_VENUE)
+				 overlay = new OverlayItem(mapPoint, point.getName(), point.getAddress());
+			else
+				overlay = new OverlayItem(mapPoint, point.getName(), point.getDescription());
+			
 			switch (point.getType()) {
 			case MapPoint.TYPE_VENUE:
 				mConferenceOverlay = overlay;
@@ -84,6 +82,9 @@ public class VenueMapsActivity extends MapActivity implements AreaZoomListener {
 			case MapPoint.TYPE_DRINK:
 				overlay.setMarker(drinkDrawable);
 				break;
+			case MapPoint.TYPE_PARTY:
+				overlay.setMarker(partyDrawable);
+				break;
 			case MapPoint.TYPE_ELECTRONICS:
 				overlay.setMarker(elecDrawable);
 				break;
@@ -94,25 +95,18 @@ public class VenueMapsActivity extends MapActivity implements AreaZoomListener {
 			mMapOverlays.doPopulate();
 		}
 
+		for (MapPolygon polygon : venue.getPolygons()) {
+			List<MapPoint> points = polygon.getPoints();
+			GeoPoint[] pathPoints = new GeoPoint[points.size()];
+			for (int i = 0; i < points.size(); i++) {
+				MapPoint point = points.get(i);
+				pathPoints[i] = new GeoPoint(point.getLat(), point.getLon());
+			}
+			MapPolygonOverlay newOverlay;
+			newOverlay = new MapPolygonOverlay(pathPoints, polygon.getLineColor(), polygon.getFillColor());
+			overlays.add(newOverlay);
+		}
 		overlays.add(mMapOverlays);
-	}
-
-	@Override
-	public void onBackPressed() {
-		super.onBackPressed();
-		overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
-	}
-
-	@Override
-	public void startActivity(Intent intent) {
-		super.startActivity(intent);
-		overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
-	}
-
-	@Override
-	public void finish() {
-		super.finish();
-		overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
 	}
 
 	@Override
@@ -125,7 +119,6 @@ public class VenueMapsActivity extends MapActivity implements AreaZoomListener {
 		if (newZoom <= MAGIC_ZOOM_LEVEL && mShowingAll) {
 			// Only show the conference venue
 			mShowingAll = false;
-			Log.d("SUSEConferences", "Only showing venue");
 			mMapOverlays.clearOverlays();
 			mMapOverlays.addOverlay(mConferenceOverlay);
 			mMapOverlays.doPopulate();
@@ -133,7 +126,6 @@ public class VenueMapsActivity extends MapActivity implements AreaZoomListener {
 		} else if (newZoom > MAGIC_ZOOM_LEVEL && !mShowingAll) {
 			// Show everything
 			mShowingAll = true;
-			Log.d("SUSEConferences", "Showing everything");
 			mMapOverlays.clearOverlays();
 			mMapOverlays.addOverlays(mOverlays);
 			mMapOverlays.doPopulate();
