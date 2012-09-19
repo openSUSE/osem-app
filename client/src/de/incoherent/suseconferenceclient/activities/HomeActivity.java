@@ -27,7 +27,7 @@ import de.incoherent.suseconferenceclient.fragments.NewsFeedFragment;
 import de.incoherent.suseconferenceclient.fragments.SchedulePhoneFragment;
 import de.incoherent.suseconferenceclient.models.Conference;
 import de.incoherent.suseconferenceclient.tasks.GetConferencesTask;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;

@@ -36,7 +36,7 @@ import de.incoherent.suseconferenceclient.app.AlarmReceiver;
 import de.incoherent.suseconferenceclient.app.Database;
 import de.incoherent.suseconferenceclient.models.Event;
 import de.incoherent.suseconferenceclient.models.Speaker;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 
 public class ScheduleDetailsActivity extends SherlockActivity implements OnClickListener {
 	private Event mEvent;

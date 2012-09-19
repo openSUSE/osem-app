@@ -24,12 +24,15 @@ import android.text.format.DateUtils;
 import android.util.Log;
 import de.incoherent.suseconferenceclient.Config;
 import de.incoherent.suseconferenceclient.models.SocialItem;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 
 public class SocialWrapper {
 	public static ArrayList<SocialItem> getTwitterItems(Context context, String tag, int maximum) {
 		String twitterSearch = "http://search.twitter.com/search.json?q=" + tag;
 		ArrayList<SocialItem> socialItems = new ArrayList<SocialItem>();
+		
+		// TODO Android 2.2 thinks that "Wed, 19 Sep 2012 16:35:43 +0000" is invalid
+		// with this formatter
 		SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
 		Bitmap icon = BitmapFactory.decodeResource(context.getResources(),
                 R.drawable.twitter_icon);
@@ -47,7 +50,7 @@ public class SocialWrapper {
 				try {
 					formattedDate = formatter.parse(jsonItem.getString("created_at"));
 				} catch (ParseException e) {
-					// TODO Auto-generated catch block
+					Log.d("SUSEConferences", "Invalid date string: " + jsonItem.getString("created_at"));
 					e.printStackTrace();
 				}
 				String user = jsonItem.getString("from_user");

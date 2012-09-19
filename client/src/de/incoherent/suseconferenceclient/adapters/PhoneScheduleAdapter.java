@@ -6,7 +6,7 @@ import java.util.List;
 
 import de.incoherent.suseconferenceclient.models.Event;
 import de.incoherent.suseconferenceclient.models.Speaker;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 
 import android.content.Context;
 import android.graphics.Color;

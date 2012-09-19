@@ -3,10 +3,10 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" >
 
-	<de.suse.conferenceclient.app.ScheduleViewPager
+	<de.incoherent.suseconferenceclient.app.ScheduleViewPager
 	    android:id="@+id/agendaViewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        </de.suse.conferenceclient.app.ScheduleViewPager>
+        </de.incoherent.suseconferenceclient.app.ScheduleViewPager>
     </LinearLayout>

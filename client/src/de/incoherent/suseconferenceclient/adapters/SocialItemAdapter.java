@@ -1,11 +1,8 @@
 package de.incoherent.suseconferenceclient.adapters;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import de.incoherent.suseconferenceclient.models.Event;
 import de.incoherent.suseconferenceclient.models.SocialItem;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;

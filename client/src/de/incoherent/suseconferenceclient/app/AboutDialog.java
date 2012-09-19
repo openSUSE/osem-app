@@ -3,7 +3,7 @@
  */
 package de.incoherent.suseconferenceclient.app;
 
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;

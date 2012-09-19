@@ -22,7 +22,7 @@ import de.incoherent.suseconferenceclient.models.Venue.MapPoint;
 import de.incoherent.suseconferenceclient.models.Venue.MapPolygon;
 import de.incoherent.suseconferenceclient.views.AreaMapView;
 import de.incoherent.suseconferenceclient.views.AreaMapView.AreaZoomListener;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 
 public class VenueMapsActivity extends MapActivity implements AreaZoomListener {
 	private AreaMapView mMapView;

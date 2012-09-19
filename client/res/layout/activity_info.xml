@@ -4,12 +4,12 @@
         android:background="#ffffff"
         android:layout_height="fill_parent" >
 
-        <de.suse.conferenceclient.views.AreaMapView
+        <de.incoherent.suseconferenceclient.views.AreaMapView
             android:id="@+id/mapView"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:apiKey="04fPcVba6EsLh-u1pRCC8LCRFEySM52Zy7kjm6w"
             android:clickable="true" >
-        </de.suse.conferenceclient.views.AreaMapView>
+        </de.incoherent.suseconferenceclient.views.AreaMapView>
 
     </LinearLayout>

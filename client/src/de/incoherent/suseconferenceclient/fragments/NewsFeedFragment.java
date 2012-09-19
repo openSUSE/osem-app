@@ -17,10 +17,11 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
+import de.incoherent.suseconferenceclient.adapters.PhoneScheduleAdapter;
 import de.incoherent.suseconferenceclient.adapters.SocialItemAdapter;
 import de.incoherent.suseconferenceclient.app.SocialWrapper;
 import de.incoherent.suseconferenceclient.models.SocialItem;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 
 public class NewsFeedFragment extends SherlockListFragment {
 	private String mSearchTag = "";
@@ -28,26 +29,46 @@ public class NewsFeedFragment extends SherlockListFragment {
 	protected int mFeedNumber = 0;
 	private SocialItemAdapter mAdapter;
 	private ArrayList<SocialItem> mItems;
+    private int mIndex = -1;
+    private int mTop = 0;
+
 	public void NewsFeedFragment() {}
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		if (savedInstanceState != null) {
-			Log.d("SUSEConferences", "bundle is NOT null");
 			this.mSearchTag = savedInstanceState.getString("searchTag");
 			this.mFeedNumber = savedInstanceState.getInt("feedNumber");
 			this.mItems = savedInstanceState.getParcelableArrayList("items");
 			mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, mItems);
 			setListAdapter(mAdapter);
 		} else {
-			Log.d("SUSEConferences", "bundle IS null");
 			Bundle args = getArguments();
 			mSearchTag = args.getString("socialTag");
 			SocialTask task = new SocialTask();
 			task.execute(mSearchTag);
 		}
 	}
-	
+	@Override
+	public void onResume() {
+		super.onResume();
+		if(mIndex!=-1){
+			this.getListView().setSelectionFromTop(mIndex, mTop);
+		}
+	}
+	@Override
+	public void onPause() {
+		super.onPause();
+		try{
+			mIndex = this.getListView().getFirstVisiblePosition();
+			View v = this.getListView().getChildAt(0);
+			mTop = (v == null) ? 0 : v.getTop();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {
 		  super.onSaveInstanceState(savedInstanceState);

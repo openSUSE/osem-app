@@ -22,7 +22,7 @@ import de.incoherent.suseconferenceclient.adapters.PhoneScheduleAdapter;
 import de.incoherent.suseconferenceclient.adapters.PhoneScheduleAdapter.ScheduleItem;
 import de.incoherent.suseconferenceclient.app.Database;
 import de.incoherent.suseconferenceclient.models.Event;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 
 public class MySchedulePhoneFragment extends SherlockListFragment {
 	public MySchedulePhoneFragment() { }
@@ -32,7 +32,9 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
     private List<Event> mEventList;
     private DateFormat mHeaderFormatter;
     private PhoneScheduleAdapter mAdapter;
-    
+    private int mIndex = -1;
+    private int mTop = 0;
+
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mHeaderFormatter = DateFormat.getDateInstance(DateFormat.LONG);		
@@ -45,6 +47,18 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		super.onActivityCreated(savedInstanceState);
 		getListView().setDrawSelectorOnTop(true);
 	}
+	@Override
+	public void onPause() {
+		super.onPause();
+		try{
+			mIndex = this.getListView().getFirstVisiblePosition();
+			View v = this.getListView().getChildAt(0);
+			mTop = (v == null) ? 0 : v.getTop();
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+	}
 
 	public void onResume() {
 		super.onResume();
@@ -56,7 +70,9 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 				getResources().getColor(R.color.suse_grey),
 				items);
 		setListAdapter(mAdapter);
-		getListView().invalidate();
+		if(mIndex!=-1){
+			this.getListView().setSelectionFromTop(mIndex, mTop);
+		}
 	}
 
 	private List<ScheduleItem> getScheduleItems() {

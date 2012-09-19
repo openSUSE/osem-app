@@ -1,7 +1,7 @@
 package de.incoherent.suseconferenceclient.app;
 
 import de.incoherent.suseconferenceclient.activities.HomeActivity;
-import de.suse.conferenceclient.R;
+import de.incoherent.suseconferenceclient.R;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
