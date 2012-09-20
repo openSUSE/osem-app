@@ -8,7 +8,7 @@
             android:id="@+id/mapView"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:apiKey="04fPcVba6EsLh-u1pRCC8LCRFEySM52Zy7kjm6w"
+            android:apiKey="04fPcVba6EsK5DoDqf4l6ZgTMoN7QHm9AuZpWhQ"
             android:clickable="true" >
         </de.incoherent.suseconferenceclient.views.AreaMapView>
 
