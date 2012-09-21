@@ -140,64 +140,66 @@ public class HomeActivity extends SherlockFragmentActivity implements
     	return super.onOptionsItemSelected(menuItem);
     }
 
-    private void setView(boolean attachFragments) {
+    
+    // When the device is rotated, we don't want to go and load up
+    // the social stream again, so loadSocial will be set to false
+    // and it will just reuse the existing fragment.
+    private void setView(boolean loadSocial) {
     	if (mDialog != null)
         	mDialog.dismiss();
       setContentView(R.layout.activity_home);
       Database db = SUSEConferences.getDatabase();
       Conference conference = db.getConference(mConferenceId);
       getSupportActionBar().setTitle(conference.getName());
-      if (attachFragments) {
-    	  mPhonePager= (ViewPager) findViewById(R.id.phonePager);
-    	  if (mPhonePager !=  null) { // Phone layout
-    		  ActionBar bar = getSupportActionBar();
-    		  bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-    		  Bundle args = new Bundle();
-    		  args.putLong("conferenceId", this.mConferenceId);
-    		  args.putString("socialTag", conference.getSocialTag());
-    		  mTabsAdapter = new TabAdapter(this, mPhonePager);
+      mPhonePager= (ViewPager) findViewById(R.id.phonePager);
+      if (mPhonePager !=  null) { // Phone layout
+    	  ActionBar bar = getSupportActionBar();
+    	  bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+    	  Bundle args = new Bundle();
+    	  args.putLong("conferenceId", this.mConferenceId);
+    	  args.putString("socialTag", conference.getSocialTag());
+    	  mTabsAdapter = new TabAdapter(this, mPhonePager);
+    	  mTabsAdapter.addTab(
+    			  bar.newTab().setText(getString(R.string.mySchedule)),
+    			  MySchedulePhoneFragment.class, args);
+    	  mTabsAdapter.addTab(
+    			  bar.newTab().setText(getString(R.string.fullSchedule)),
+    			  SchedulePhoneFragment.class, args);
+    	  if (hasInternet())
     		  mTabsAdapter.addTab(
-    				  bar.newTab().setText(getString(R.string.mySchedule)),
-    				  MySchedulePhoneFragment.class, args);
-    		  mTabsAdapter.addTab(
-    				  bar.newTab().setText(getString(R.string.fullSchedule)),
-    				  SchedulePhoneFragment.class, args);
-    		  if (hasInternet())
-    			  mTabsAdapter.addTab(
-    					  bar.newTab().setText(getString(R.string.newsFeed)),
-    					  NewsFeedFragment.class, args);
-    	  } else { // Tablet layout
-    		  FragmentManager fm = getSupportFragmentManager();
-    		  Bundle args = new Bundle();
-    		  args.putLong("conferenceId", this.mConferenceId);
-    		  args.putString("socialTag", conference.getSocialTag());
+    				  bar.newTab().setText(getString(R.string.newsFeed)),
+    				  NewsFeedFragment.class, args);
+      } else { // Tablet layout
+    	  FragmentManager fm = getSupportFragmentManager();
+    	  Bundle args = new Bundle();
+    	  args.putLong("conferenceId", this.mConferenceId);
+    	  args.putString("socialTag", conference.getSocialTag());
 
-    		  MySchedulePhoneFragment mySched = new MySchedulePhoneFragment();
-    		  mySched.setArguments(args);
-    		  fm.beginTransaction()
-    		  .add(R.id.myScheduleFragmentLayout, mySched).commit();
+    	  MySchedulePhoneFragment mySched = new MySchedulePhoneFragment();
+    	  mySched.setArguments(args);
+    	  fm.beginTransaction()
+    	  .add(R.id.myScheduleFragmentLayout, mySched).commit();
 
-    		  SchedulePhoneFragment sched = new SchedulePhoneFragment();
-    		  sched.setArguments(args);
-    		  fm.beginTransaction()
-    		  .add(R.id.scheduleFragmentLayout, sched).commit();
+    	  SchedulePhoneFragment sched = new SchedulePhoneFragment();
+    	  sched.setArguments(args);
+    	  fm.beginTransaction()
+    	  .add(R.id.scheduleFragmentLayout, sched).commit();
 
-    		  if (hasInternet()) {
-    			  NewsFeedFragment newsFeed = new NewsFeedFragment();
-    			  newsFeed.setArguments(args);
-    			  fm.beginTransaction().add(R.id.socialLayout, newsFeed).commit();
-    		  }
+    	  if (hasInternet() && loadSocial) {
+    		  NewsFeedFragment newsFeed = new NewsFeedFragment();
+    		  newsFeed.setArguments(args);
+    		  fm.beginTransaction().add(R.id.socialLayout, newsFeed).commit();
     	  }
-      }
-      
-      if (!hasInternet()) {
-    	  RelativeLayout horizontal = (RelativeLayout) findViewById(R.id.newsFeedHorizontalLayout);
-    	  if (horizontal != null)
-    		  horizontal.setVisibility(View.GONE);
-    	  FrameLayout socialLayout = (FrameLayout) findViewById(R.id.socialLayout);
-    	  socialLayout.setVisibility(View.GONE);
-    	  TextView labelView = (TextView) findViewById(R.id.newsFeedTextView);
-    	  labelView.setVisibility(View.GONE);
+    	  
+    	  if (!hasInternet()) {
+    		  RelativeLayout horizontal = (RelativeLayout) findViewById(R.id.newsFeedHorizontalLayout);
+    		  if (horizontal != null)
+    			  horizontal.setVisibility(View.GONE);
+    		  FrameLayout socialLayout = (FrameLayout) findViewById(R.id.socialLayout);
+    		  socialLayout.setVisibility(View.GONE);
+    		  TextView labelView = (TextView) findViewById(R.id.newsFeedTextView);
+    		  labelView.setVisibility(View.GONE);
+    	  }
       }
     }
 
