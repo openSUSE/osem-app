@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.incoherent.suseconferenceclient.app;
+package de.incoherent.suseconferenceclient.maps;
 
 import java.util.ArrayList;
 
@@ -16,11 +16,11 @@ import com.google.android.maps.OverlayItem;
  * @author Matt Barringer <mbarringer@suse.de>
  *
  */
-public class MapOverlay extends ItemizedOverlay<OverlayItem> {
+public class GoogleMapOverlay extends ItemizedOverlay<OverlayItem> {
 	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
 	private Context mContext;
 	
-	public MapOverlay(Context context, Drawable defaultMarker) {
+	public GoogleMapOverlay(Context context, Drawable defaultMarker) {
 		super(boundCenterBottom(defaultMarker));
 		this.mContext = context;
 	}

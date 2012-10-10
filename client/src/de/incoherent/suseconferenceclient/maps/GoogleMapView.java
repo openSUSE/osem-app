@@ -1,7 +1,7 @@
 /**
  * 
  */
-package de.incoherent.suseconferenceclient.views;
+package de.incoherent.suseconferenceclient.maps;
 
 import android.content.Context;
 import android.util.AttributeSet;
@@ -20,7 +20,7 @@ import com.google.android.maps.MapView;
  */
 
 
-public class AreaMapView extends MapView  implements OnZoomListener {
+public class GoogleMapView extends MapView  implements OnZoomListener {
 	public interface AreaZoomListener {
 	    public void onZoom(int oldZoom, int newZoom);
 	}
@@ -28,15 +28,15 @@ public class AreaMapView extends MapView  implements OnZoomListener {
 	private int mZoomLevel;
     private AreaZoomListener mListener;
 
-	public AreaMapView(Context context, String apiKey) {
+	public GoogleMapView(Context context, String apiKey) {
 		super(context, apiKey);
 	}
 	
-	public AreaMapView(Context context, AttributeSet attrs) {
+	public GoogleMapView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 	}
 
-	public AreaMapView(Context context, AttributeSet attrs, int defStyle) {
+	public GoogleMapView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
 	

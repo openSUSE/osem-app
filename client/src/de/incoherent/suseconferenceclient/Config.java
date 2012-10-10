@@ -19,4 +19,9 @@ public class Config {
 	public static String MAPS_KEY = "XYZ";
 	public static String TWITTER_KEY = "XYZ";
 	public static String PLUS_KEY = "XYZ";
+	
+	// The level at which the map only displays the marker for the conference
+	// venue, and not food/drinks/etc.  The greater the number, the more
+	// zoomed in it is.
+	public static final int MAGIC_ZOOM_LEVEL = 14;
 }

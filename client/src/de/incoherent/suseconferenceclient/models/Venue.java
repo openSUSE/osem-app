@@ -22,7 +22,7 @@ public class Venue {
 		private int mType;
 		private String mName;
 		private String mAddress;
-		private String mDescription;
+		private String mDescription;		
 		private int mLat;
 		private int mLon;
 		
@@ -126,9 +126,10 @@ public class Venue {
 	private String mName;
 	private String mAddress;
 	private String mInfo;
+	private String mOfflineMapUrl;
+
 	private List<MapPoint> mPoints;
 	private List<MapPolygon> mPolygons;
-
 
 	public Venue(String name, String address, String info) {
 		this.mName = name;
@@ -175,4 +176,13 @@ public class Venue {
 	public void setInfo(String info) {
 		mInfo = info;
 	}
+	public String getOfflineMapUrl() {
+		return mOfflineMapUrl;
+	}
+
+	public void setOfflineMapUrl(String offlineMapUrl) {
+		mOfflineMapUrl = offlineMapUrl;
+	}
+
+
 }

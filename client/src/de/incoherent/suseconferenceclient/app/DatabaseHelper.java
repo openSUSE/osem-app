@@ -13,7 +13,7 @@ import android.util.Log;
  *
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
-	private static final int DATABASE_VERSION = 1;
+	private static final int DATABASE_VERSION = 2;
 	
 	private static final String conferencesTableCreate = "CREATE TABLE conferences ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -30,6 +30,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "guid VARCHAR, "
 			+ "name VARCHAR, "
+			+ "offline_map VARCHAR, "
 			+ "address VARCHAR, "
 			+ "info_text VARCHAR)";
 	
@@ -113,6 +114,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		if (oldVersion == 1) {
+			db.execSQL("ALTER TABLE venues ADD offline_map VARCHAR");
+		}
+		
 	}
 
 	public void clearDatabase(SQLiteDatabase db) {
@@ -125,7 +130,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		db.execSQL("DELETE FROM speakers");
 		db.execSQL("DELETE FROM events");
 		db.execSQL("DELETE FROM eventSpeakers");
-
 	}
 
 }

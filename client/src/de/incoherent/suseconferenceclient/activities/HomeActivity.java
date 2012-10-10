@@ -101,11 +101,9 @@ public class HomeActivity extends SherlockFragmentActivity implements
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-    	if (hasInternet() && hasMaps()) {
-    		menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
-    		.setIcon(R.drawable.icon_venue_off)
-    		.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-    	}
+    	menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
+    	.setIcon(R.drawable.icon_venue_off)
+    	.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
     	
 //    	menu.add(Menu.NONE, R.id.checkForUpdates, Menu.NONE, getString(R.string.menu_checkForUpdates))
 //    	.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
@@ -121,11 +119,9 @@ public class HomeActivity extends SherlockFragmentActivity implements
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	switch (menuItem.getItemId()) {
     	case R.id.mapsOptionMenuItem:
-    		if (hasMaps()) {
-	    		Intent i = new Intent(HomeActivity.this, VenueMapsActivity.class);
-	    		i.putExtra("venueId", mConferenceId);
-	    		startActivity(i);
-    		}
+    		Intent i = new Intent(HomeActivity.this, VenueMapsActivity.class);
+    		i.putExtra("venueId", mConferenceId);
+    		startActivity(i);
     		return true;
     	case R.id.aboutItem:
             AboutDialog about = new AboutDialog(this);
@@ -249,16 +245,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
 //    	}
 //    }
     
-    // Google Maps don't work on Kindle devices, so until I switch to osmdroid,
-    // disable them when the library isn't available
-    private boolean hasMaps() {
-    	try {
-    		Class.forName("com.google.android.maps.MapView");
-    		return true;
-    	} catch (ClassNotFoundException e) {
-    		return false;
-    	}
-    }
+    
     private boolean hasInternet() {
     	boolean ret = true;
     	ConnectivityManager manager =  (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -377,9 +364,15 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			String info = HTTPWrapper.getRawText(infoUrl);
     			String venueName = venue.getString("name");
     			String venueAddr =  venue.getString("address");
+    			String offlineMap = "";
+    			if (venue.has("offline_map")) {
+    				offlineMap = venue.getString("offline_map");
+    			}
+    			
     			long venueId = db.insertVenue(venue.getString("guid"),
     										  venueName,
     										  venueAddr,
+    										  offlineMap,
     										  info);
     			JSONArray mapPoints = venue.getJSONArray("map_points");
     			int mapLen = mapPoints.length();

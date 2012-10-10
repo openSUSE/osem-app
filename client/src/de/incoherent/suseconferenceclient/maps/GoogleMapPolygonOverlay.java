@@ -8,7 +8,7 @@
  * Contributors:
  *     Matt Barringer <matt@incoherent.de> - initial API and implementation
  ******************************************************************************/
-package de.incoherent.suseconferenceclient.app;
+package de.incoherent.suseconferenceclient.maps;
 
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -22,7 +22,7 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.Projection;
 
-public class MapPolygonOverlay extends Overlay {
+public class GoogleMapPolygonOverlay extends Overlay {
 	private GeoPoint[] mPointList;
 	private int mLineColor;
 	private int mFillColor = 0;
@@ -31,7 +31,7 @@ public class MapPolygonOverlay extends Overlay {
 
 	private Paint mLabelPainter;
 	
-	public MapPolygonOverlay(GeoPoint[] pathPoints, int lineColor, int fillColor) {
+	public GoogleMapPolygonOverlay(GeoPoint[] pathPoints, int lineColor, int fillColor) {
 		this.mPointList = pathPoints;
 		this.mLineColor = lineColor;
 		this.mFillColor = fillColor;

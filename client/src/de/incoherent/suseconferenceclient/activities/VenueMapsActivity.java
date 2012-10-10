@@ -10,137 +10,94 @@
  ******************************************************************************/
 package de.incoherent.suseconferenceclient.activities;
 
-import java.util.ArrayList;
-import java.util.List;
-import android.content.Intent;
-import android.graphics.drawable.Drawable;
+import java.io.File;
+
+import com.actionbarsherlock.app.SherlockMapActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
+
 import android.os.Bundle;
 import android.util.Log;
-
-import com.google.android.maps.GeoPoint;
-import com.google.android.maps.MapActivity;
-import com.google.android.maps.MapController;
-import com.google.android.maps.Overlay;
-import com.google.android.maps.OverlayItem;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.LinearLayout;
 
 import de.incoherent.suseconferenceclient.SUSEConferences;
 import de.incoherent.suseconferenceclient.app.Database;
-import de.incoherent.suseconferenceclient.app.MapOverlay;
-import de.incoherent.suseconferenceclient.app.MapPolygonOverlay;
+import de.incoherent.suseconferenceclient.maps.GoogleMap;
+import de.incoherent.suseconferenceclient.maps.MapInterface;
+import de.incoherent.suseconferenceclient.maps.OSMMap;
+import de.incoherent.suseconferenceclient.maps.OSMMapView;
 import de.incoherent.suseconferenceclient.models.Venue;
-import de.incoherent.suseconferenceclient.models.Venue.MapPoint;
-import de.incoherent.suseconferenceclient.models.Venue.MapPolygon;
-import de.incoherent.suseconferenceclient.views.AreaMapView;
-import de.incoherent.suseconferenceclient.views.AreaMapView.AreaZoomListener;
 import de.incoherent.suseconferenceclient.R;
 
-public class VenueMapsActivity extends MapActivity implements AreaZoomListener {
-	private AreaMapView mMapView;
-	private OverlayItem mConferenceOverlay;
-	private MapOverlay mMapOverlays;
-	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
-
-	// The level at which the map only displays the marker for the conference
-	// venue, and not food/drinks/etc.  The greater the number, the more
-	// zoomed in it is.
-	private static final int MAGIC_ZOOM_LEVEL = 14;
-	private boolean mShowingAll = true;
-
+// TODO This probably still doesn't work on the kindle
+public class VenueMapsActivity extends SherlockMapActivity {
+	private File mOfflineMap = null;
+	private Venue mVenue;
+	private boolean mHasOfflineMap = false;
+	private MapInterface mMap;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		long venueId = getIntent().getLongExtra("venueId", -1);
 		setContentView(R.layout.activity_info);
 		Database db = SUSEConferences.getDatabase();
-		Venue venue = db.getVenueInfo(venueId);
-
-		mMapView = (AreaMapView) findViewById(R.id.mapView);
-		mMapView.setBuiltInZoomControls(true);
-		mMapView.setZoomListener(this);
-		mMapView.setSatellite(true);
-		List<Overlay> overlays = mMapView.getOverlays();
-
-		
-		Drawable venueDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.venue_marker));
-		Drawable foodDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.food_marker));
-		Drawable drinkDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.drink_marker));
-		Drawable elecDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.electronics_marker));
-		Drawable partyDrawable = MapOverlay.boundDrawable(this.getResources().getDrawable(R.drawable.party_marker));
-		mMapOverlays = new MapOverlay(VenueMapsActivity.this, venueDrawable);
-
-		if (venue == null)
-			return;
-		
-		MapController controller =  mMapView.getController();
-		for (MapPoint point : venue.getPoints()) {
-			GeoPoint mapPoint = new GeoPoint(point.getLat(), point.getLon());
-			OverlayItem overlay = null;
-			if (point.getType() == MapPoint.TYPE_VENUE)
-				 overlay = new OverlayItem(mapPoint, point.getName(), point.getAddress());
-			else
-				overlay = new OverlayItem(mapPoint, point.getName(), point.getDescription());
-			
-			switch (point.getType()) {
-			case MapPoint.TYPE_VENUE:
-				mConferenceOverlay = overlay;
-				controller.setCenter(mapPoint);
-				controller.setZoom(18);
-				break;
-			case MapPoint.TYPE_FOOD:
-				overlay.setMarker(foodDrawable);
-				break;
-			case MapPoint.TYPE_DRINK:
-				overlay.setMarker(drinkDrawable);
-				break;
-			case MapPoint.TYPE_PARTY:
-				overlay.setMarker(partyDrawable);
-				break;
-			case MapPoint.TYPE_ELECTRONICS:
-				overlay.setMarker(elecDrawable);
-				break;
-			}
-
-			mOverlays.add(overlay);
-			mMapOverlays.addOverlay(overlay);
-			mMapOverlays.doPopulate();
+		mVenue = db.getVenueInfo(venueId);
+		String offlineMapUrl = mVenue.getOfflineMapUrl();
+		String offlineMapFilename = "";
+		if (offlineMapUrl.length() > 0) {
+			offlineMapFilename = offlineMapUrl.substring(offlineMapUrl.lastIndexOf('/')+1, offlineMapUrl.length());
+			mOfflineMap = new File(getExternalFilesDir(null), offlineMapFilename);
+			Log.d("SUSEConferences", "Offline map path: " + mOfflineMap.getAbsolutePath());
 		}
 
-		for (MapPolygon polygon : venue.getPolygons()) {
-			List<MapPoint> points = polygon.getPoints();
-			GeoPoint[] pathPoints = new GeoPoint[points.size()];
-			for (int i = 0; i < points.size(); i++) {
-				MapPoint point = points.get(i);
-				pathPoints[i] = new GeoPoint(point.getLat(), point.getLon());
-			}
-			MapPolygonOverlay newOverlay;
-			newOverlay = new MapPolygonOverlay(pathPoints, polygon.getLineColor(), polygon.getFillColor());
-			overlays.add(newOverlay);
+		if (mOfflineMap != null && mOfflineMap.canRead()) {
+			useOfflineMaps();
+			mHasOfflineMap = true;
+		} else {
+			Log.d("SUSEConferences", "Can't find offline map");
+			useOnlineMaps();
 		}
-		overlays.add(mMapOverlays);
+		
+		mMap.setupMap(mVenue);
+		View view = mMap.getView();
+		LinearLayout layout = (LinearLayout) findViewById(R.id.mapsLinearLayout);
+		if (view != null)
+			layout.addView(view, new LayoutParams(
+					LayoutParams.MATCH_PARENT,
+					LayoutParams.MATCH_PARENT));
 	}
+
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return super.onCreateOptionsMenu(menu);
+    }
 
 	@Override
 	protected boolean isRouteDisplayed() {
 		return false;
 	}
 
-	@Override
-	public void onZoom(int oldZoom, int newZoom) {
-		if (newZoom <= MAGIC_ZOOM_LEVEL && mShowingAll) {
-			// Only show the conference venue
-			mShowingAll = false;
-			mMapOverlays.clearOverlays();
-			mMapOverlays.addOverlay(mConferenceOverlay);
-			mMapOverlays.doPopulate();
-			mMapView.invalidate();
-		} else if (newZoom > MAGIC_ZOOM_LEVEL && !mShowingAll) {
-			// Show everything
-			mShowingAll = true;
-			mMapOverlays.clearOverlays();
-			mMapOverlays.addOverlays(mOverlays);
-			mMapOverlays.doPopulate();
-			mMapView.invalidate();
-		}
+	private void useOfflineMaps() {
+		mMap = new OSMMap(this, mOfflineMap);
 	}
+
+	private void useOnlineMaps() {
+		if (hasGoogleMaps())
+			mMap = new GoogleMap(this);
+		else
+			mMap = new OSMMap(this, null);
+	}
+	
+    // Google Maps don't work on Kindle devices, so use osmdroid in that case
+    private boolean hasGoogleMaps() {
+    	try {
+    		Class.forName("com.google.android.maps.MapView");
+    		return true;
+    	} catch (ClassNotFoundException e) {
+    		return false;
+    	}
+    }
 
 }
