@@ -16,7 +16,7 @@ package de.incoherent.suseconferenceclient;
  */
 
 public class Config {
-	public static String MAPS_KEY = "XYZ";
+	public static String MAPS_KEY = "04fPcVba6EsLh-u1pRCC8LCRFEySM52Zy7kjm6w";
 	public static String TWITTER_KEY = "XYZ";
 	public static String PLUS_KEY = "XYZ";
 	

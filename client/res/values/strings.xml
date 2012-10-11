@@ -14,4 +14,7 @@
     <string name="googlePlus">Google+</string>
     <string name="mapsOptionMenuItem">Maps</string>
     <string name="refresh">Refresh</string>
+    <string name="downloadMap">Download Map</string>
+    <string name="switchToOfflineMap">Use Offline Map</string>
+    <string name="switchToOnlineMap">Use Online Map</string>
 </resources>

@@ -5,8 +5,7 @@ import org.osmdroid.views.overlay.OverlayItem;
 
 public class OSMOverlayItem extends OverlayItem {
 
-	public OSMOverlayItem(String aTitle, String aDescription, GeoPoint aGeoPoint) {
-		super(aTitle, aDescription, aGeoPoint);
+	public OSMOverlayItem(String title, String description, String address, GeoPoint geoPoint) {
+		super(title, description, geoPoint);
 	}
-
 }

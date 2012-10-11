@@ -113,13 +113,14 @@ public class Database {
 	
 	public Venue getVenueInfo(long venueId) {
 		Venue venue = null;
-		String sql = "SELECT name, address, info_text, offline_map FROM venues WHERE _id=" + venueId;
+		String sql = "SELECT name, address, info_text, offline_map, offline_map_bounds FROM venues WHERE _id=" + venueId;
 		String pointSql = "SELECT type, lat, lon, name, address, description FROM points WHERE venue_id=" + venueId;
 		String polygonSql = "SELECT name, label, lineColor, fillColor, pointList FROM mapPolygons WHERE venue_id=" + venueId;
 		Cursor c = db.rawQuery(sql, null);
 		if (c.moveToFirst()) {
 			venue = new Venue(c.getString(0), c.getString(1), c.getString(2));
 			venue.setOfflineMapUrl(c.getString(3));
+			venue.setOfflineMapBounds(c.getString(4));
 		}
 		c.close();
 		
@@ -212,12 +213,13 @@ public class Database {
 		return insertId;
 	}
 	
-	public long insertVenue(String guid, String name, String address, String offlineMap, String infoText) {
+	public long insertVenue(String guid, String name, String address, String offlineMap, String offlineMapBounds, String infoText) {
 		ContentValues values = new ContentValues();
 		values.put("guid", guid);
 		values.put("name", name);
 		values.put("address", address);
 		values.put("offline_map", offlineMap);
+		values.put("offline_map_bounds", offlineMapBounds);
 		values.put("info_text", infoText);
 		long insertId = db.insert("venues", null, values);
 		return insertId;

@@ -31,6 +31,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "guid VARCHAR, "
 			+ "name VARCHAR, "
 			+ "offline_map VARCHAR, "
+			+ "offline_map_bounds VARCHAR, "
 			+ "address VARCHAR, "
 			+ "info_text VARCHAR)";
 	
@@ -116,6 +117,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		if (oldVersion == 1) {
 			db.execSQL("ALTER TABLE venues ADD offline_map VARCHAR");
+			db.execSQL("ALTER TABLE venues ADD offline_map_bounds VARCHAR");
 		}
 		
 	}

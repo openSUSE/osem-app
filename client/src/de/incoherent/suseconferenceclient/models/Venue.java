@@ -127,7 +127,7 @@ public class Venue {
 	private String mAddress;
 	private String mInfo;
 	private String mOfflineMapUrl;
-
+	private String mOfflineMapBounds;
 	private List<MapPoint> mPoints;
 	private List<MapPolygon> mPolygons;
 
@@ -182,6 +182,14 @@ public class Venue {
 
 	public void setOfflineMapUrl(String offlineMapUrl) {
 		mOfflineMapUrl = offlineMapUrl;
+	}
+
+	public String getOfflineMapBounds() {
+		return mOfflineMapBounds;
+	}
+
+	public void setOfflineMapBounds(String offlineMapBounds) {
+		mOfflineMapBounds = offlineMapBounds;
 	}
 
 

@@ -3,6 +3,8 @@ package de.incoherent.suseconferenceclient.maps;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.osmdroid.util.BoundingBoxE6;
+
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
@@ -20,6 +22,7 @@ import de.incoherent.suseconferenceclient.models.Venue.MapPolygon;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 
@@ -137,13 +140,21 @@ public class GoogleMap implements AreaZoomListener, MapInterface {
 
 	@Override
 	public void enableLocation() {
-		// TODO Auto-generated method stub
+		Log.d("SUSEConferences", "GoogleMap: enableLocation");
 		mLocationOverlay.enableMyLocation();
+		mLocationOverlay.enableCompass();
 	}
 
 	@Override
 	public void disableLocation() {
+		Log.d("SUSEConferences", "GoogleMap: disableLocation");
 		mLocationOverlay.disableMyLocation();
+		mLocationOverlay.disableCompass();
+	}
+
+	@Override
+	public void setBoundingBox(BoundingBoxE6 box) {
+		// Not useful ATM
 	}
 
 }

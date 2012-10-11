@@ -365,14 +365,17 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			String venueName = venue.getString("name");
     			String venueAddr =  venue.getString("address");
     			String offlineMap = "";
+    			String offlineMapBounds = "";
     			if (venue.has("offline_map")) {
     				offlineMap = venue.getString("offline_map");
+    				offlineMapBounds = venue.getString("offline_map_bounds");
     			}
     			
     			long venueId = db.insertVenue(venue.getString("guid"),
     										  venueName,
     										  venueAddr,
     										  offlineMap,
+    										  offlineMapBounds,
     										  info);
     			JSONArray mapPoints = venue.getJSONArray("map_points");
     			int mapLen = mapPoints.length();

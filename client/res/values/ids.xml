@@ -1,8 +1,11 @@
 
-    <resources>
+    <resources xmlns:android="http://schemas.android.com/apk/res/android">
         <item name="mapsOptionMenuItem" type="id"/>
         <item name="socialRefreshItem" type="id"/>
         <item name="aboutItem" type="id"/>
         <item name="settingsItem" type="id"/>
         <item name="checkForUpdates" type="id"/>
+        <item name="downloadMap" type="id" />
+        <item name="switchToOnlineMap" type="id" />
+        <item name="switchToOfflineMap" type="id" />
     </resources>

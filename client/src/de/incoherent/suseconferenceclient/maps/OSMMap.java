@@ -4,10 +4,15 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.modules.GEMFFileArchive;
 import org.osmdroid.tileprovider.modules.IArchiveFile;
@@ -16,6 +21,8 @@ import org.osmdroid.tileprovider.modules.MapTileFileArchiveProvider;
 import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
+import org.osmdroid.util.BoundingBoxE6;
+import org.osmdroid.util.GEMFFile;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapController;
 import org.osmdroid.views.overlay.ItemizedIconOverlay.OnItemGestureListener;
@@ -28,6 +35,7 @@ import org.osmdroid.views.overlay.TilesOverlay;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
@@ -43,6 +51,8 @@ public class OSMMap implements MapInterface {
 	private File mOfflineMap;
 	private MyLocationOverlay mLocationOverlay;
 	private ArrayList<OSMOverlayItem> mOverlays = new ArrayList<OSMOverlayItem>();
+	private BoundingBoxE6 mBoundingBox = null;
+	private int mLastMapX, mLastMapY;
 	
 	public OSMMap(Context context, File offlineMap) {
 		mContext = context;
@@ -61,8 +71,14 @@ public class OSMMap implements MapInterface {
 			mMapView.setTileSource(TileSourceFactory.MAPQUESTOSM);
 		} else {
 			GEMFFileArchive archive;
+			int minZoom = 13;
+			int maxZoom = 18;
 			try {
 				archive = GEMFFileArchive.getGEMFFileArchive(mOfflineMap);
+				GEMFFile file = new GEMFFile(mOfflineMap);
+				Set<Integer> levels = file.getZoomLevels();
+				minZoom = Collections.min(levels);
+				maxZoom = Collections.max(levels);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				mMapView = null;
@@ -75,18 +91,17 @@ public class OSMMap implements MapInterface {
 			
 			IArchiveFile[] archiveFiles = new IArchiveFile[1];
 			archiveFiles[0] = archive;
-	        OSMBitmapTileSourceBase bitmapTileSourceBase = new OSMBitmapTileSourceBase("OfflineMap", null, 13, 18, 256, ".png");
-	        MapTileModuleProviderBase[] mapTileProviders = new MapTileModuleProviderBase[2];
+	        OSMBitmapTileSourceBase bitmapTileSourceBase = new OSMBitmapTileSourceBase("MapQuest", null, minZoom, maxZoom, 256, ".png");
+	        MapTileModuleProviderBase[] mapTileProviders = new MapTileModuleProviderBase[1];
 	        mapTileProviders[0] = new MapTileFileArchiveProvider(new SimpleRegisterReceiver(mContext),
 	        													 bitmapTileSourceBase,
 	        													 archiveFiles);
-	        mapTileProviders[1] = new MapTileDownloader(TileSourceFactory.MAPQUESTOSM);
 	        MapTileProviderArray gemfTileProvider = new MapTileProviderArray(bitmapTileSourceBase,
 	        																 null,
 	        																 mapTileProviders);
-	        TilesOverlay tilesOverlay = new TilesOverlay(gemfTileProvider, mContext);
 	        gemfTileProvider.setUseDataConnection(false);
-	
+
+	        TilesOverlay tilesOverlay = new TilesOverlay(gemfTileProvider, mContext);	
 	        mMapView = new OSMMapView(mContext, 
 											 256, new DefaultResourceProxyImpl(mContext), 
 											 gemfTileProvider);
@@ -97,7 +112,6 @@ public class OSMMap implements MapInterface {
 		mMapView.setClickable(true);
 		mMapView.setMultiTouchControls(true); 
 		mMapView.getController().setZoom(15);
-
 		if (venue == null)
 			return;
 	
@@ -111,10 +125,7 @@ public class OSMMap implements MapInterface {
 		for (MapPoint point : venue.getPoints()) {
 			GeoPoint mapPoint = new GeoPoint(point.getLat(), point.getLon());
 			OSMOverlayItem overlay = null;
-			if (point.getType() == MapPoint.TYPE_VENUE)
-				 overlay = new OSMOverlayItem(point.getAddress(), point.getName(), mapPoint);
-			else
-				overlay = new OSMOverlayItem(point.getDescription(), point.getName(), mapPoint);
+			overlay = new OSMOverlayItem(point.getName(), point.getDescription(), point.getAddress(), mapPoint);
 			
 			switch (point.getType()) {
 			case MapPoint.TYPE_VENUE:
@@ -169,28 +180,34 @@ public class OSMMap implements MapInterface {
 //		}
 //		overlays.add(mMapOverlays);
 		
-		
-//		mLocationOverlay = new MyLocationOverlay(mContext, mMapView);
-//		mLocationOverlay.enableMyLocation();
-//		mLocationOverlay.enableCompass();
-//		overlays.add(mLocationOverlay);
-		
 		mMapView.getOverlays().add(mapOverlays);
 		mapOverlays.doPopulate();
-		mMapView.postInvalidate();
 
+		mLocationOverlay = new MyLocationOverlay(mContext, mMapView);
+		mLocationOverlay.enableMyLocation();
+		mLocationOverlay.enableCompass();
+		mMapView.getOverlays().add(mLocationOverlay);
+		if (mBoundingBox != null)
+			mMapView.setScrollableAreaLimit(mBoundingBox);
+		
+		mMapView.postInvalidate();
 	}
 
+	public void setBoundingBox(BoundingBoxE6 box) {
+		mBoundingBox = box;
+	}
+	
 	@Override
 	public void enableLocation() {
-		// TODO Auto-generated method stub
-		
+		Log.d("SUSEConferences", "OSMMap: enableLocation");
+		mLocationOverlay.enableMyLocation();
+		mLocationOverlay.enableCompass();
 	}
 
 	@Override
 	public void disableLocation() {
-		// TODO Auto-generated method stub
-		
+		Log.d("SUSEConferences", "OSMMap: disableLocation");
+		mLocationOverlay.disableMyLocation();
+		mLocationOverlay.disableCompass();
 	}
-
 }
