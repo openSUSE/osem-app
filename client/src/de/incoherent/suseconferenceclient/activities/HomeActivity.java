@@ -32,6 +32,7 @@ import de.incoherent.suseconferenceclient.adapters.TabAdapter;
 import de.incoherent.suseconferenceclient.app.AboutDialog;
 import de.incoherent.suseconferenceclient.app.Database;
 import de.incoherent.suseconferenceclient.app.HTTPWrapper;
+import de.incoherent.suseconferenceclient.fragments.FilterDialogFragment;
 import de.incoherent.suseconferenceclient.fragments.MySchedulePhoneFragment;
 import de.incoherent.suseconferenceclient.fragments.NewsFeedFragment;
 import de.incoherent.suseconferenceclient.fragments.SchedulePhoneFragment;
@@ -51,6 +52,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -109,9 +111,10 @@ public class HomeActivity extends SherlockFragmentActivity implements
 //    	.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 //		menu.add(Menu.NONE, R.id.settingsItem, Menu.NONE, getString(R.string.menu_settings))
 //        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		menu.add(Menu.NONE, R.id.filterEvents, Menu.NONE, getString(R.string.filter))
+        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		menu.add(Menu.NONE, R.id.aboutItem, Menu.NONE, getString(R.string.menu_about))
         .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -128,6 +131,11 @@ public class HomeActivity extends SherlockFragmentActivity implements
             about.setTitle("About");
             about.show();
             return true;
+    	case R.id.filterEvents:
+    	    FragmentManager fragmentManager = getSupportFragmentManager();
+    	    FilterDialogFragment newFragment = FilterDialogFragment.newInstance(this.mConferenceId);
+	        newFragment.show(fragmentManager, "Filter");
+    		return true;
 //    	case R.id.checkForUpdates:
 //    		checkForUpdates();
 //    		return true;
@@ -202,7 +210,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     private void loadConferences() {    	
     	mDialog = ProgressDialog.show(HomeActivity.this, "", 
     			"Loading. Please wait...", true);
-    	GetConferencesTask task = new GetConferencesTask("http://incoherent.de/suseconferenceapp", this);
+    	GetConferencesTask task = new GetConferencesTask("http://incoherent.de/conferences", this);
     	task.execute();
     }
 

@@ -100,6 +100,7 @@ public class Database {
 		values.put("lastUpdated", time);
 		db.update("conferences", values, sql, null);
 	}
+	
 	public long getConferenceVenue(long conferenceId) {
 		long id = -1;
 		String sql = "SELECT venue_id FROM conferences WHERE _id=" + conferenceId;
@@ -118,6 +119,7 @@ public class Database {
 		String polygonSql = "SELECT name, label, lineColor, fillColor, pointList FROM mapPolygons WHERE venue_id=" + venueId;
 		Cursor c = db.rawQuery(sql, null);
 		if (c.moveToFirst()) {
+			Log.d("SUSEConferences", "Moving to the first entry in the DB");
 			venue = new Venue(c.getString(0), c.getString(1), c.getString(2));
 			venue.setOfflineMapUrl(c.getString(3));
 			venue.setOfflineMapBounds(c.getString(4));
@@ -326,6 +328,23 @@ public class Database {
 			return eventList.subList(0,2);
 		else
 			return eventList;
+	}
+	
+	public String[] getUniqueLanguages(long conferenceId) {
+		String sql = "SELECT DISTINCT(language) FROM events WHERE conference_id = " + conferenceId;
+		Cursor c = db.rawQuery(sql, null);
+		int count = c.getCount();
+		if (count > 0) {
+			String[] ret = new String[count];
+			count = 0;
+			for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+				ret[count] = c.getString(0);
+				count++;
+			}
+			return ret;
+		} else {
+			return null;
+		}
 	}
 	
 	public List<Event> getMyScheduleTitles(long conferenceId) {

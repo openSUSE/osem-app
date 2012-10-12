@@ -64,6 +64,10 @@ public class VenueMapsActivity extends SherlockMapActivity {
 		setContentView(R.layout.activity_info);
 		Database db = SUSEConferences.getDatabase();
 		mVenue = db.getVenueInfo(venueId);
+		if (mVenue == null) {
+			Log.d("SUSEConferences", "mVenue is null!  I tried " + venueId);
+			return;
+		}
 		mOfflineMapUrl = mVenue.getOfflineMapUrl();
 		mOfflineMapFilename = "";
 		if (mOfflineMapUrl.length() > 0) {

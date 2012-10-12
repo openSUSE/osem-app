@@ -8,4 +8,5 @@
         <item name="downloadMap" type="id" />
         <item name="switchToOnlineMap" type="id" />
         <item name="switchToOfflineMap" type="id" />
+        <item name="filterEvents" type="id" />
     </resources>

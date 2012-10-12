@@ -7,6 +7,7 @@ import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.ItemizedOverlay;
+import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
 import org.osmdroid.views.overlay.OverlayItem;
 
 import android.app.AlertDialog;
@@ -14,7 +15,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 
-public class OSMMapOverlay extends ItemizedIconOverlay<OSMOverlayItem> {
+public class OSMMapOverlay extends ItemizedOverlayWithFocus<OSMOverlayItem> {
 	private ArrayList<OSMOverlayItem> mOverlays = null;
 //	private Context mContext;
 	
