@@ -1,17 +1,22 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * 
- */
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.app;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-/**
- * @author Matt Barringer <mbarringer@suse.de>
- *
- */
 public class DatabaseHelper extends SQLiteOpenHelper {
 	private static final int DATABASE_VERSION = 2;
 	
@@ -24,7 +29,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "venue_id INTEGER,"
 			+ "social_tag VARCHAR, "
 			+ "dateRange VARCHAR, "
-			+ "lastUpdated INTEGER DEFAULT 0)";
+			+ "lastUpdated INTEGER DEFAULT 0, "
+			+ "is_cached INTEGER DEFAULT 0,"
+			+ "url VARCHAR)";
 	
 	private static final String venueTableCreate = "CREATE TABLE venues (" 
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -118,20 +125,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		if (oldVersion == 1) {
 			db.execSQL("ALTER TABLE venues ADD offline_map VARCHAR");
 			db.execSQL("ALTER TABLE venues ADD offline_map_bounds VARCHAR");
+			db.execSQL("ALTER TABLE conferences ADD is_cached INTEGER");
+			db.execSQL("ALTER TABLE conferences ADD url VARCHAR");
+			db.execSQL("UPDATE conferences SET is_cached=1");
 		}
 		
 	}
 
-	public void clearDatabase(SQLiteDatabase db) {
-		db.execSQL("DELETE FROM conferences");
-		db.execSQL("DELETE FROM venues");
-		db.execSQL("DELETE FROM points");
-		db.execSQL("DELETE FROM mapPolygons");
-		db.execSQL("DELETE FROM rooms");
-		db.execSQL("DELETE FROM tracks");
-		db.execSQL("DELETE FROM speakers");
-		db.execSQL("DELETE FROM events");
-		db.execSQL("DELETE FROM eventSpeakers");
+	public void clearDatabase(SQLiteDatabase db, long conferenceId) {
+		long venueId = -1;
+		String sql = "SELECT venue_id FROM conferences WHERE _id=" + conferenceId;
+		Cursor c = db.rawQuery(sql, null);
+		if (c.moveToFirst()) {
+			venueId = c.getLong(0);
+		}
+		c.close();
+		
+		db.execSQL("DELETE FROM venues WHERE _id=" + venueId);
+		db.execSQL("DELETE FROM points WHERE venue_id="+ venueId);
+		db.execSQL("DELETE FROM mapPolygons WHERE venue_id=" + venueId);
+		db.execSQL("DELETE FROM rooms WHERE venue_id=" + venueId);
+		db.execSQL("DELETE FROM tracks WHERE conference_id=" + conferenceId);
+		db.execSQL("DELETE FROM events WHERE conference_id=" + conferenceId);
+		// TODO Delete speakers and eventSpeakers entries
 	}
 
 }

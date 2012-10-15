@@ -1,32 +1,36 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * 
- */
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.maps;
 
 import java.util.ArrayList;
 
-import android.app.AlertDialog;
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 
 import com.google.android.maps.ItemizedOverlay;
-import com.google.android.maps.OverlayItem;
+import com.google.android.maps.MapView;
 
-/**
- * @author Matt Barringer <mbarringer@suse.de>
- *
- */
-public class GoogleMapOverlay extends ItemizedOverlay<OverlayItem> {
-	private ArrayList<OverlayItem> mOverlays = new ArrayList<OverlayItem>();
-	private Context mContext;
+public class GoogleMapOverlay extends ItemizedOverlay<GoogleMapOverlayItem> {
+	private ArrayList<GoogleMapOverlayItem> mOverlays = new ArrayList<GoogleMapOverlayItem>();
+	private GoogleMapPopup mPopup = null;
+	private MapView mMapView;
 	
-	public GoogleMapOverlay(Context context, Drawable defaultMarker) {
+	public GoogleMapOverlay(Drawable defaultMarker, MapView mapView) {
 		super(boundCenterBottom(defaultMarker));
-		this.mContext = context;
+		this.mPopup = new GoogleMapPopup(mapView);
+		this.mMapView = mapView;
 	}
 		
 	@Override
-	protected OverlayItem createItem(int i) {
+	protected GoogleMapOverlayItem createItem(int i) {
 		return mOverlays.get(i);
 	}
 	
@@ -34,15 +38,15 @@ public class GoogleMapOverlay extends ItemizedOverlay<OverlayItem> {
 		return boundCenterBottom(d);
 	}
 	
-	public void addOverlay(OverlayItem overlayItem) {
+	public void addOverlay(GoogleMapOverlayItem overlayItem) {
 		mOverlays.add(overlayItem);
 	}
 	
-	public void addOverlays(ArrayList<OverlayItem> overlays) {
+	public void addOverlays(ArrayList<GoogleMapOverlayItem> overlays) {
 		mOverlays.addAll(overlays);
 	}
 	
-	public void removeOverlay(OverlayItem overlayItem) {
+	public void removeOverlay(GoogleMapOverlayItem overlayItem) {
 		mOverlays.remove(overlayItem);
 	}
 	
@@ -62,11 +66,12 @@ public class GoogleMapOverlay extends ItemizedOverlay<OverlayItem> {
 	
 	@Override
 	protected boolean onTap(int index) {
-	  OverlayItem item = mOverlays.get(index);
-	  AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
-	  dialog.setTitle(item.getTitle());
-	  dialog.setMessage(item.getSnippet());
-	  dialog.show();
+	  GoogleMapOverlayItem item = mOverlays.get(index);
+	  item.showPopup(mPopup, mMapView);
 	  return true;
 	}
+	
+    public void closePopup() {
+    	mPopup.close();
+    }
 }

@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * 
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.maps;
 
 import java.io.File;
@@ -10,6 +21,7 @@ import java.util.Set;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
+import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
@@ -45,20 +57,20 @@ import de.incoherent.suseconferenceclient.models.Venue;
 import de.incoherent.suseconferenceclient.models.Venue.MapPoint;
 import de.incoherent.suseconferenceclient.models.Venue.MapPolygon;
 
-public class OSMMap implements MapInterface {
+public class OSMMap implements MapInterface, OSMEventsInterface, OnItemGestureListener<OSMOverlayItem> {
 	private Context mContext;
 	private OSMMapView mMapView = null;
+	private OSMMapOverlay mMapOverlay = null;
 	private File mOfflineMap;
 	private MyLocationOverlay mLocationOverlay;
 	private ArrayList<OSMOverlayItem> mOverlays = new ArrayList<OSMOverlayItem>();
 	private BoundingBoxE6 mBoundingBox = null;
-	private int mLastMapX, mLastMapY;
 	
 	public OSMMap(Context context, File offlineMap) {
 		mContext = context;
 		mOfflineMap = offlineMap;
 	}
-	
+
 	@Override
 	public View getView() {
 		return mMapView;
@@ -66,6 +78,9 @@ public class OSMMap implements MapInterface {
 
 	@Override
 	public void setupMap(Venue venue) {
+		if (mMapView != null)
+			return;
+		
 		if (mOfflineMap == null) {
 			mMapView = new OSMMapView(mContext);
 			mMapView.setTileSource(TileSourceFactory.MAPQUESTOSM);
@@ -120,7 +135,7 @@ public class OSMMap implements MapInterface {
 		Drawable drinkDrawable = mContext.getResources().getDrawable(R.drawable.drink_marker);
 		Drawable elecDrawable = mContext.getResources().getDrawable(R.drawable.electronics_marker);
 		Drawable partyDrawable = mContext.getResources().getDrawable(R.drawable.party_marker);
-
+		Drawable hotelDrawable = mContext.getResources().getDrawable(R.drawable.hotel_marker);
 		MapController controller =  mMapView.getController();
 		for (MapPoint point : venue.getPoints()) {
 			GeoPoint mapPoint = new GeoPoint(point.getLat(), point.getLon());
@@ -145,43 +160,21 @@ public class OSMMap implements MapInterface {
 			case MapPoint.TYPE_ELECTRONICS:
 				overlay.setMarker(elecDrawable);
 				break;
+			case MapPoint.TYPE_HOTEL:
+				overlay.setMarker(hotelDrawable);
+				break;
 			}
 
 			mOverlays.add(overlay);
 		}
 		
 		ResourceProxy proxy = new DefaultResourceProxyImpl(mContext);
-		OSMMapOverlay mapOverlays = new OSMMapOverlay(mOverlays, new OnItemGestureListener<OSMOverlayItem>() {
-            @Override
-            public boolean onItemSingleTapUp(final int index, final OSMOverlayItem item) {
-            	AlertDialog.Builder dialog = new AlertDialog.Builder(mContext);
-            	dialog.setTitle(item.getTitle());
-            	dialog.setMessage(item.getSnippet());
-            	dialog.show();
-                return true;
-            }
-
-            @Override
-            public boolean onItemLongPress(final int index, final OSMOverlayItem item) {
-                return false;
-            }
-        }, proxy);
-//
-//		for (MapPolygon polygon : venue.getPolygons()) {
-//			List<MapPoint> points = polygon.getPoints();
-//			GeoPoint[] pathPoints = new GeoPoint[points.size()];
-//			for (int i = 0; i < points.size(); i++) {
-//				MapPoint point = points.get(i);
-//				pathPoints[i] = new GeoPoint(point.getLat(), point.getLon());
-//			}
-//			GoogleMapPolygonOverlay newOverlay;
-//			newOverlay = new GoogleMapPolygonOverlay(pathPoints, polygon.getLineColor(), polygon.getFillColor());
-//			overlays.add(newOverlay);
-//		}
-//		overlays.add(mMapOverlays);
+		mMapOverlay = new OSMMapOverlay(mOverlays, this, proxy, mMapView);
 		
-		mMapView.getOverlays().add(mapOverlays);
-		mapOverlays.doPopulate();
+        OSMEventsOverlay eventsOverlay = new OSMEventsOverlay(mContext, this);
+        mMapView.getOverlays().add(eventsOverlay);
+		mMapView.getOverlays().add(mMapOverlay);
+		mMapOverlay.doPopulate();
 
 		mLocationOverlay = new MyLocationOverlay(mContext, mMapView);
 		mLocationOverlay.enableMyLocation();
@@ -209,5 +202,22 @@ public class OSMMap implements MapInterface {
 		Log.d("SUSEConferences", "OSMMap: disableLocation");
 		mLocationOverlay.disableMyLocation();
 		mLocationOverlay.disableCompass();
+	}
+
+	@Override
+	public boolean onItemSingleTapUp(int index, OSMOverlayItem item) {
+		mMapOverlay.showBubbleOnItem(index, mMapView);
+		return true;
+	}
+
+	@Override
+	public boolean onItemLongPress(int arg0, OSMOverlayItem arg1) {
+		return false;
+	}
+
+	@Override
+	public boolean singleTapUpHelper(IGeoPoint p) {
+		mMapOverlay.closeBubble();
+		return false;
 	}
 }

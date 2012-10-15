@@ -2,7 +2,7 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/map_info_bubble">
+        android:background="@drawable/map_info_popup">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -14,17 +14,18 @@
                     android:id="@+id/nameTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:text="Large Text"
-                    android:textAppearance="?android:attr/textAppearanceLarge" />
-
+                    android:layout_gravity="center_horizontal|center_vertical"
+                    android:text="Title"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="@color/dark_suse_green" />
 
             <TextView
                 android:id="@+id/addressTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:text="Small Text"
+                android:text="Address"
+                android:textColor="#1531AE"
                 android:textAppearance="?android:attr/textAppearanceSmall" />
 
             <View
@@ -40,7 +41,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:text="Medium Text"
+                android:text="A Long Description"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
 
         </LinearLayout>

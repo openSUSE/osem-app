@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * 
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.maps;
 
 import java.util.ArrayList;
@@ -14,7 +25,7 @@ import com.google.android.maps.OverlayItem;
 
 import de.incoherent.suseconferenceclient.Config;
 import de.incoherent.suseconferenceclient.R;
-import de.incoherent.suseconferenceclient.activities.VenueMapsActivity;
+import de.incoherent.suseconferenceclient.activities.MapsActivity;
 import de.incoherent.suseconferenceclient.maps.GoogleMapView.AreaZoomListener;
 import de.incoherent.suseconferenceclient.models.Venue;
 import de.incoherent.suseconferenceclient.models.Venue.MapPoint;
@@ -26,18 +37,18 @@ import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 
-public class GoogleMap implements AreaZoomListener, MapInterface {
+public class GoogleMap implements AreaZoomListener, MapInterface, GoogleMapEventsInterface {
 	private GoogleMapView mMapView = null;
 	private Context mContext;
 	private boolean mShowingAll = true;
-	private OverlayItem mConferenceOverlay;
+	private GoogleMapOverlayItem mConferenceOverlay = null;
 	private GoogleMapOverlay mMapOverlays;
-	private ArrayList<OverlayItem> mOverlays;
+	private ArrayList<GoogleMapOverlayItem> mOverlays;
 	private MyLocationOverlay mLocationOverlay;
 
 	public GoogleMap(Context context)  {
 		mContext = context;
-		mOverlays = new ArrayList<OverlayItem>();
+		mOverlays = new ArrayList<GoogleMapOverlayItem>();
 	}
 	
 	@Override
@@ -47,6 +58,9 @@ public class GoogleMap implements AreaZoomListener, MapInterface {
 	
 	@Override
 	public void setupMap(Venue venue) {
+		if (mMapView != null)
+			return;
+		
 		mMapView = new GoogleMapView(mContext, Config.MAPS_KEY);
 		mMapView.setBuiltInZoomControls(true);
 		mMapView.setZoomListener(this);
@@ -54,13 +68,15 @@ public class GoogleMap implements AreaZoomListener, MapInterface {
 		mMapView.setClickable(true);
 
 		List<Overlay> overlays = mMapView.getOverlays();
+		GoogleMapEventsOverlay eventOverlay = new GoogleMapEventsOverlay(this);
+		overlays.add(eventOverlay);
 		
 		Drawable venueDrawable = GoogleMapOverlay.boundDrawable(mContext.getResources().getDrawable(R.drawable.venue_marker));
 		Drawable foodDrawable = GoogleMapOverlay.boundDrawable(mContext.getResources().getDrawable(R.drawable.food_marker));
 		Drawable drinkDrawable = GoogleMapOverlay.boundDrawable(mContext.getResources().getDrawable(R.drawable.drink_marker));
 		Drawable elecDrawable = GoogleMapOverlay.boundDrawable(mContext.getResources().getDrawable(R.drawable.electronics_marker));
 		Drawable partyDrawable = GoogleMapOverlay.boundDrawable(mContext.getResources().getDrawable(R.drawable.party_marker));
-		mMapOverlays = new GoogleMapOverlay(mContext, venueDrawable);
+		mMapOverlays = new GoogleMapOverlay(venueDrawable, mMapView);
 
 		if (venue == null)
 			return;
@@ -68,15 +84,13 @@ public class GoogleMap implements AreaZoomListener, MapInterface {
 		MapController controller =  mMapView.getController();
 		for (MapPoint point : venue.getPoints()) {
 			GeoPoint mapPoint = new GeoPoint(point.getLat(), point.getLon());
-			OverlayItem overlay = null;
-			if (point.getType() == MapPoint.TYPE_VENUE)
-				 overlay = new OverlayItem(mapPoint, point.getName(), point.getAddress());
-			else
-				overlay = new OverlayItem(mapPoint, point.getName(), point.getDescription());
+			GoogleMapOverlayItem overlay = null;
+			overlay = new GoogleMapOverlayItem(point.getName(), point.getDescription(), point.getAddress(), mapPoint);
 			
 			switch (point.getType()) {
 			case MapPoint.TYPE_VENUE:
-				mConferenceOverlay = overlay;
+				if (mConferenceOverlay == null)
+					mConferenceOverlay = overlay;
 				controller.setCenter(mapPoint);
 				controller.setZoom(18);
 				break;
@@ -157,4 +171,9 @@ public class GoogleMap implements AreaZoomListener, MapInterface {
 		// Not useful ATM
 	}
 
+	@Override
+	public boolean singleTapUpHelper(GeoPoint p) {
+		mMapOverlays.closePopup();
+		return false;
+	}
 }

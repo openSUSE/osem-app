@@ -30,6 +30,8 @@
             android:layout_height="wrap_content"
             android:layout_alignLeft="@+id/nameTextView"
             android:layout_below="@+id/nameTextView"
+            android:linksClickable="true"
+            android:autoLink="web"
             android:text="Small Text"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -39,8 +41,10 @@
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_below="@+id/companyTextView"
-            android:paddingLeft="15dip"
+            android:linksClickable="true"
+            android:autoLink="web"
             android:paddingBottom="10dip"
+            android:paddingLeft="15dip"
             android:paddingRight="10dip"
             android:paddingTop="5dip"
             android:text="Medium Text"

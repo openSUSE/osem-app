@@ -1,6 +1,14 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * 
- */
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.app;
 
 import java.text.ParseException;
@@ -15,6 +23,7 @@ import java.util.TimeZone;
 import de.incoherent.suseconferenceclient.models.Conference;
 import de.incoherent.suseconferenceclient.models.Event;
 import de.incoherent.suseconferenceclient.models.Speaker;
+import de.incoherent.suseconferenceclient.models.Track;
 import de.incoherent.suseconferenceclient.models.Venue;
 import de.incoherent.suseconferenceclient.models.Venue.MapPoint;
 import de.incoherent.suseconferenceclient.models.Venue.MapPolygon;
@@ -26,11 +35,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 import android.util.Log;
 
-/**
+/*
  * Database access wrapper
  * 
- * @author Matt Barringer <mbarringer@suse.de>
- *
  */
 
 public class Database {
@@ -56,18 +63,38 @@ public class Database {
 		helper.close();
 	}
 	
-	public void clearDatabase() {
-		helper.clearDatabase(db);
+	public void clearDatabase(long conferenceId) {
+		helper.clearDatabase(db, conferenceId);
 	}
+	
 	public void setConferenceVenue(long venueId, long conferenceId) {
 		ContentValues values = new ContentValues();
 		values.put("venue_id", venueId);
 		db.update("conferences", values, "_id = " + conferenceId, null);		
 	}
 	
+	public List<Conference> getConferenceList() {
+		List<Conference> ret = new ArrayList<Conference>();
+		String sql = "SELECT _id, guid, name, description, year, social_tag, dateRange, is_cached, url FROM conferences";
+		Cursor c = db.rawQuery(sql, null);
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			Conference newConference = new Conference();
+			newConference.setSqlId(c.getLong(0));
+			newConference.setGuid(c.getString(1));
+			newConference.setName(c.getString(2));
+			newConference.setDescription(c.getString(3));
+			newConference.setYear(c.getInt(4));
+			newConference.setSocialTag(c.getString(5));
+			newConference.setDateRange(c.getString(6));
+			newConference.setIsCached((c.getInt(7) == 1));
+			newConference.setUrl(c.getString(8));
+			ret.add(newConference);
+		}
+		return ret;
+	}
 	public Conference getConference(long conferenceId) {
 		Conference newConference = null;
-		String sql = "SELECT guid, name, description, year, social_tag, dateRange FROM conferences WHERE _id=" + conferenceId;
+		String sql = "SELECT guid, name, description, year, social_tag, dateRange, is_cached, url FROM conferences WHERE _id=" + conferenceId;
 		Cursor c = db.rawQuery(sql, null);
 		if (c.moveToFirst()) {
 			newConference = new Conference();
@@ -78,6 +105,9 @@ public class Database {
 			newConference.setSocialTag(c.getString(4));
 			newConference.setDateRange(c.getString(5));
 			newConference.setSqlId(conferenceId);
+			newConference.setIsCached((c.getInt(6) == 1));
+			newConference.setUrl(c.getString(7));
+
 		}
 		
 		return newConference;
@@ -101,6 +131,13 @@ public class Database {
 		db.update("conferences", values, sql, null);
 	}
 	
+	public void setConferenceAsCached(long conferenceId, int isCached) {
+		String sql = "_id=" + conferenceId;
+		ContentValues values = new ContentValues();
+		values.put("is_cached", isCached);
+		db.update("conferences", values, sql, null);
+	}
+
 	public long getConferenceVenue(long conferenceId) {
 		long id = -1;
 		String sql = "SELECT venue_id FROM conferences WHERE _id=" + conferenceId;
@@ -143,8 +180,10 @@ public class Database {
 				type = MapPoint.TYPE_DRINK;
 			else if (typeStr.equals("electronics"))
 				type = MapPoint.TYPE_ELECTRONICS;
-			if (typeStr.equals("party"))
+			else if (typeStr.equals("party"))
 				type = MapPoint.TYPE_PARTY;
+			else if (typeStr.equals("hotel"))
+				type = MapPoint.TYPE_HOTEL;
 			
 			MapPoint newPoint = venue.new MapPoint(type, lat, lon);
 			newPoint.setName(c.getString(3));
@@ -211,6 +250,7 @@ public class Database {
 		values.put("dateRange", conference.getDateRange());
 		values.put("description", conference.getDescription());
 		values.put("social_tag", conference.getSocialTag());
+		values.put("url", conference.getUrl());
 		long insertId = db.insert("conferences", null, values);
 		return insertId;
 	}
@@ -347,6 +387,17 @@ public class Database {
 		}
 	}
 	
+	public List<Track> getUniqueTracks(long conferenceId) {
+		List<Track> trackList = new ArrayList<Track>();
+		String sql = "SELECT DISTINCT(events.track_id), tracks.name FROM events INNER JOIN tracks ON tracks._id = events.track_id WHERE events.conference_id=" + conferenceId;
+		Cursor c = db.rawQuery(sql, null);
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			Track track = new Track(c.getLong(0), c.getString(1));
+			trackList.add(track);
+		}
+		return trackList;
+	}
+	
 	public List<Event> getMyScheduleTitles(long conferenceId) {
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
 				   + "rooms.name, events.track_id, events.abstract, events.my_schedule FROM events INNER JOIN rooms ON rooms._id = events.room_id "
@@ -355,9 +406,20 @@ public class Database {
 	}
 	
 	public List<Event> getScheduleTitles(long conferenceId) {
+		return getScheduleTitles(conferenceId, null, null);
+	}
+	
+	public List<Event> getScheduleTitles(long conferenceId, String trackFilter, String languageFilter) {
+		String where = "WHERE events.conference_id = " + conferenceId;
+		if (trackFilter != null && trackFilter.length() > 0) {
+			where += " AND events.track_id IN (" + trackFilter + ")";
+		}
+		if (languageFilter != null && languageFilter.length() > 0) {
+			where += " AND events.language IN (" + languageFilter + ")";
+		}
 		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
 				   + "rooms.name, events.track_id, events.abstract, events.my_schedule FROM events INNER JOIN rooms ON rooms._id = events.room_id "
-				   + "WHERE events.conference_id = " + conferenceId + " ORDER BY julianday(events.date) ASC";
+				   + where + " ORDER BY julianday(events.date) ASC";
 		return doEventsQuery(sql, conferenceId);
 	}
 	
@@ -436,4 +498,5 @@ public class Database {
 		c.close();
 		return eventList;
 	}
+
 }

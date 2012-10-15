@@ -1,6 +1,14 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * 
- */
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.models;
 
 import java.util.ArrayList;
@@ -8,10 +16,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-/**
- * @author Matt Barringer <mbarringer@suse.de>
- *
- */
 public class Event implements Comparable<Event> {
 	private String mGuid = "";
 	private Date mDate;

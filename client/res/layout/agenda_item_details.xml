@@ -64,53 +64,13 @@
             </LinearLayout>
         </ScrollView>
 
-        <ToggleButton
-            android:id="@+id/favoriteButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentTop="true"
-            android:background="@drawable/favorite_toggle"
-            android:text=""
-            android:textOff=""
-            android:textOn="" />
-
-        <!-- <ImageButton -->
-        <!-- android:id="@+id/favoriteButton" -->
-        <!-- android:layout_width="wrap_content" -->
-        <!-- android:layout_height="wrap_content" -->
-        <!-- android:layout_alignParentRight="true" -->
-        <!-- android:layout_alignParentTop="true" -->
-        <!-- android:background="@null" -->
-        <!-- android:src="@drawable/favorite_off" /> -->
-
-        <ToggleButton
-            android:id="@+id/calendarButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/favoriteButton"
-            android:layout_toLeftOf="@+id/favoriteButton"
-            android:background="@drawable/calendar_toggle"
-            android:paddingRight="10dip"
-            android:text=""
-            android:textOff=""
-            android:textOn="" />
-
-        <!-- <ImageButton -->
-        <!-- android:id="@+id/calendarButton" -->
-        <!-- android:paddingRight="10dip" -->
-        <!-- android:layout_width="wrap_content" -->
-        <!-- android:layout_height="wrap_content" -->
-        <!-- android:layout_alignTop="@+id/favoriteButton" -->
-        <!-- android:layout_toLeftOf="@+id/favoriteButton" -->
-        <!-- android:background="@null" -->
-        <!-- android:src="@drawable/event_off" /> -->
-
         <TextView
             android:id="@+id/agendaItemName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/calendarButton"
+            android:layout_alignLeft="@+id/agendaItemTime"
+            android:layout_alignParentTop="true"
+            android:layout_alignRight="@+id/horizontalLineView"
             android:text="Talk Title"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="@color/dark_suse_green" />

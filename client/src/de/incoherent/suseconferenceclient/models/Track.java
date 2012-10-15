@@ -9,22 +9,22 @@
  *     Matt Barringer <matt@incoherent.de> - initial API and implementation
  ******************************************************************************/
 
-package de.incoherent.suseconferenceclient.maps;
+package de.incoherent.suseconferenceclient.models;
 
-import org.osmdroid.util.BoundingBoxE6;
-
-import de.incoherent.suseconferenceclient.models.Venue;
-import android.view.View;
-
-/*
- * Both GoogleMap and OSMMap implement this interface so the user
- * can switch between online Google maps, and offline OSM maps.
- */
-
-public interface MapInterface {
-	public View getView();
-	public void setupMap(Venue venue);
-	public void enableLocation();
-	public void disableLocation();
-	public void setBoundingBox(BoundingBoxE6 box);
+public class Track {
+	private long mId;
+	private String mName;
+	
+	public Track(long id, String name) {
+		this.mId = id;
+		this.mName = name;
+	}
+	
+	public long getId() {
+		return mId;
+	}
+	
+	public String getName() {
+		return mName;
+	}
 }

@@ -11,7 +11,6 @@
 package de.incoherent.suseconferenceclient.activities;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
@@ -31,15 +30,16 @@ import android.provider.CalendarContract.Events;
 import android.provider.CalendarContract.Instances;
 import android.text.Html;
 import android.text.format.DateFormat;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import com.actionbarsherlock.app.SherlockActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
 
 import de.incoherent.suseconferenceclient.SUSEConferences;
 import de.incoherent.suseconferenceclient.app.AlarmReceiver;
@@ -48,33 +48,29 @@ import de.incoherent.suseconferenceclient.models.Event;
 import de.incoherent.suseconferenceclient.models.Speaker;
 import de.incoherent.suseconferenceclient.R;
 
-public class ScheduleDetailsActivity extends SherlockActivity implements OnClickListener {
+public class ScheduleDetailsActivity extends SherlockActivity  {
 	private Event mEvent;
 	private Database mDb;
 	private long mConferenceId;
-	private ToggleButton mFavoriteButton, mCalendarButton;
 	private TextView mTitleView, mTitleTime, mAbstractView, mTrackView;
-
+	private boolean mFavoriteCheck = false, mCalendarCheck = false;
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.agenda_item_details);
+		
 		Bundle extras = getIntent().getExtras();
 		mConferenceId = extras.getLong("conferenceId");
 		mDb = SUSEConferences.getDatabase();
 		mEvent = mDb.getEvent(mConferenceId, extras.getLong("eventId"));
 
-		mFavoriteButton = (ToggleButton) findViewById(R.id.favoriteButton);
-		mCalendarButton = (ToggleButton) findViewById(R.id.calendarButton);
 		mTitleView = (TextView) findViewById(R.id.agendaItemName);
 		mTitleTime = (TextView) findViewById(R.id.agendaItemTime);
 		mAbstractView = (TextView) findViewById(R.id.abstractContents);
 		mTrackView = (TextView) findViewById(R.id.trackTextView);
-		mFavoriteButton.setOnClickListener(this);
-		mCalendarButton.setOnClickListener(this);
 
 		if (savedInstanceState != null) {
-			mFavoriteButton.setChecked(savedInstanceState.getBoolean("favoriteChecked"));
-			mCalendarButton.setChecked(savedInstanceState.getBoolean("calendarChecked"));
+			mFavoriteCheck = savedInstanceState.getBoolean("favoriteChecked");
+			mCalendarCheck = savedInstanceState.getBoolean("calendarChecked");
 			mTitleView.setText(savedInstanceState.getString("title"));
 			mTitleTime.setText(savedInstanceState.getString("time"));
 			mAbstractView.setText(savedInstanceState.getString("abstract"));
@@ -91,9 +87,9 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 		// check if they cancelled the calendar addition
 		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			if (findEventId() >= 0)
-				mCalendarButton.setChecked(true);
+				mCalendarCheck = true;
 			else
-				mCalendarButton.setChecked(false);
+				mCalendarCheck = false;
 		}
 	}
 
@@ -101,8 +97,8 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 	public void onSaveInstanceState (Bundle outState) {
 		Log.d("SUSEConferences", "onSaveInstanceState");
 		outState.putLong("conferenceId", mConferenceId);
-		outState.putBoolean("favoriteChecked", mFavoriteButton.isChecked());
-		outState.putBoolean("calendarChecked", mCalendarButton.isChecked());
+		outState.putBoolean("favoriteChecked", mFavoriteCheck);
+		outState.putBoolean("calendarChecked", mCalendarCheck);
 		outState.putString("title", mTitleView.getText().toString());
 		outState.putString("time", mTitleTime.getText().toString());
 		outState.putString("abstract", mAbstractView.getText().toString());
@@ -113,8 +109,7 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 		if (event == null) return;
 
 		if (event.isInMySchedule())
-			mFavoriteButton.setChecked(true);
-
+			mFavoriteCheck = true;
 
 		mTitleView.setText(mEvent.getTitle());
 		String startTime = "";
@@ -145,10 +140,19 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 				View newView = View.inflate(this, R.layout.speaker_view, null);
 				TextView v = (TextView) newView.findViewById(R.id.nameTextView);
 				v.setText(speaker.getName());
+				
 				v = (TextView) newView.findViewById(R.id.companyTextView);
 				v.setText(speaker.getCompany());
+				
 				v = (TextView) newView.findViewById(R.id.biographyView);
-				v.setText(Html.fromHtml(speaker.getBio()));
+				String bio = speaker.getBio();
+				if (bio.length() == 0) {
+					v.setVisibility(View.GONE);
+				} else {
+					v.setText(Html.fromHtml(bio));
+					v.setMovementMethod(LinkMovementMethod.getInstance());
+				}
+				
 				newView.setPadding(0, 10, 0, 0);
 				speakerLayout.addView(newView);
 			}
@@ -156,7 +160,7 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 		// Check if this event is in the calendar
 		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 			if (findEventId() >= 0)
-				mCalendarButton.setChecked(true);
+				mCalendarCheck = true;
 		} else {
 			Intent intent = generateAlarmIntent();
 			PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 
@@ -164,33 +168,64 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 																	intent, 
 																	PendingIntent.FLAG_NO_CREATE);
 			if (pendingIntent != null)
-				mCalendarButton.setChecked(true);
+				mCalendarCheck = true;
 		}
 
 	}
-
-	// Suppress lint checks because of the ICS+ calls in the if block
-	@SuppressLint({ "NewApi", "NewApi" })
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	MenuItem item = menu.add(Menu.NONE, R.id.actionBarFavorite, Menu.NONE, "");
+    	item.setCheckable(true);
+    	item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+    	if (mFavoriteCheck) {
+    		item.setIcon(R.drawable.favorite_on);
+    		item.setChecked(true);
+    	} else {
+    		item.setIcon(R.drawable.favorite_off);
+    	}
+    	item = menu.add(Menu.NONE, R.id.actionBarCalendar, Menu.NONE, "");
+    	item.setCheckable(true);
+    	item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+    	if (mCalendarCheck) {
+    		item.setIcon(R.drawable.event_on);
+    		item.setChecked(true);
+    	} else {
+    		item.setIcon(R.drawable.event_off);
+    	}
+    	return true;
+    }
+    
+    @SuppressLint("NewApi")
 	@Override
-	public void onClick(View v) {
-		ToggleButton button = (ToggleButton) v;
-
-		if (v.getId() == R.id.favoriteButton) {
-			Log.d("SUSEConferences", "Toggling " + mEvent.getSqlId());
-			if (button.isChecked()) {
-				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 1);
-				Toast.makeText(this, "Added to My Schedule", 3).show();
-			} else {
+    public boolean onOptionsItemSelected(MenuItem menuItem) {
+    	switch (menuItem.getItemId()) {
+    	case R.id.actionBarFavorite:
+    		if (menuItem.isChecked()) {
+    			menuItem.setChecked(false);
+    			menuItem.setIcon(R.drawable.favorite_off);
+    			mFavoriteCheck = false;
 				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 0);
-				Toast.makeText(this, "Removed from My Schedule", 3).show();
-			}
-		} else {
-			// Before ICS, there was no reliable way to add events
-			// to the user's calendar.  So if this runs on API 14+,
-			// we'll use the built in.  If not, we'll add it to
-			// their Google Calendar.
+				Toast.makeText(this, "Removed from My Schedule", Toast.LENGTH_SHORT).show();
+    		} else {
+    			menuItem.setChecked(true);
+    			menuItem.setIcon(R.drawable.favorite_on);
+    			mFavoriteCheck = true;
+				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 1);
+				Toast.makeText(this, "Added to My Schedule", Toast.LENGTH_SHORT).show();
+    		}
+    		return true;
+    	case R.id.actionBarCalendar:
+    		if (menuItem.isChecked()) {
+    			menuItem.setChecked(false);
+    			menuItem.setIcon(R.drawable.event_off);
+    			mCalendarCheck = false;
+    		} else {
+    			menuItem.setChecked(true);
+    			menuItem.setIcon(R.drawable.event_on);
+    			mCalendarCheck = true;
+    		}
 			if (android.os.Build.VERSION.SDK_INT >=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-				if (button.isChecked()) {
+				if (mCalendarCheck) {
 					Intent intent = new Intent(Intent.ACTION_INSERT);
 					intent.setType("vnd.android.cursor.item/event");
 					intent.putExtra(Events.TITLE, mEvent.getTitle());
@@ -210,22 +245,25 @@ public class ScheduleDetailsActivity extends SherlockActivity implements OnClick
 				Intent intent = generateAlarmIntent();
 				PendingIntent pendingIntent = PendingIntent.getBroadcast(this, intent.getStringExtra("intentId").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 				
-				if (button.isChecked()) {
+				if (mCalendarCheck) {
 					// Add an alarm to notify the user 5 minutes before the talk
 					manager.set(AlarmManager.RTC_WAKEUP, mEvent.getDate().getTime() - 300000 , pendingIntent);
-					Toast.makeText(this, "Alert set", 3).show();
+					Toast.makeText(this, "Alert set", Toast.LENGTH_SHORT).show();
 				} else {
 					manager.cancel(pendingIntent);
-					Toast.makeText(this, "Alert canceled", 3).show();
+					Toast.makeText(this, "Alert canceled", Toast.LENGTH_SHORT).show();
 				}
 			}
-		}
-	}
 
+    		return true;
+    	}
+    	return super.onOptionsItemSelected(menuItem);
+    }
 	private Intent generateAlarmIntent() {
 		Intent intent = new Intent(ScheduleDetailsActivity.this, AlarmReceiver.class);
 		Calendar cal = GregorianCalendar.getInstance();
 		cal.setTime(mEvent.getDate());
+		
 		// This is used to keep track of the alarm intents, the hashCode() is used as the PendingIntent id
 		String id = mEvent.getTitle() + mEvent.getRoomName() + mTitleTime.getText().toString();
 		intent.putExtra("intentId", id);

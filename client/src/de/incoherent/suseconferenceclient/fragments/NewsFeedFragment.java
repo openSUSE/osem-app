@@ -27,7 +27,7 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 
-import de.incoherent.suseconferenceclient.adapters.PhoneScheduleAdapter;
+import de.incoherent.suseconferenceclient.adapters.ScheduleAdapter;
 import de.incoherent.suseconferenceclient.adapters.SocialItemAdapter;
 import de.incoherent.suseconferenceclient.app.SocialWrapper;
 import de.incoherent.suseconferenceclient.models.SocialItem;
@@ -37,7 +37,7 @@ public class NewsFeedFragment extends SherlockListFragment {
 	private String mSearchTag = "";
 	// In the future, this may be used to present a short list of recent items
 	protected int mFeedNumber = 0;
-	private SocialItemAdapter mAdapter;
+	private SocialItemAdapter mAdapter = null;
 	private ArrayList<SocialItem> mItems;
     private int mIndex = -1;
     private int mTop = 0;
@@ -66,6 +66,23 @@ public class NewsFeedFragment extends SherlockListFragment {
 			this.getListView().setSelectionFromTop(mIndex, mTop);
 		}
 	}
+	
+	public void loadNewConference(String searchTag) {
+		this.mSearchTag = searchTag;
+		requery();
+	}
+	
+	public void requery() {
+		mIndex = -1;
+		mTop = 0;
+		if (mAdapter != null)
+			mAdapter.clear();
+		Bundle args = getArguments();
+		mSearchTag = args.getString("socialTag");
+		SocialTask task = new SocialTask();
+		task.execute(mSearchTag);
+	}
+
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -95,9 +112,6 @@ public class NewsFeedFragment extends SherlockListFragment {
 			ArrayList<SocialItem> twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
 			twitterItems.addAll(SocialWrapper.getGooglePlusItems(getActivity(), searchTag, mFeedNumber));
 			Collections.sort(twitterItems, Collections.reverseOrder());
-//			if (mFeedNumber > 0)
-//				if (twitterItems.size() >= mFeedNumber)
-//					return (ArrayList<SocialItem>) twitterItems.subList(0, mFeedNumber);
 			return twitterItems;
 		}
 		

@@ -6,6 +6,7 @@
     <string name="title_activity_home">SUSE Conferences</string>
     <string name="title_activity_info">Conference Information</string>
     <string name="title_activity_map">Map</string>
+    <string name="title_activity_conference_list">Conferences List</string>
     <string name="mySchedule">MY SCHEDULE</string>
     <string name="fullSchedule">FULL SCHEDULE</string>
     <string name="newsFeed">NEWS FEED</string>
@@ -17,8 +18,14 @@
     <string name="downloadMap">Download Map</string>
     <string name="switchToOfflineMap">Use Offline Map</string>
     <string name="switchToOnlineMap">Use Online Map</string>
+    <string name="deleteMap">Delete Map</string>
     <string name="filter">Filter</string>
     <string name="onlyShowLanguage">Languages</string>
     <string name="onlyShowTracks">Tracks</string>
     <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="selectConference">Select a conference</string>
+    <string name="conferenceList">Conferences</string>
 </resources>

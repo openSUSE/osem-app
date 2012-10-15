@@ -22,6 +22,12 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.Overlay;
 import com.google.android.maps.Projection;
 
+/*
+ * Given a set of points, draw lines over the map.  
+ * Currently unused, it was an earlier experiment at
+ * drawing more detailed venue layouts.  Perhaps it
+ * will be resurected eventually.
+ */
 public class GoogleMapPolygonOverlay extends Overlay {
 	private GeoPoint[] mPointList;
 	private int mLineColor;

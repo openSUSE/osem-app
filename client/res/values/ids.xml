@@ -6,7 +6,11 @@
         <item name="settingsItem" type="id"/>
         <item name="checkForUpdates" type="id"/>
         <item name="downloadMap" type="id" />
+        <item name="deleteMap" type="id" />
         <item name="switchToOnlineMap" type="id" />
         <item name="switchToOfflineMap" type="id" />
         <item name="filterEvents" type="id" />
+        <item name="actionBarFavorite" type="id" />
+        <item name="actionBarCalendar" type="id" />
+        <item name="conferenceList" type="id" />
     </resources>

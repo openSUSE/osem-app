@@ -1,29 +1,36 @@
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+ * 
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.maps;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapView;
+import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
-import org.osmdroid.views.overlay.ItemizedOverlay;
-import org.osmdroid.views.overlay.ItemizedOverlayWithFocus;
-import org.osmdroid.views.overlay.OverlayItem;
 
-import android.app.AlertDialog;
-import android.content.Context;
 import android.graphics.Point;
-import android.graphics.drawable.Drawable;
 
-public class OSMMapOverlay extends ItemizedOverlayWithFocus<OSMOverlayItem> {
+public class OSMMapOverlay extends ItemizedIconOverlay<OSMOverlayItem> {
 	private ArrayList<OSMOverlayItem> mOverlays = null;
-//	private Context mContext;
+	private OSMMapPopup mPopup;
 	
 	public OSMMapOverlay(ArrayList<OSMOverlayItem> overlays,
 						 ItemizedIconOverlay.OnItemGestureListener<OSMOverlayItem> listener,
-						 ResourceProxy proxy) {
+						 ResourceProxy proxy,
+						 MapView mapView) {
 		super(overlays, listener, proxy);
-		mOverlays = overlays;
+		this.mOverlays = overlays;
+		this.mPopup = new OSMMapPopup(mapView);
 	}
 		
 	@Override
@@ -66,4 +73,16 @@ public class OSMMapOverlay extends ItemizedOverlayWithFocus<OSMOverlayItem> {
 	public boolean onSnapToItem(int arg0, int arg1, Point arg2, IMapView arg3) {
 		return false;
 	}
+	
+    public void showBubbleOnItem(final int index, final MapView mapView) {
+        OSMOverlayItem item = (OSMOverlayItem)(getItem(index)); 
+        if (item!= null){
+        	item.showPopup(mPopup, mapView);
+        }
+    }
+    
+    public void closeBubble() {
+    	mPopup.close();
+    }
+
 }

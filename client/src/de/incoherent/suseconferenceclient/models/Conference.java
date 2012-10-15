@@ -1,12 +1,15 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * 
- */
-package de.incoherent.suseconferenceclient.models;
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
 
-/**
- * @author Matt Barringer <mbarringer@suse.de>
- *
- */
+package de.incoherent.suseconferenceclient.models;
 
 public class Conference {
 	private String mGuid = "";
@@ -17,6 +20,7 @@ public class Conference {
 	private String mDateRange = "";
 	private String mUrl = "";
 	private String mSocialTag = "";
+	private boolean mIsCached = false;
 	
 	public Conference() {
 	}
@@ -83,5 +87,12 @@ public class Conference {
 	public void setSocialTag(String socialTag) {
 		mSocialTag = socialTag;
 	}
+	
+	public boolean isCached() {
+		return mIsCached;
+	}
 
+	public void setIsCached(boolean isCached) {
+		mIsCached = isCached;
+	}
 }

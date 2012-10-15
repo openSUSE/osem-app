@@ -22,6 +22,11 @@ import android.graphics.Color;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+/*
+ * Android 2.x/3.x don't provide a sufficiently reliable way to add
+ * events to the user's calendar, so we set alarms to remind users
+ * that the event is coming up, if they've pressed the "Add to Calendar" button.
+ */
 public class AlarmReceiver extends BroadcastReceiver {
 	// TODO launch the event details activity on click
 	@SuppressWarnings({"deprecation" })

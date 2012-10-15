@@ -1,16 +1,23 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * 
- */
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.models;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author Matt Barringer <mbarringer@suse.de>
- *
- */
 public class Venue {
+	/*
+	 * MapPoint represents the markers on the map
+	 */
 	public class MapPoint {
 		public static final int TYPE_VENUE = 0;
 		public static final int TYPE_FOOD = 1;
@@ -18,6 +25,7 @@ public class Venue {
 		public static final int TYPE_ELECTRONICS = 3;
 		public static final int TYPE_PARTY = 4;
 		public static final int TYPE_NONE = 5;
+		public static final int TYPE_HOTEL = 6;
 		
 		private int mType;
 		private String mName;
@@ -81,6 +89,10 @@ public class Venue {
 		}
 	}
 	
+	/*
+	 * MapPolygon represents polygons to be drawn over the map.  Currently
+	 * not used.
+	 */
 	public class MapPolygon {
 		private List<MapPoint> mPoints;
 		private String mName = "";

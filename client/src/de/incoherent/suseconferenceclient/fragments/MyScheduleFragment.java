@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -28,20 +29,20 @@ import com.actionbarsherlock.app.SherlockListFragment;
 
 import de.incoherent.suseconferenceclient.SUSEConferences;
 import de.incoherent.suseconferenceclient.activities.ScheduleDetailsActivity;
-import de.incoherent.suseconferenceclient.adapters.PhoneScheduleAdapter;
-import de.incoherent.suseconferenceclient.adapters.PhoneScheduleAdapter.ScheduleItem;
+import de.incoherent.suseconferenceclient.adapters.ScheduleAdapter;
+import de.incoherent.suseconferenceclient.adapters.ScheduleAdapter.ScheduleItem;
 import de.incoherent.suseconferenceclient.app.Database;
 import de.incoherent.suseconferenceclient.models.Event;
 import de.incoherent.suseconferenceclient.R;
 
-public class MySchedulePhoneFragment extends SherlockListFragment {
-	public MySchedulePhoneFragment() { }
+public class MyScheduleFragment extends SherlockListFragment {
+	public MyScheduleFragment() { }
 
 	private Database db;
     private long mConferenceId;
     private List<Event> mEventList;
     private DateFormat mHeaderFormatter;
-    private PhoneScheduleAdapter mAdapter;
+    private ScheduleAdapter mAdapter;
     private int mIndex = -1;
     private int mTop = 0;
 
@@ -57,6 +58,7 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		super.onActivityCreated(savedInstanceState);
 		getListView().setDrawSelectorOnTop(true);
 	}
+	
 	@Override
 	public void onPause() {
 		super.onPause();
@@ -70,10 +72,15 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		}
 	}
 
+	public void onStart() {
+		super.onStart();
+		getListView().setFastScrollEnabled(true);
+	}
+	
 	public void onResume() {
 		super.onResume();
 		List<ScheduleItem> items = getScheduleItems();
-		mAdapter = new PhoneScheduleAdapter(getActivity(),
+		mAdapter = new ScheduleAdapter(getActivity(),
 				false,
 				R.layout.schedule_list_item,
 				getResources().getColor(R.color.dark_suse_green),
@@ -83,6 +90,20 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		if(mIndex!=-1){
 			this.getListView().setSelectionFromTop(mIndex, mTop);
 		}
+		getListView().setFastScrollEnabled(true);
+	}
+	
+	public void loadNewConference(long conferenceId) {
+		this.mConferenceId = conferenceId;
+		mIndex = -1;
+		mTop = 0;
+		mAdapter = new ScheduleAdapter(getActivity(),
+				true,
+				R.layout.schedule_list_item,
+				getResources().getColor(R.color.dark_suse_green),
+				getResources().getColor(R.color.suse_grey),
+				getScheduleItems());
+		setListAdapter(mAdapter);
 	}
 
 	private List<ScheduleItem> getScheduleItems() {
@@ -94,7 +115,7 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		Collections.sort(mEventList);
 
 		if (mEventList.size() > 0) {
-			ScheduleItem newItem = new ScheduleItem(buildHeaderText(mEventList.get(0)));
+			ScheduleItem newItem = new ScheduleItem(buildHeaderText(mEventList.get(0)), getDayString(mEventList.get(0)));
 			items.add(newItem);
 			Event event;
 			Event previousEvent = null;
@@ -128,7 +149,7 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 					
 					// If we've hit a new day, add a header item to the list
 					if (!sameDay(previousEvent.getDate(), event.getDate(), previousEvent.getTimeZone(), event.getTimeZone())) {
-						ScheduleItem newHeader= new ScheduleItem(buildHeaderText(event));
+						ScheduleItem newHeader= new ScheduleItem(buildHeaderText(event), getDayString(event));
 						items.add(newHeader);
 					}
 				}
@@ -151,6 +172,13 @@ public class MySchedulePhoneFragment extends SherlockListFragment {
 		mHeaderFormatter.setTimeZone(event.getTimeZone());
 		return mHeaderFormatter.format(event.getDate());
 	}
+	
+	private String getDayString(Event e) {
+		Calendar cal = new GregorianCalendar();
+		cal.setTime(e.getDate());
+		return String.valueOf(cal.get(Calendar.DAY_OF_MONTH));
+	}
+
 	
 	private boolean timesOverlap(Date s1, Date e1, Date s2, Date e2) {
 		return (s1.before(e2) && s2.before(e1));

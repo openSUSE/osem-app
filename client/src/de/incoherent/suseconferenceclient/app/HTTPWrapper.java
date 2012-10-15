@@ -44,10 +44,9 @@ import android.util.Log;
 /**
  * Convenience wrapper around HTTP calls.
  *   
- * @author Matt Barringer <mbarringer@suse.de>
- *
  * TODO This probably doesn't work with HTTPS
  */
+
 public class HTTPWrapper {
 	
 	public static Bitmap getImage(String url) throws ClientProtocolException, IOException {

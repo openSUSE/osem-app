@@ -23,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.actionbarsherlock.app.ActionBar;
+import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
@@ -33,9 +34,9 @@ import de.incoherent.suseconferenceclient.app.AboutDialog;
 import de.incoherent.suseconferenceclient.app.Database;
 import de.incoherent.suseconferenceclient.app.HTTPWrapper;
 import de.incoherent.suseconferenceclient.fragments.FilterDialogFragment;
-import de.incoherent.suseconferenceclient.fragments.MySchedulePhoneFragment;
+import de.incoherent.suseconferenceclient.fragments.MyScheduleFragment;
 import de.incoherent.suseconferenceclient.fragments.NewsFeedFragment;
-import de.incoherent.suseconferenceclient.fragments.SchedulePhoneFragment;
+import de.incoherent.suseconferenceclient.fragments.ScheduleFragment;
 import de.incoherent.suseconferenceclient.models.Conference;
 import de.incoherent.suseconferenceclient.tasks.GetConferencesTask;
 import de.incoherent.suseconferenceclient.R;
@@ -63,11 +64,15 @@ import android.widget.TextView;
 
 public class HomeActivity extends SherlockFragmentActivity implements 
 		GetConferencesTask.ConferenceListListener {
-
+	final int CONFERENCE_LIST_CODE = 1;
+	final String MY_SCHEDULE_TAG = "myschedule";
+	final String SCHEDULE_TAG = "schedule";
+	final String NEWSFEED_TAG = "newsfeed";
 	private ViewPager mPhonePager;
-	private TabAdapter mTabsAdapter;
+	private TabAdapter mTabsAdapter = null;
 	private long mConferenceId = -1;
 	private ProgressDialog mDialog;
+	private Conference mConference = null;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,7 +83,6 @@ public class HomeActivity extends SherlockFragmentActivity implements
         if (mConferenceId == -1) {
         	Log.d("SUSEConferences", "Conference ID is -1");
         	if (!hasInternet()) {
-        		Log.d("SUSEConferences", "Info is null");
         		AlertDialog.Builder builder = new AlertDialog.Builder(this);
         		builder.setMessage("Please enable internet access and try again.");
         		builder.setCancelable(false);
@@ -93,7 +97,6 @@ public class HomeActivity extends SherlockFragmentActivity implements
         		loadConferences();
         	}
         } else {
-        	Log.d("SUSEConferences", "Conference ID is NOT -1");
         	if (savedInstanceState != null)
         		setView(false);
         	else
@@ -103,16 +106,20 @@ public class HomeActivity extends SherlockFragmentActivity implements
     
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-    	menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
-    	.setIcon(R.drawable.icon_venue_off)
-    	.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
-    	
+    	if (hasGoogleMaps()) {
+	    	menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
+	    	.setIcon(R.drawable.icon_venue_off)
+	    	.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+    	}
 //    	menu.add(Menu.NONE, R.id.checkForUpdates, Menu.NONE, getString(R.string.menu_checkForUpdates))
 //    	.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 //		menu.add(Menu.NONE, R.id.settingsItem, Menu.NONE, getString(R.string.menu_settings))
 //        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		menu.add(Menu.NONE, R.id.filterEvents, Menu.NONE, getString(R.string.filter))
         .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		menu.add(Menu.NONE, R.id.conferenceList, Menu.NONE, getString(R.string.conferenceList))
+        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+
 		menu.add(Menu.NONE, R.id.aboutItem, Menu.NONE, getString(R.string.menu_about))
         .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
         return super.onCreateOptionsMenu(menu);
@@ -121,8 +128,11 @@ public class HomeActivity extends SherlockFragmentActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
     	switch (menuItem.getItemId()) {
+    	case R.id.conferenceList:
+    		launchConferenceListActivity();
+    		return true;
     	case R.id.mapsOptionMenuItem:
-    		Intent i = new Intent(HomeActivity.this, VenueMapsActivity.class);
+    		Intent i = new Intent(HomeActivity.this, MapsActivity.class);
     		i.putExtra("venueId", mConferenceId);
     		startActivity(i);
     		return true;
@@ -132,9 +142,11 @@ public class HomeActivity extends SherlockFragmentActivity implements
             about.show();
             return true;
     	case R.id.filterEvents:
-    	    FragmentManager fragmentManager = getSupportFragmentManager();
-    	    FilterDialogFragment newFragment = FilterDialogFragment.newInstance(this.mConferenceId);
-	        newFragment.show(fragmentManager, "Filter");
+    		if (mConference != null) {
+    			FragmentManager fragmentManager = getSupportFragmentManager();
+    			FilterDialogFragment newFragment = FilterDialogFragment.newInstance(this.mConferenceId, mConference.getName());
+    			newFragment.show(fragmentManager, "Filter");
+    		}
     		return true;
 //    	case R.id.checkForUpdates:
 //    		checkForUpdates();
@@ -153,46 +165,75 @@ public class HomeActivity extends SherlockFragmentActivity implements
         	mDialog.dismiss();
       setContentView(R.layout.activity_home);
       Database db = SUSEConferences.getDatabase();
-      Conference conference = db.getConference(mConferenceId);
-      getSupportActionBar().setTitle(conference.getName());
+      mConference = db.getConference(mConferenceId);
+      getSupportActionBar().setTitle(mConference.getName());
+
       mPhonePager= (ViewPager) findViewById(R.id.phonePager);
       if (mPhonePager !=  null) { // Phone layout
     	  ActionBar bar = getSupportActionBar();
     	  bar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
     	  Bundle args = new Bundle();
     	  args.putLong("conferenceId", this.mConferenceId);
-    	  args.putString("socialTag", conference.getSocialTag());
-    	  mTabsAdapter = new TabAdapter(this, mPhonePager);
-    	  mTabsAdapter.addTab(
-    			  bar.newTab().setText(getString(R.string.mySchedule)),
-    			  MySchedulePhoneFragment.class, args);
-    	  mTabsAdapter.addTab(
-    			  bar.newTab().setText(getString(R.string.fullSchedule)),
-    			  SchedulePhoneFragment.class, args);
-    	  if (hasInternet())
-    		  mTabsAdapter.addTab(
-    				  bar.newTab().setText(getString(R.string.newsFeed)),
-    				  NewsFeedFragment.class, args);
+    	  args.putString("socialTag", mConference.getSocialTag());
+    	  args.putString("conferenceName", mConference.getName());
+    	  
+    	  // If the user has switched the conference after another conference
+    	  // was loaded, we'll just reset everything
+    	  if (mTabsAdapter == null) {
+	    	  mTabsAdapter = new TabAdapter(this, mPhonePager);
+	    	  
+	    	  Tab myScheduleTab = bar.newTab();
+	
+	    	  myScheduleTab.setText(getString(R.string.mySchedule));
+	    	  myScheduleTab.setTag(MY_SCHEDULE_TAG);
+	    	  mTabsAdapter.addTab(myScheduleTab,
+	    			  MyScheduleFragment.class, args);
+	    	  
+	    	  Tab scheduleTab = bar.newTab();
+	    	  scheduleTab.setText(getString(R.string.fullSchedule));
+	    	  scheduleTab.setTag(SCHEDULE_TAG);
+	    	  mTabsAdapter.addTab(scheduleTab,
+	    			  ScheduleFragment.class, args);
+	
+	    	  if (hasInternet())
+	    		  mTabsAdapter.addTab(
+	    				  bar.newTab().setText(getString(R.string.newsFeed)),
+	    				  NewsFeedFragment.class, args);
+    	  } else {
+    		  MyScheduleFragment mySchedule = (MyScheduleFragment) mTabsAdapter.getItem(0);
+    		  ScheduleFragment schedule = (ScheduleFragment) mTabsAdapter.getItem(1);
+    		  NewsFeedFragment news = (NewsFeedFragment) mTabsAdapter.getItem(2);
+    		  
+    		  if (mySchedule != null) {
+    			  mySchedule.loadNewConference(mConferenceId);
+    		  }
+    		  if (schedule != null) {
+    			  schedule.loadNewConference(mConferenceId, mConference.getName());
+    		  }
+    		  if (news != null) {
+    			  news.loadNewConference(mConference.getSocialTag());
+    		  }
+    	  }
       } else { // Tablet layout
     	  FragmentManager fm = getSupportFragmentManager();
     	  Bundle args = new Bundle();
     	  args.putLong("conferenceId", this.mConferenceId);
-    	  args.putString("socialTag", conference.getSocialTag());
-
-    	  MySchedulePhoneFragment mySched = new MySchedulePhoneFragment();
+    	  args.putString("socialTag", mConference.getSocialTag());
+    	  args.putString("conferenceName", mConference.getName());
+    	  MyScheduleFragment mySched = new MyScheduleFragment();
     	  mySched.setArguments(args);
     	  fm.beginTransaction()
-    	  .add(R.id.myScheduleFragmentLayout, mySched).commit();
+    	  .add(R.id.myScheduleFragmentLayout, mySched, MY_SCHEDULE_TAG).commit();
 
-    	  SchedulePhoneFragment sched = new SchedulePhoneFragment();
+    	  ScheduleFragment sched = new ScheduleFragment();
     	  sched.setArguments(args);
     	  fm.beginTransaction()
-    	  .add(R.id.scheduleFragmentLayout, sched).commit();
+    	  .add(R.id.scheduleFragmentLayout, sched, SCHEDULE_TAG).commit();
 
     	  if (hasInternet() && loadSocial) {
     		  NewsFeedFragment newsFeed = new NewsFeedFragment();
     		  newsFeed.setArguments(args);
-    		  fm.beginTransaction().add(R.id.socialLayout, newsFeed).commit();
+    		  fm.beginTransaction().add(R.id.socialLayout, newsFeed, NEWSFEED_TAG).commit();
     	  }
     	  
     	  if (!hasInternet()) {
@@ -209,31 +250,32 @@ public class HomeActivity extends SherlockFragmentActivity implements
 
     private void loadConferences() {    	
     	mDialog = ProgressDialog.show(HomeActivity.this, "", 
-    			"Loading. Please wait...", true);
+    			"Downloading conference list, please wait...", true);
     	GetConferencesTask task = new GetConferencesTask("http://incoherent.de/conferences", this);
     	task.execute();
     }
 
     @Override
-	public void handled(ArrayList<Conference> conferences) {
+	public void conferencesDownloaded(ArrayList<Conference> conferences) {
+    	Log.d("SUSEConferences", "Conferences downloaded: " + conferences.size());
     	if (conferences.size() == 1) {
     		conferenceChosen(conferences.get(0));
     	} else if (conferences.size() > 1) {
-    		// Show the list
+    		launchConferenceListActivity();
     	}
     }
     
     private void conferenceChosen(Conference conference) {
-    	Database db = SUSEConferences.getDatabase();
-    	long id = db.getConferenceIdFromGuid(conference.getGuid());
-    	if (id == -1) {
-    		mConferenceId = db.addConference(conference);
-    		conference.setSqlId(mConferenceId);
+    	mConferenceId = conference.getSqlId();
+    	
+    	if (!conference.isCached()) {
+    		Log.d("SUSEConferences", "Conference is not cached");
+    		mDialog = ProgressDialog.show(HomeActivity.this, "", 
+        			"Downloading data for " + mConference.getName(), true);
     		CacheConferenceTask task = new CacheConferenceTask(conference);
     		task.execute();
     	} else {
-    		mConferenceId = id;
-
+    		Log.d("SUSEConferences", "Conference is cached, switching");
     		SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
     		SharedPreferences.Editor editor = settings.edit();
     		editor.putLong("active_conference", mConferenceId);
@@ -241,8 +283,8 @@ public class HomeActivity extends SherlockFragmentActivity implements
 
     		SUSEConferences app = ((SUSEConferences) getApplicationContext());
     		app.setActiveId(mConferenceId);
-    		if (id != -1)
-    			setView(true);
+    		// TODO Don't set the view on conference changes
+    		setView(true);
     	}
     }
 
@@ -252,7 +294,17 @@ public class HomeActivity extends SherlockFragmentActivity implements
 //    		return;
 //    	}
 //    }
-    
+
+    // Google Maps don't work on Kindle devices
+    private boolean hasGoogleMaps() {
+    	try {
+    		Class.forName("com.google.android.maps.MapView");
+    		return true;
+    	} catch (ClassNotFoundException e) {
+    		return false;
+    	}
+    }
+
     
     private boolean hasInternet() {
     	boolean ret = true;
@@ -337,11 +389,12 @@ public class HomeActivity extends SherlockFragmentActivity implements
 //    		return 0;
 //    	}
 //    }
+    
     /*
      * Downloads all of the data about a conference and stores it
      * in SQLite.
      */
-    private class CacheConferenceTask extends AsyncTask<Void, Void, Long> {    	
+    private class CacheConferenceTask extends AsyncTask<Void, String, Long> {    	
     	private Conference mConference;
     	private Database db;
     	private String mErrorMessage = "";
@@ -350,9 +403,13 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		this.mConference = conference;
     		this.db = SUSEConferences.getDatabase();
     	}
-
+        protected void onProgressUpdate(String... progress) {
+        	mDialog.setMessage("Loading " + progress[0]);
+        }
+        
     	@Override
     	protected Long doInBackground(Void... params) {
+    		Log.d("SUSEConferences", "Caching data from " + mConference.getUrl());
     		String url = mConference.getUrl();
     		String eventsUrl = url + "/events.json";
     		String roomsUrl = url + "/rooms.json";
@@ -366,6 +423,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		
     		try {
 				Log.d("SUSEConferences", "Venues: " + venueUrl);
+				publishProgress("venues");
     			JSONObject venueReply = HTTPWrapper.get(venueUrl);
     			JSONObject venue = venueReply.getJSONObject("venue");
     			String infoUrl = url + "/" + venue.getString("info_text");
@@ -392,15 +450,20 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				String lat = point.getString("lat");
     				String lon = point.getString("lon");
     				String type = point.getString("type");
-    				String name = venueName;
-    				String addr = venueAddr;
-    				String desc = "Conference Venue";
+    				String name = "Unknown Point";
+    				String addr = "Unknown Address";
+    				String desc = "";
     				
-    				if (!type.equals("venue")) {
+    				if (point.has("name")) {
     					name = point.getString("name");
+    				}
+    				if (point.has("address")) {
     					addr = point.getString("address");
+    				}
+    				if (point.has("description")) {
     					desc = point.getString("description");
-    				} 
+    				}
+    				
     				db.insertVenuePoint(venueId, lat, lon, type, name, addr, desc);
     			}
     			
@@ -433,6 +496,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			db.setConferenceVenue(venueId, mConferenceId);
     			
 				Log.d("SUSEConferences", "Rooms");
+				publishProgress("rooms");
     			JSONObject roomsReply = HTTPWrapper.get(roomsUrl);
     			JSONArray rooms = roomsReply.getJSONArray("rooms");
     			int roomsLen = rooms.length();
@@ -446,7 +510,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				roomMap.put(guid, roomId);
     			}
 				Log.d("SUSEConferences", "Tracks");
-
+				publishProgress("tracks");
     			JSONObject tracksReply = HTTPWrapper.get(tracksUrl);
     			JSONArray tracks = tracksReply.getJSONArray("tracks");
     			int tracksLen = tracks.length();
@@ -460,6 +524,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     				trackMap.put(guid, trackId);
     			}
 				Log.d("SUSEConferences", "Speakers");
+				publishProgress("speakers");
     			JSONObject speakersReply = HTTPWrapper.get(speakersUrl);
     			JSONArray speakers = speakersReply.getJSONArray("speakers");
     			int speakersLen = speakers.length();
@@ -475,6 +540,7 @@ public class HomeActivity extends SherlockFragmentActivity implements
     			}
 
 				Log.d("SUSEConferences", "Events");
+				publishProgress("events");
     			JSONObject eventsReply = HTTPWrapper.get(eventsUrl);
     			JSONArray events = eventsReply.getJSONArray("events");
     			int eventsLen = events.length();
@@ -548,11 +614,13 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		return returnVal;
     	}
 
-    	// TODO Don't destroy the database once more than one conference is available
     	protected void onPostExecute(Long id) {
     		if (id == -1) {
     			Log.d("SUSEConferences", "Error!");
-    			db.clearDatabase();
+    			// TODO handle errors more gracefully
+    			db.setConferenceAsCached(id, 0);
+    			db.clearDatabase(mConference.getSqlId());
+
     	    	if (mDialog != null)
     	        	mDialog.dismiss();
 
@@ -571,11 +639,13 @@ public class HomeActivity extends SherlockFragmentActivity implements
         		       });
         		builder.show();
     		} else {
+    			Log.d("SUSEConferences", "Conference cached");
+    			db.setConferenceAsCached(id, 1);
 	    		SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
 	    		SharedPreferences.Editor editor = settings.edit();
 	    		editor.putLong("active_conference", id.longValue());
 	    		editor.commit();
-	
+	    		
 	    		SUSEConferences app = ((SUSEConferences) getApplicationContext());
 	    		app.setActiveId(id.longValue());
 	
@@ -583,4 +653,36 @@ public class HomeActivity extends SherlockFragmentActivity implements
     		}
     	}
     }
+
+	public void filterSet() {
+		ScheduleFragment fragment = null;
+		if (mPhonePager != null) {
+			fragment = (ScheduleFragment) mTabsAdapter.getItem(1);
+		} else {
+			FragmentManager fragmentManager = getSupportFragmentManager();		
+			fragment = (ScheduleFragment) fragmentManager.findFragmentByTag(SCHEDULE_TAG);
+		}
+		
+		if (fragment == null)
+			Log.d("SUSEConferences", "Couldn't find fragment!");
+		else
+			fragment.requery();
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK && requestCode == CONFERENCE_LIST_CODE) {
+			int id = data.getExtras().getInt("selected_conference");
+			if (id != mConferenceId) {
+				Database db = SUSEConferences.getDatabase();
+				conferenceChosen(db.getConference(id));
+			}
+		}
+	}
+	
+	private void launchConferenceListActivity() {
+		Intent i = new Intent(HomeActivity.this, ConferenceListActivity.class);
+		startActivityForResult(i, CONFERENCE_LIST_CODE);
+	}
+
 }

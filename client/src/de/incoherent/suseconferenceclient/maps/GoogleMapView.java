@@ -1,6 +1,14 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * 
- */
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
+
 package de.incoherent.suseconferenceclient.maps;
 
 import android.content.Context;
@@ -11,12 +19,9 @@ import android.widget.ZoomButtonsController.OnZoomListener;
 
 import com.google.android.maps.MapView;
 
-/**
+/*
  * Extend MapView so we can set how many items to display
  * when the map is zoomed out.
- * 
- * @author Matt Barringer <mbarringer@suse.de>
- *
  */
 
 

@@ -11,20 +11,11 @@
 
 package de.incoherent.suseconferenceclient.maps;
 
-import org.osmdroid.util.BoundingBoxE6;
-
-import de.incoherent.suseconferenceclient.models.Venue;
-import android.view.View;
+import com.google.android.maps.GeoPoint;
 
 /*
- * Both GoogleMap and OSMMap implement this interface so the user
- * can switch between online Google maps, and offline OSM maps.
+ * Interface used by the GoogleMapEventsOverlay and the GoogleMap.
  */
-
-public interface MapInterface {
-	public View getView();
-	public void setupMap(Venue venue);
-	public void enableLocation();
-	public void disableLocation();
-	public void setBoundingBox(BoundingBoxE6 box);
+public interface GoogleMapEventsInterface {
+	boolean singleTapUpHelper(GeoPoint p);
 }
