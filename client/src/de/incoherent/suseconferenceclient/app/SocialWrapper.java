@@ -44,9 +44,8 @@ public class SocialWrapper {
 		// TODO Android 2.2 thinks that "Wed, 19 Sep 2012 16:35:43 +0000" is invalid
 		// with this formatter
 		SimpleDateFormat formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z");
-		Bitmap icon = BitmapFactory.decodeResource(context.getResources(),
-                R.drawable.twitter_icon);
 		try {
+			Bitmap icon = BitmapFactory.decodeResource(context.getResources(), R.drawable.twitter_icon);
 			JSONObject result = HTTPWrapper.get(twitterSearch);
 			JSONArray items = result.getJSONArray("results");
 			int len = items.length();

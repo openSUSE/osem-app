@@ -126,6 +126,7 @@ public class ScheduleFragment extends SherlockListFragment {
 	}
 
 	public void loadNewConference(long conferenceId, String conferenceName) {
+		Log.d("SUSEConferences", "Loading new conference " + conferenceId + " " + conferenceName);
 		this.mConferenceId = conferenceId;
 		this.mConferenceName = conferenceName;
 		requery();

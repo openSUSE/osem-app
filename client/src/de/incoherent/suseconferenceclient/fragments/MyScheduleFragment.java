@@ -79,14 +79,7 @@ public class MyScheduleFragment extends SherlockListFragment {
 	
 	public void onResume() {
 		super.onResume();
-		List<ScheduleItem> items = getScheduleItems();
-		mAdapter = new ScheduleAdapter(getActivity(),
-				false,
-				R.layout.schedule_list_item,
-				getResources().getColor(R.color.dark_suse_green),
-				getResources().getColor(R.color.suse_grey),
-				items);
-		setListAdapter(mAdapter);
+		setItems();
 		if(mIndex!=-1){
 			this.getListView().setSelectionFromTop(mIndex, mTop);
 		}
@@ -97,15 +90,19 @@ public class MyScheduleFragment extends SherlockListFragment {
 		this.mConferenceId = conferenceId;
 		mIndex = -1;
 		mTop = 0;
+		setItems();
+	}
+
+	public void setItems() {
 		mAdapter = new ScheduleAdapter(getActivity(),
-				true,
+				false,
 				R.layout.schedule_list_item,
 				getResources().getColor(R.color.dark_suse_green),
 				getResources().getColor(R.color.suse_grey),
 				getScheduleItems());
 		setListAdapter(mAdapter);
-	}
 
+	}
 	private List<ScheduleItem> getScheduleItems() {
 		boolean isEmpty = false;
 		boolean conflict = false;
@@ -126,7 +123,6 @@ public class MyScheduleFragment extends SherlockListFragment {
 				
 				conflict = false;
 				isEmpty = true;
-				Log.d("SUSEConferences", "Event: " + event.getDate());
 				if (previousEvent != null) {
 					// If the time slot is the same as the one before,
 					// and the event is *not* in My Schedule or meta information, skip it

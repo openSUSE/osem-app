@@ -33,6 +33,7 @@ import de.incoherent.suseconferenceclient.app.SocialWrapper;
 import de.incoherent.suseconferenceclient.models.SocialItem;
 import de.incoherent.suseconferenceclient.R;
 
+// TODO this fragment isn't being reloaded on conference changes
 public class NewsFeedFragment extends SherlockListFragment {
 	private String mSearchTag = "";
 	// In the future, this may be used to present a short list of recent items
@@ -41,11 +42,13 @@ public class NewsFeedFragment extends SherlockListFragment {
 	private ArrayList<SocialItem> mItems;
     private int mIndex = -1;
     private int mTop = 0;
-
-	public void NewsFeedFragment() {}
+    private SocialTask mActiveTask = null;
+    
+	public NewsFeedFragment() {}
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		setRetainInstance(true);
 		if (savedInstanceState != null) {
 			this.mSearchTag = savedInstanceState.getString("searchTag");
 			this.mFeedNumber = savedInstanceState.getInt("feedNumber");
@@ -55,10 +58,11 @@ public class NewsFeedFragment extends SherlockListFragment {
 		} else {
 			Bundle args = getArguments();
 			mSearchTag = args.getString("socialTag");
-			SocialTask task = new SocialTask();
-			task.execute(mSearchTag);
+			mActiveTask = new SocialTask();
+			mActiveTask.execute(mSearchTag);
 		}
 	}
+	
 	@Override
 	public void onResume() {
 		super.onResume();
@@ -79,8 +83,13 @@ public class NewsFeedFragment extends SherlockListFragment {
 			mAdapter.clear();
 		Bundle args = getArguments();
 		mSearchTag = args.getString("socialTag");
-		SocialTask task = new SocialTask();
-		task.execute(mSearchTag);
+		
+		if (mActiveTask != null && mActiveTask.getStatus() != AsyncTask.Status.FINISHED) {
+			mActiveTask.cancel(true);
+		}
+		
+		mActiveTask = new SocialTask();
+		mActiveTask.execute(mSearchTag);
 	}
 
 	@Override
@@ -108,18 +117,22 @@ public class NewsFeedFragment extends SherlockListFragment {
 		@Override
 		protected ArrayList<SocialItem> doInBackground(String... params) {
 			Log.d("SUSEConferences", "Fetching social feed");
+			ArrayList<SocialItem> twitterItems = null;
 			String searchTag = params[0];
-			ArrayList<SocialItem> twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
-			twitterItems.addAll(SocialWrapper.getGooglePlusItems(getActivity(), searchTag, mFeedNumber));
-			Collections.sort(twitterItems, Collections.reverseOrder());
+			if (!isCancelled()) {
+				twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
+				twitterItems.addAll(SocialWrapper.getGooglePlusItems(getActivity(), searchTag, mFeedNumber));
+				Collections.sort(twitterItems, Collections.reverseOrder());
+			}
 			return twitterItems;
 		}
 		
-		@SuppressWarnings("ucd")
 		protected void onPostExecute(ArrayList<SocialItem> items) {
-			mItems = items;
-			mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
-			setListAdapter(mAdapter);
+			if (!isCancelled() && items != null) {
+				mItems = items;
+				mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
+				setListAdapter(mAdapter);
+			}
 		}
 	}
 
@@ -145,3 +158,4 @@ public class NewsFeedFragment extends SherlockListFragment {
 	}
 
 }
+

@@ -43,4 +43,14 @@
             android:text="Small Text"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
+        <TextView
+            android:id="@+id/mapLicenseTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/homePageLink"
+            android:layout_centerHorizontal="true"
+            android:text="Downloadable maps (C) OpenStreetMap contributors, and licensed by CC-BY-SA"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="italic" />
+        
     </RelativeLayout>
