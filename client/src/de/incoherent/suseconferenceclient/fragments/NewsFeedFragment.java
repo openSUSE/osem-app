@@ -35,7 +35,7 @@ import de.incoherent.suseconferenceclient.R;
 
 // TODO this fragment isn't being reloaded on conference changes
 public class NewsFeedFragment extends SherlockListFragment {
-	private String mSearchTag = "";
+	private String mSearchTag = null;
 	// In the future, this may be used to present a short list of recent items
 	protected int mFeedNumber = 0;
 	private SocialItemAdapter mAdapter = null;
@@ -43,12 +43,16 @@ public class NewsFeedFragment extends SherlockListFragment {
     private int mIndex = -1;
     private int mTop = 0;
     private SocialTask mActiveTask = null;
-    
 	public NewsFeedFragment() {}
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setRetainInstance(true);
+		
+		// Retain the instance so the AsyncTask doesn't wind
+		// up an orphan on rotation
+	    setRetainInstance(true);
+
+		Log.d("SUSEConferences", "NewsFeedFragment onCreate");
 		if (savedInstanceState != null) {
 			this.mSearchTag = savedInstanceState.getString("searchTag");
 			this.mFeedNumber = savedInstanceState.getInt("feedNumber");
@@ -57,7 +61,8 @@ public class NewsFeedFragment extends SherlockListFragment {
 			setListAdapter(mAdapter);
 		} else {
 			Bundle args = getArguments();
-			mSearchTag = args.getString("socialTag");
+			if (mSearchTag == null)
+				mSearchTag = args.getString("socialTag");
 			mActiveTask = new SocialTask();
 			mActiveTask.execute(mSearchTag);
 		}
@@ -73,17 +78,16 @@ public class NewsFeedFragment extends SherlockListFragment {
 	
 	public void loadNewConference(String searchTag) {
 		this.mSearchTag = searchTag;
-		requery();
+		if (isAdded())
+			requery();
 	}
 	
 	public void requery() {
+		Log.d("SUSEConferences", "NewsFeedFragment requery");
+		setListShown(false);
+
 		mIndex = -1;
 		mTop = 0;
-		if (mAdapter != null)
-			mAdapter.clear();
-		Bundle args = getArguments();
-		mSearchTag = args.getString("socialTag");
-		
 		if (mActiveTask != null && mActiveTask.getStatus() != AsyncTask.Status.FINISHED) {
 			mActiveTask.cancel(true);
 		}
@@ -111,14 +115,19 @@ public class NewsFeedFragment extends SherlockListFragment {
 		  savedInstanceState.putString("searchTag", this.mSearchTag);
 		  savedInstanceState.putInt("feedNumber", this.mFeedNumber);
 		  savedInstanceState.putParcelableArrayList("items", mItems);
+			if (mActiveTask != null && mActiveTask.getStatus() != AsyncTask.Status.FINISHED) {
+				mActiveTask.cancel(true);
+				setListShown(false);
+			}
 	}
 	
 	protected class SocialTask extends AsyncTask<String, Void, ArrayList<SocialItem>> {
 		@Override
 		protected ArrayList<SocialItem> doInBackground(String... params) {
-			Log.d("SUSEConferences", "Fetching social feed");
 			ArrayList<SocialItem> twitterItems = null;
 			String searchTag = params[0];
+			Log.d("SUSEConferences", "Fetching social feed for " + searchTag);
+
 			if (!isCancelled()) {
 				twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
 				twitterItems.addAll(SocialWrapper.getGooglePlusItems(getActivity(), searchTag, mFeedNumber));
@@ -129,10 +138,13 @@ public class NewsFeedFragment extends SherlockListFragment {
 		
 		protected void onPostExecute(ArrayList<SocialItem> items) {
 			if (!isCancelled() && items != null) {
+				Log.d("SUSEConferences", "NewsFeedFragment not cancelled");
 				mItems = items;
 				mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
 				setListAdapter(mAdapter);
+				setListShown(true);
 			}
+			Log.d("SUSEConferences", "NewsFeedFragment onPostExecute");
 		}
 	}
 

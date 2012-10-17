@@ -48,6 +48,8 @@ public class MyScheduleFragment extends SherlockListFragment {
 
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+	    setRetainInstance(true);
+
 		mHeaderFormatter = DateFormat.getDateInstance(DateFormat.LONG);		
 		Bundle args = getArguments();
 		this.mConferenceId = args.getLong("conferenceId");
@@ -101,7 +103,6 @@ public class MyScheduleFragment extends SherlockListFragment {
 				getResources().getColor(R.color.suse_grey),
 				getScheduleItems());
 		setListAdapter(mAdapter);
-
 	}
 	private List<ScheduleItem> getScheduleItems() {
 		boolean isEmpty = false;

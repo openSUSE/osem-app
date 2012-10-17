@@ -78,9 +78,16 @@ GetConferencesTask.ConferenceListListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_home);
-
+		Log.d("SUSEConferences", "HomeActivity onCreate");
 		mDialog = null;
-		mConferenceId = ((SUSEConferences) getApplicationContext()).getActiveId();
+
+		if (savedInstanceState == null) {
+	    	SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
+	    	mConferenceId = settings.getLong("active_conference", -1);
+		} else {
+			mConferenceId = savedInstanceState.getLong("conferenceId");
+		}
+	
 		if (mConferenceId == -1) {
 			Log.d("SUSEConferences", "Conference ID is -1");
 			if (!hasInternet()) {
@@ -105,6 +112,12 @@ GetConferencesTask.ConferenceListListener {
 		}
 	}
 
+	@Override
+	public void onSaveInstanceState(Bundle savedInstanceState) {
+		  super.onSaveInstanceState(savedInstanceState);
+		  Log.d("SUSEConferences", "saving InstanceState");
+		  savedInstanceState.putLong("conferenceId", mConferenceId);
+	}
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		if (hasGoogleMaps()) {
@@ -168,6 +181,7 @@ GetConferencesTask.ConferenceListListener {
 		Database db = SUSEConferences.getDatabase();
 		mConference = db.getConference(mConferenceId);
 		getSupportActionBar().setTitle(mConference.getName());
+		Log.d("SUSEConferences", "Conference ID is " + mConferenceId);
 
 		mPhonePager= (ViewPager) findViewById(R.id.phonePager);
 		if (mPhonePager !=  null) { // Phone layout
@@ -182,7 +196,6 @@ GetConferencesTask.ConferenceListListener {
 			// was loaded, we'll just reset everything
 			if (mTabsAdapter == null) {
 				mTabsAdapter = new TabAdapter(this, mPhonePager);
-
 				Tab myScheduleTab = bar.newTab();
 
 				myScheduleTab.setText(getString(R.string.mySchedule));
@@ -281,9 +294,6 @@ GetConferencesTask.ConferenceListListener {
 			SharedPreferences.Editor editor = settings.edit();
 			editor.putLong("active_conference", mConferenceId);
 			editor.commit();
-
-			SUSEConferences app = ((SUSEConferences) getApplicationContext());
-			app.setActiveId(mConferenceId);
 			setView(true);
 		}
 	}
@@ -646,10 +656,6 @@ GetConferencesTask.ConferenceListListener {
 				SharedPreferences.Editor editor = settings.edit();
 				editor.putLong("active_conference", id.longValue());
 				editor.commit();
-
-				SUSEConferences app = ((SUSEConferences) getApplicationContext());
-				app.setActiveId(id.longValue());
-
 				setView(true);
 			}
 		}
@@ -675,8 +681,16 @@ GetConferencesTask.ConferenceListListener {
 		if (resultCode == RESULT_OK && requestCode == CONFERENCE_LIST_CODE) {
 			int id = data.getExtras().getInt("selected_conference");
 			if (id != mConferenceId) {
-				Database db = SUSEConferences.getDatabase();
-				conferenceChosen(db.getConference(id));
+				SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
+				SharedPreferences.Editor editor = settings.edit();
+				editor.putLong("active_conference", id);
+				editor.commit();
+				// TODO This is clumsy, figure out how to handle reloading the fragments
+				// without crashes
+				Intent i = getBaseContext().getPackageManager()
+			             .getLaunchIntentForPackage( getBaseContext().getPackageName() );
+			i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			startActivity(i);
 			}
 		}
 	}

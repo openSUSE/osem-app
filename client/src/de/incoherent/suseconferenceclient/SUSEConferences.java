@@ -15,6 +15,7 @@ import de.incoherent.suseconferenceclient.app.Database;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 /*
  * Do this to provide a simple way to grab the Database
@@ -38,19 +39,9 @@ public class SUSEConferences extends Application {
 	    super.onCreate();
 	    mDb = Database.getInstance(this);
 	    mDb.open();
-    	SharedPreferences settings = getSharedPreferences("SUSEConferences", 0);
-    	mActiveId = settings.getLong("active_conference", -1);
     }
     
     public static Database getDatabase() {
         return mDb;
-    }
-
-    public long getActiveId() {
-    	return mActiveId;
-    }
-    
-    public void setActiveId(long id) {
-    	this.mActiveId = id; 
     }
 }
