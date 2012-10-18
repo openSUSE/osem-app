@@ -25,6 +25,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.text.TextUtils.TruncateAt;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -185,6 +186,7 @@ public class ScheduleAdapter extends ArrayAdapter<ScheduleAdapter.ScheduleItem> 
 	public View getView(int position, View convertView, ViewGroup parent) {
         View root;
         int scheduleHour = 0;
+        int scheduleHour24 = 0;
         ViewHolder viewHolder;
         ScheduleItem item = mItems.get(position);
         Event event = item.getEvent();
@@ -239,8 +241,16 @@ public class ScheduleAdapter extends ArrayAdapter<ScheduleAdapter.ScheduleItem> 
         	// *strictly* respected, it's necessary to make all of the hours two digits
         	// to maintain the column width
         	scheduleHour = mTimeFormatter.getCalendar().get(Calendar.HOUR);
+        	scheduleHour24 = mTimeFormatter.getCalendar().get(Calendar.HOUR_OF_DAY);
+
         	if (!DateFormat.is24HourFormat(mContext) &&  scheduleHour < 10 && scheduleHour > 0)
         		time = "0" + time;
+        	
+        	// One more work around for certain locales (Germany, for example) where 24 hour
+        	// clocks don't mean double digit hours
+        	if (DateFormat.is24HourFormat(mContext) && scheduleHour24 < 10 && !time.startsWith("0"))
+        		time = "0" + time;
+        	
         	viewHolder.timeText.setText(time);
         } else {
         	if (!mFullSchedule || !event.isInMySchedule()) {
@@ -264,8 +274,13 @@ public class ScheduleAdapter extends ArrayAdapter<ScheduleAdapter.ScheduleItem> 
         	mTimeFormatter.setTimeZone(event.getTimeZone());
         	String time = mTimeFormatter.format(event.getDate());
         	scheduleHour = mTimeFormatter.getCalendar().get(Calendar.HOUR);
+        	scheduleHour24 = mTimeFormatter.getCalendar().get(Calendar.HOUR_OF_DAY);
+
         	if (!DateFormat.is24HourFormat(mContext) &&  scheduleHour < 10 && scheduleHour > 0)
         		time = "0" + time;
+        	if (DateFormat.is24HourFormat(mContext) && scheduleHour24 < 10 && !time.startsWith("0"))
+        		time = "0" + time;
+
         	viewHolder.timeText.setText(time);
         	viewHolder.titleText.setTypeface(null, Typeface.NORMAL);
 

@@ -134,7 +134,9 @@ public class SocialItem implements Comparable<SocialItem>, Parcelable {
         out.writeString(this.mDatestamp);
         out.writeString(this.mLink);
         out.writeString(this.mTitle);
-        mUserImage.writeToParcel(out, flags);
+        if (mUserImage != null)
+        	mUserImage.writeToParcel(out, flags);
+
         mTypeIcon.writeToParcel(out, flags);
         out.writeLong(this.mDate.getTime());
     }

@@ -113,21 +113,21 @@ public class Database {
 		return newConference;
 	}
 	
-	public long getLastUpdateTime(long conferenceId) {
-		long time = 0;
+	public int getLastUpdateValue(long conferenceId) {
+		int time = 0;
 		String sql = "SELECT lastUpdated FROM conferences WHERE _id=" + conferenceId;
 		Cursor c = db.rawQuery(sql, null);
 		if (c.moveToFirst()) {
-			time = c.getLong(0);
+			time = c.getInt(0);
 		}
 		c.close();
 		return time;
 	}
 	
-	public void setLastUpdateTime(long conferenceId, long time) {
+	public void setLastUpdateValue(long conferenceId, int value) {
 		String sql = "_id=" + conferenceId;
 		ContentValues values = new ContentValues();
-		values.put("lastUpdated", time);
+		values.put("lastUpdated", value);
 		db.update("conferences", values, sql, null);
 	}
 	

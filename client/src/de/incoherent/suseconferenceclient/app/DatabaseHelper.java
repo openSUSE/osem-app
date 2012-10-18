@@ -123,11 +123,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		if (oldVersion == 1) {
-			db.execSQL("ALTER TABLE venues ADD offline_map VARCHAR");
-			db.execSQL("ALTER TABLE venues ADD offline_map_bounds VARCHAR");
-			db.execSQL("ALTER TABLE conferences ADD is_cached INTEGER");
-			db.execSQL("ALTER TABLE conferences ADD url VARCHAR");
+			Log.d("SUSEConferences", "Upgrading database");
+			db.execSQL("ALTER TABLE venues ADD COLUMN offline_map VARCHAR");
+			db.execSQL("ALTER TABLE venues ADD COLUMN offline_map_bounds VARCHAR");
+			db.execSQL("ALTER TABLE conferences ADD COLUMN is_cached INTEGER");
+			db.execSQL("ALTER TABLE conferences ADD COLUMN url VARCHAR");
 			db.execSQL("UPDATE conferences SET is_cached=1");
+			db.execSQL("UPDATE conferences SET url=\'\'");
+			db.execSQL("UPDATE venues SET offline_map=\'\'");
+			db.execSQL("UPDATE venues SET offline_map_bounds=\'\'");
 		}
 		
 	}

@@ -11,15 +11,17 @@
     <string name="fullSchedule">FULL SCHEDULE</string>
     <string name="newsFeed">NEWS FEED</string>
     <string name="speakers">SPEAKERS</string>
+    <string name="checkForUpdates">Check for Updates</string>
     <string name="twitter">Twitter</string>
     <string name="googlePlus">Google+</string>
     <string name="mapsOptionMenuItem">Maps</string>
     <string name="refresh">Refresh</string>
+    <string name="refreshNews">Refresh News</string>
     <string name="downloadMap">Download Map</string>
     <string name="switchToOfflineMap">Use Offline Map</string>
     <string name="switchToOnlineMap">Use Online Map</string>
     <string name="deleteMap">Delete Map</string>
-    <string name="filter">Filter</string>
+    <string name="filter">Set Filter</string>
     <string name="onlyShowLanguage">Languages</string>
     <string name="onlyShowTracks">Tracks</string>
     <string name="ok">OK</string>
@@ -27,5 +29,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="selectConference">Select a conference</string>
-    <string name="conferenceList">Conferences</string>
+    <string name="conferenceList">Set Conferences</string>
+    <string name="whatsNew">What\'s New</string>
+    <string name="changelog"></string>
 </resources>

@@ -1,0 +1,11 @@
+<u>Version 1.1.0</u>
+<p>
+<b>Filters</b><br/>
+Filter the schedule by language and track.  Available from the main menu.<br><br/>
+<b>Multiple Conferences</b><br/>
+You can switch between cached conferences by going to the menu and choosing <i>Conferences</i>.<br/><br/>
+<b>Downloadable Maps</b><br/>
+Where available, you can now download an offline map of the area around the venue.<br/><br/>
+<b>Fast scrolling</b><br/>
+The <i>Full Schedule</i> list is now fast-scroll enabled, look for the blue marker to the right.<br/><br/>
+</p>

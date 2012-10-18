@@ -81,7 +81,7 @@ public class MapsActivity extends SherlockMapActivity {
 		}
 		mOfflineMapUrl = mVenue.getOfflineMapUrl();
 		mOfflineMapFilename = "";
-		if (mOfflineMapUrl.length() > 0) {
+		if (mOfflineMapUrl != null && mOfflineMapUrl.length() > 0) {
 			mHasOfflineMap = true;
 			mOfflineMapFilename = mOfflineMapUrl.substring(mOfflineMapUrl.lastIndexOf('/')+1, mOfflineMapUrl.length());
 			mOfflineMap = new File(getExternalFilesDir(null), mOfflineMapFilename);

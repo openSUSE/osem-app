@@ -57,7 +57,6 @@ public class ScheduleFragment extends SherlockListFragment {
 		super.onCreate(savedInstanceState);
 	    setRetainInstance(true);
 	    Log.d("SUSEConferences", "Schedule Fragment onCreate");
-
 		mHeaderFormatter = DateFormat.getDateInstance(DateFormat.LONG);
 		Bundle args = getArguments();
 		this.mConferenceId = args.getLong("conferenceId");

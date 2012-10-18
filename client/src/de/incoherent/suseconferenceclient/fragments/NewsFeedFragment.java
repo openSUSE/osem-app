@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
@@ -31,10 +32,12 @@ import de.incoherent.suseconferenceclient.adapters.ScheduleAdapter;
 import de.incoherent.suseconferenceclient.adapters.SocialItemAdapter;
 import de.incoherent.suseconferenceclient.app.SocialWrapper;
 import de.incoherent.suseconferenceclient.models.SocialItem;
+import de.incoherent.suseconferenceclient.tasks.GetSocialItemsTask;
+import de.incoherent.suseconferenceclient.tasks.GetSocialItemsTask.GetSocialItemsListener;
 import de.incoherent.suseconferenceclient.R;
 
 // TODO this fragment isn't being reloaded on conference changes
-public class NewsFeedFragment extends SherlockListFragment {
+public class NewsFeedFragment extends SherlockListFragment implements GetSocialItemsListener {
 	private String mSearchTag = null;
 	// In the future, this may be used to present a short list of recent items
 	protected int mFeedNumber = 0;
@@ -42,16 +45,13 @@ public class NewsFeedFragment extends SherlockListFragment {
 	private ArrayList<SocialItem> mItems;
     private int mIndex = -1;
     private int mTop = 0;
-    private SocialTask mActiveTask = null;
+    private GetSocialItemsTask mActiveTask = null;
 	public NewsFeedFragment() {}
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		// Retain the instance so the AsyncTask doesn't wind
-		// up an orphan on rotation
 	    setRetainInstance(true);
-
+	    setHasOptionsMenu(true);
 		Log.d("SUSEConferences", "NewsFeedFragment onCreate");
 		if (savedInstanceState != null) {
 			this.mSearchTag = savedInstanceState.getString("searchTag");
@@ -63,8 +63,7 @@ public class NewsFeedFragment extends SherlockListFragment {
 			Bundle args = getArguments();
 			if (mSearchTag == null)
 				mSearchTag = args.getString("socialTag");
-			mActiveTask = new SocialTask();
-			mActiveTask.execute(mSearchTag);
+			setEmptyList();
 		}
 	}
 	
@@ -81,24 +80,44 @@ public class NewsFeedFragment extends SherlockListFragment {
 		if (isAdded())
 			requery();
 	}
-	
+
 	public void requery() {
 		Log.d("SUSEConferences", "NewsFeedFragment requery");
-		setListShown(false);
-
 		mIndex = -1;
 		mTop = 0;
-		if (mActiveTask != null && mActiveTask.getStatus() != AsyncTask.Status.FINISHED) {
-			mActiveTask.cancel(true);
-		}
-		
-		mActiveTask = new SocialTask();
-		mActiveTask.execute(mSearchTag);
+		runTask();
 	}
 
+	public void runTask() {
+		mActiveTask = new GetSocialItemsTask(getActivity(), this);
+		mActiveTask.execute(mSearchTag);
+		
+		// If the user is on a slow network, or the Twitter/G+ servers
+		// are running slowly, we don't want the spinner to spin endlessly,
+		// so set a timeout and they can refresh it later.
+		Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+			@Override
+			public void run() {
+				if (mActiveTask.getStatus() == AsyncTask.Status.RUNNING) {
+					Log.d("SUSEConferences", "SocialTask timed out");
+					mActiveTask.cancel(true);
+					setEmptyList();
+				}
+			}
+		}, 30000);
+	}
+
+	public void setEmptyList() {
+		ArrayList<SocialItem> items = new ArrayList<SocialItem>();
+		mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
+		setListAdapter(mAdapter);
+	}
+	
 	@Override
 	public void onPause() {
 		super.onPause();
+		Log.d("SUSEConferences", "NewsFeedFragment onPause");
 		try{
 			mIndex = this.getListView().getFirstVisiblePosition();
 			View v = this.getListView().getChildAt(0);
@@ -117,37 +136,9 @@ public class NewsFeedFragment extends SherlockListFragment {
 		  savedInstanceState.putParcelableArrayList("items", mItems);
 			if (mActiveTask != null && mActiveTask.getStatus() != AsyncTask.Status.FINISHED) {
 				mActiveTask.cancel(true);
-				setListShown(false);
 			}
 	}
 	
-	protected class SocialTask extends AsyncTask<String, Void, ArrayList<SocialItem>> {
-		@Override
-		protected ArrayList<SocialItem> doInBackground(String... params) {
-			ArrayList<SocialItem> twitterItems = null;
-			String searchTag = params[0];
-			Log.d("SUSEConferences", "Fetching social feed for " + searchTag);
-
-			if (!isCancelled()) {
-				twitterItems = SocialWrapper.getTwitterItems(getActivity(), searchTag, mFeedNumber);
-				twitterItems.addAll(SocialWrapper.getGooglePlusItems(getActivity(), searchTag, mFeedNumber));
-				Collections.sort(twitterItems, Collections.reverseOrder());
-			}
-			return twitterItems;
-		}
-		
-		protected void onPostExecute(ArrayList<SocialItem> items) {
-			if (!isCancelled() && items != null) {
-				Log.d("SUSEConferences", "NewsFeedFragment not cancelled");
-				mItems = items;
-				mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
-				setListAdapter(mAdapter);
-				setListShown(true);
-			}
-			Log.d("SUSEConferences", "NewsFeedFragment onPostExecute");
-		}
-	}
-
 	@Override
 	public void onListItemClick (ListView l,
 								 View v,
@@ -164,10 +155,24 @@ public class NewsFeedFragment extends SherlockListFragment {
 	@Override
 	public void onCreateOptionsMenu(Menu menu,  MenuInflater inflater) {
 		super.onCreateOptionsMenu(menu, inflater);
-		menu.add(Menu.NONE, R.id.socialRefreshItem, Menu.NONE, getString(R.string.refresh))
-		 .setIcon(R.drawable.refresh)
-    	 .setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER);
+		menu.add(Menu.CATEGORY_SYSTEM, R.id.socialRefreshItem, 1, getString(R.string.refreshNews))
+    	 .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 	}
-
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem menuItem) {
+		switch (menuItem.getItemId()) {
+		case R.id.socialRefreshItem:
+			requery();
+			return true;
+		}
+			return super.onOptionsItemSelected(menuItem);
+	}
+	
+	@Override
+	public void socialItemsLoaded(ArrayList<SocialItem> items) {
+		mAdapter = new SocialItemAdapter(getActivity(), R.layout.social_item, items);
+		setListAdapter(mAdapter);
+	}
 }
 

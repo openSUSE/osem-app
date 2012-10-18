@@ -79,11 +79,13 @@ public class FilterDialogFragment extends SherlockDialogFragment {
 		int len = languages.length;
 		for (int i = 0; i < len; i++) {
 			String name = languages[i];
-			CheckBox box = new CheckBox(getActivity());
-			if (filteredLanguages == null || filteredLanguages.contains(name))
-				box.setChecked(true);
-			box.setText(name);
-			languageLayout.addView(box);
+			if (name.length() > 0) {
+				CheckBox box = new CheckBox(getActivity());
+				if (filteredLanguages == null || filteredLanguages.contains(name))
+					box.setChecked(true);
+				box.setText(name);
+				languageLayout.addView(box);
+			}
 		}
 		
 		List<Track> trackList = mDb.getUniqueTracks(conferenceId);

@@ -16,10 +16,10 @@ package de.incoherent.suseconferenceclient;
  */
 
 public class Config {
-	public static String MAPS_KEY = "XYZ";
+	public static String MAPS_KEY = "04fPcVba6EsK5DoDqf4l6ZgTMoN7QHm9AuZpWhQ";
 	public static String TWITTER_KEY = "XYZ";
-	public static String PLUS_KEY = "XYZ";
-	
+	public static String PLUS_KEY = "AIzaSyAZvokqUnIi9BxpohDBCLsPc4bR8IK5mhw";
+	public static String BASE_URL = "http://incoherent.de/conferences";
 	// The level at which the map only displays the marker for the conference
 	// venue, and not food/drinks/etc.  The greater the number, the more
 	// zoomed in it is.

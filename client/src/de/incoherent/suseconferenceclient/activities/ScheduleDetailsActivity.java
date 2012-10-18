@@ -167,11 +167,17 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
 																	intent.getStringExtra("intentId").hashCode(), 
 																	intent, 
 																	PendingIntent.FLAG_NO_CREATE);
-			if (pendingIntent != null)
-				mCalendarCheck = true;
-		}
+			Log.d("SUSEConferences", "Looking for " + intent.getStringExtra("intentId").hashCode());
 
+			if (pendingIntent != null) {
+				Log.d("SUSEConferences", "It is not null");
+				mCalendarCheck = true;
+			} else {
+				mCalendarCheck=false;
+			}
+		}
 	}
+	
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
     	MenuItem item = menu.add(Menu.NONE, R.id.actionBarFavorite, Menu.NONE, "");
@@ -183,9 +189,11 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
     	} else {
     		item.setIcon(R.drawable.favorite_off);
     	}
+    	
     	item = menu.add(Menu.NONE, R.id.actionBarCalendar, Menu.NONE, "");
     	item.setCheckable(true);
     	item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+    	Log.d("SUSEConferences", "Calendar is " + mCalendarCheck);
     	if (mCalendarCheck) {
     		item.setIcon(R.drawable.event_on);
     		item.setChecked(true);
@@ -216,14 +224,17 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
     		return true;
     	case R.id.actionBarCalendar:
     		if (menuItem.isChecked()) {
+    			Log.d("SUSEConferences", "Toggle Off");
     			menuItem.setChecked(false);
     			menuItem.setIcon(R.drawable.event_off);
     			mCalendarCheck = false;
     		} else {
+    			Log.d("SUSEConferences", "Toggle On");
     			menuItem.setChecked(true);
     			menuItem.setIcon(R.drawable.event_on);
     			mCalendarCheck = true;
     		}
+    		
 			if (android.os.Build.VERSION.SDK_INT >=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 				if (mCalendarCheck) {
 					Intent intent = new Intent(Intent.ACTION_INSERT);
@@ -243,14 +254,16 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
 			} else {
 				AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 				Intent intent = generateAlarmIntent();
-				PendingIntent pendingIntent = PendingIntent.getBroadcast(this, intent.getStringExtra("intentId").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 				
 				if (mCalendarCheck) {
 					// Add an alarm to notify the user 5 minutes before the talk
+					PendingIntent pendingIntent = PendingIntent.getBroadcast(this, intent.getStringExtra("intentId").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 					manager.set(AlarmManager.RTC_WAKEUP, mEvent.getDate().getTime() - 300000 , pendingIntent);
 					Toast.makeText(this, "Alert set", Toast.LENGTH_SHORT).show();
 				} else {
+					PendingIntent pendingIntent = PendingIntent.getBroadcast(this, intent.getStringExtra("intentId").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 					manager.cancel(pendingIntent);
+					pendingIntent.cancel();
 					Toast.makeText(this, "Alert canceled", Toast.LENGTH_SHORT).show();
 				}
 			}
@@ -259,6 +272,7 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
     	}
     	return super.onOptionsItemSelected(menuItem);
     }
+    
 	private Intent generateAlarmIntent() {
 		Intent intent = new Intent(ScheduleDetailsActivity.this, AlarmReceiver.class);
 		Calendar cal = GregorianCalendar.getInstance();
@@ -266,6 +280,8 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
 		
 		// This is used to keep track of the alarm intents, the hashCode() is used as the PendingIntent id
 		String id = mEvent.getTitle() + mEvent.getRoomName() + mTitleTime.getText().toString();
+		Log.d("SUSEConferences", "Generating intent: " + id);
+		Log.d("SUSEConferences", "Alternatively: " + id.hashCode());
 		intent.putExtra("intentId", id);
 		intent.putExtra("title", mEvent.getTitle());
 		intent.putExtra("room", mEvent.getRoomName());
