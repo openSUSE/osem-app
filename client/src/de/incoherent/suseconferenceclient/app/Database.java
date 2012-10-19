@@ -92,6 +92,7 @@ public class Database {
 		}
 		return ret;
 	}
+	
 	public Conference getConference(long conferenceId) {
 		Conference newConference = null;
 		String sql = "SELECT guid, name, description, year, social_tag, dateRange, is_cached, url FROM conferences WHERE _id=" + conferenceId;
@@ -228,7 +229,31 @@ public class Database {
 		values.put("my_schedule", val);
 		db.update("events", values, sql, null);
 	}
-		
+
+	public void toggleEventAlert(long eventId, int val) {
+		String sql = "_id=" + eventId;
+		ContentValues values = new ContentValues();
+		values.put("alert", val);
+		db.update("events", values, sql, null);
+	}
+	
+	public void toggleEventsInMySchedule(List<String> guids) {
+		String in = TextUtils.join(",", guids);
+		String sql = "UPDATE events SET my_schedule = 1 WHERE guid IN (" + in +")";
+		Log.d("SUSEConferences", "Toggling events: " + sql);
+		Cursor c = db.rawQuery(sql, null);
+		c.moveToFirst();
+		c.close();
+	}
+	
+	public void toggleEventAlerts(List<String> guids) {
+		String in = TextUtils.join(",", guids);
+		String sql = "UPDATE events SET alert = 1 WHERE guid IN (" + in +")";
+		Cursor c = db.rawQuery(sql, null);
+		c.moveToFirst();
+		c.close();
+	}
+
 	public long getConferenceIdFromGuid(String guid) {
 		String[] columns = {"_id"};
 		String where = "guid = \"" + guid + "\"";
@@ -370,6 +395,21 @@ public class Database {
 			return eventList;
 	}
 	
+	// Search the database and return an array list of the _ids,
+	// suitable for joining into an IN () query
+	// TODO Search for people's names as well
+	public ArrayList<String> searchEvents(long conferenceId, String what) {
+		ArrayList<String> ret = new ArrayList<String>();
+		String sql = "SELECT _id FROM events where (title like \"%" + what + "%\") "
+				     +"OR (abstract like \"%" + what + "%\") AND conference_id=" + conferenceId;
+		Cursor c = db.rawQuery(sql, null);
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			ret.add(String.valueOf(c.getInt(0)));
+		}
+		c.close();
+		return ret;
+	}
+	
 	public String[] getUniqueLanguages(long conferenceId) {
 		String sql = "SELECT DISTINCT(language) FROM events WHERE conference_id = " + conferenceId;
 		Cursor c = db.rawQuery(sql, null);
@@ -405,6 +445,63 @@ public class Database {
 		return doEventsQuery(sql, conferenceId);
 	}
 	
+	public List<String> getFavoriteGuids(long conferenceId) {
+		List<String> ret = new ArrayList<String>();
+		String sql = "SELECT guid FROM events WHERE my_schedule=1";
+		Cursor c = db.rawQuery(sql, null);
+
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			ret.add("\"" + c.getString(0) + "\"");
+		}
+		return ret;
+	}
+	
+	public List<Event> getAlertEvents(long conferenceId) { 
+		List<Event> ret = new ArrayList<Event>();
+		SimpleDateFormat  format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+
+		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length,  "
+				    + "rooms.name FROM events INNER JOIN rooms on rooms._id= events.room_id WHERE events.alert=1";
+		Cursor c = db.rawQuery(sql, null);
+
+		for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+			Event e = new Event();
+			e.setSqlId(c.getLong(0));
+			e.setGuid(c.getString(1));
+			e.setTitle(c.getString(2));
+			String time = c.getString(3);
+		    Date date;
+			try {
+				date = format.parse(time);
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+				date = new Date();
+			}
+		    String tzOffset = time.substring(time.length() - 5);
+		    TimeZone tz = TimeZone.getTimeZone("GMT"+tzOffset);
+		    e.setTimeZone(tz);
+		    e.setDate(date);
+		    GregorianCalendar cal = new GregorianCalendar();
+		    cal.setTime(date);
+		    cal.setTimeZone(tz);
+		    cal.add(GregorianCalendar.MINUTE, c.getInt(4));
+		    e.setLength(c.getInt(4));
+		    e.setEndDate(cal.getTime());
+		    e.setRoomName(c.getString(5));
+			ret.add(e);
+		}
+		return ret;
+	}
+	
+	public List<Event> getEventsFromIdList(long conferenceId, ArrayList<String> ids) {
+		String in = TextUtils.join(",", ids);
+		List<Event> ret = new ArrayList<Event>();
+		String sql = "SELECT events._id, events.guid, events.title, events.date, events.length, "
+				   + "rooms.name, events.track_id, events.abstract, events.my_schedule FROM events INNER JOIN rooms ON rooms._id = events.room_id "
+				   + "WHERE events._id IN (" + in + ")";
+		return doEventsQuery(sql, conferenceId);
+	}
+
 	public List<Event> getScheduleTitles(long conferenceId) {
 		return getScheduleTitles(conferenceId, null, null);
 	}

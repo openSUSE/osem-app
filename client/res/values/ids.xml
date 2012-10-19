@@ -13,4 +13,5 @@
         <item name="actionBarFavorite" type="id" />
         <item name="actionBarCalendar" type="id" />
         <item name="conferenceList" type="id" />
+        <item name="search" type="id" />
     </resources>

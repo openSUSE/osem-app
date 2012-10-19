@@ -17,6 +17,8 @@ import com.actionbarsherlock.app.ActionBar.Tab;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuItem;
+import com.actionbarsherlock.view.MenuItem.OnActionExpandListener;
+import com.actionbarsherlock.widget.SearchView;
 
 import de.incoherent.suseconferenceclient.SUSEConferences;
 import de.incoherent.suseconferenceclient.Config;
@@ -31,6 +33,8 @@ import de.incoherent.suseconferenceclient.fragments.ScheduleFragment;
 import de.incoherent.suseconferenceclient.models.Conference;
 import de.incoherent.suseconferenceclient.tasks.CacheConferenceTask;
 import de.incoherent.suseconferenceclient.tasks.CacheConferenceTask.CacheConferenceTaskListener;
+import de.incoherent.suseconferenceclient.tasks.CheckForUpdatesTask;
+import de.incoherent.suseconferenceclient.tasks.CheckForUpdatesTask.CheckForUpdatesListener;
 import de.incoherent.suseconferenceclient.tasks.GetConferencesTask;
 import de.incoherent.suseconferenceclient.R;
 
@@ -46,15 +50,22 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
 public class HomeActivity extends SherlockFragmentActivity implements 
-GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
+GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckForUpdatesListener, OnActionExpandListener {
 	final int CONFERENCE_LIST_CODE = 1;
 	final String MY_SCHEDULE_TAG = "myschedule";
 	final String SCHEDULE_TAG = "schedule";
@@ -86,7 +97,6 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
 				builder.setCancelable(false);
 				builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
-						Log.d("SUSEConferences", "Exiting");
 						HomeActivity.this.finish();
 					}
 				});
@@ -111,13 +121,40 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
+		
+        final MenuItem searchItem = menu.add(Menu.NONE, R.id.search, Menu.NONE, "Search");
+        searchItem.setIcon(R.drawable.search);
+        searchItem.setActionView(R.layout.collapsable_search);
+        searchItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        searchItem.setOnActionExpandListener(this);
+        
+        final EditText searchEdit = (EditText) searchItem.getActionView();
+        searchEdit.setOnEditorActionListener(new OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                	String query = v.getText().toString();
+                	if (query.length() > 0)
+                		doSearch(query);
+                	searchItem.collapseActionView();
+                    return true;
+                }
+                return false;
+            }
+        });
+        
 		if (hasGoogleMaps()) {
-			menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
-			.setIcon(R.drawable.icon_venue_off)
-			.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_WITH_TEXT);
+			// With the phone layout, put the maps icon in the popup menu
+			if (mPhonePager !=  null) {
+				menu.add(Menu.CATEGORY_SYSTEM, R.id.mapsOptionMenuItem, 9, getString(R.string.mapsOptionMenuItem))
+					.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+			} else {
+		        menu.add(Menu.NONE, R.id.mapsOptionMenuItem, Menu.NONE, getString(R.string.mapsOptionMenuItem))
+				.setIcon(R.drawable.icon_venue_off)
+				.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+			}
 		}
-		//		menu.add(Menu.NONE, R.id.settingsItem, Menu.NONE, getString(R.string.menu_settings))
-		//        .setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		
 		menu.add(Menu.CATEGORY_SYSTEM, R.id.filterEvents, 10, getString(R.string.filter))
 		.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		menu.add(Menu.CATEGORY_SYSTEM, R.id.checkForUpdates, 11, getString(R.string.checkForUpdates))
@@ -128,10 +165,12 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
 		.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		return super.onCreateOptionsMenu(menu);
 	}
-
+	
 	@Override
-	public boolean onOptionsItemSelected(MenuItem menuItem) {
+	public boolean onOptionsItemSelected(final MenuItem menuItem) {
 		switch (menuItem.getItemId()) {
+		case R.id.search:
+			return true;
 		case R.id.conferenceList:
 			launchConferenceListActivity();
 			return true;
@@ -160,11 +199,27 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
 		return super.onOptionsItemSelected(menuItem);
 	}
 
-
+	private void doSearch(String query) {
+		Database db = SUSEConferences.getDatabase();
+		ArrayList<String> results = db.searchEvents(mConferenceId, query);
+		if (results.size() == 0) {
+			Toast.makeText(this, "No results", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		
+		Intent i = new Intent(HomeActivity.this, SearchResultsActivity.class);
+		i.putExtra("conferenceId", this.mConferenceId);
+		i.putExtra("query", query);
+		i.putExtra("results", results);
+		startActivity(i);
+	}
+	
 	// When the device is rotated, we don't want to go and load up
 	// the social stream again, so loadSocial will be set to false
 	// and it will just reuse the existing fragment.
 	private void setView(boolean loadSocial) {
+		Log.d("SUSEConferences", "setView");
+
 		if (mDialog != null)
 			mDialog.dismiss();
 		
@@ -279,6 +334,9 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
 			Toast.makeText(this, "You don't have internet access!", 3).show();
 			return;
 		}
+		
+		CheckForUpdatesTask task = new CheckForUpdatesTask(this, mConference, this);
+		task.execute();
 	}
 
 	// Google Maps doesn't work on Kindle devices
@@ -301,80 +359,6 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
 
 		return ret;
 	}
-
-	/*
-	 * Check the server for schedule updates
-	 */
-	//    private class ScheduleUpdatesTask extends AsyncTask<Void, Void, Integer> {
-	//    	private Conference mConference;
-	//    	private Database mDb;
-	//    	
-	//    	public ScheduleUpdatesTask(Conference conference) {
-	//    		this.mConference = conference;
-	//    		this.mDb = SUSEConferences.getDatabase();
-	//    	}
-	//    	
-	//    	private void handleAdd(JSONObject object) throws JSONException {
-	//    		
-	//    	}
-	//
-	//    	private void handleEdit(JSONObject object) throws JSONException {
-	//    		String room = null;
-	//    		String guid = object.getString("guid");
-	//    		if (object.has("room"))
-	//    			room = object.getString("room");
-	//    			
-	//    	}
-	//    	
-	//    	private void handleDelete(JSONObject object) throws JSONException {
-	//    		
-	//    	}
-	//
-	//    	@Override
-	//    	protected Integer doInBackground(Void... params) {
-	//    		String url = mConference.getUrl();
-	//    		String updatesUrl = url + "/updates.json";
-	//    		long lastUpdateTime = mDb.getLastUpdateTime(mConference.getSqlId());
-	//    		long newUpdateTime = lastUpdateTime;
-	//    		try {
-	//				JSONObject updateReply = HTTPWrapper.get(updatesUrl);
-	//				if (updateReply == null)
-	//					return 0;
-	//				JSONArray updateArray = updateReply.getJSONArray("updates");
-	//				int len = updateArray.length();
-	//				for (int i = 0; i < len; i++) {
-	//					JSONObject update = updateArray.getJSONObject(i);
-	//					long time = update.getLong("timestamp");
-	//					if (time > lastUpdateTime) {
-	//						newUpdateTime = time;
-	//						String type = update.getString("type");
-	//						if (type.equals("edit"))
-	//							handleEdit(update);
-	//						
-	//					}
-	//				}
-	//				
-	//				mDb.setLastUpdateTime(mConference.getSqlId(), newUpdateTime);
-	//			} catch (IllegalStateException e) {
-	//				// TODO Auto-generated catch block
-	//				e.printStackTrace();
-	//			} catch (SocketException e) {
-	//				// TODO Auto-generated catch block
-	//				e.printStackTrace();
-	//			} catch (UnsupportedEncodingException e) {
-	//				// TODO Auto-generated catch block
-	//				e.printStackTrace();
-	//			} catch (IOException e) {
-	//				// TODO Auto-generated catch block
-	//				e.printStackTrace();
-	//			} catch (JSONException e) {
-	//				// TODO Auto-generated catch block
-	//				e.printStackTrace();
-	//			}
-	//    		
-	//    		return 0;
-	//    	}
-	//    }
 
 	public void filterSet() {
 		ScheduleFragment fragment = null;
@@ -407,6 +391,10 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
 				i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				startActivity(i);
 			}
+		} else if (resultCode == RESULT_CANCELED && requestCode == CONFERENCE_LIST_CODE) {
+			// If they don't have any conference cached at all, exit
+			if (mConferenceId == -1)
+				finish();
 		}
 	}
 
@@ -475,6 +463,77 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener {
 			ChangeLogDialogFragment newFragment = ChangeLogDialogFragment.newInstance();
 			newFragment.show(fragmentManager, "Changelog");
     	}
+	}
+
+	@Override
+	public void updatesChecked(long id, String error) {
+		if (id == -1) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setMessage(error);
+			builder.setCancelable(false);
+			builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int id) {
+				}
+			});
+			builder.show();
+		} else if (id == 0) {
+			Toast.makeText(this, "No updates available", Toast.LENGTH_SHORT).show();
+		} else {
+			ScheduleFragment scheduleFragment = null;
+			MyScheduleFragment myScheduleFragment = null;
+			
+			if (mPhonePager != null) {
+				myScheduleFragment = (MyScheduleFragment) mTabsAdapter.getItem(0);
+				scheduleFragment = (ScheduleFragment) mTabsAdapter.getItem(1);
+			} else {
+				FragmentManager fragmentManager = getSupportFragmentManager();
+				myScheduleFragment = (MyScheduleFragment) fragmentManager.findFragmentByTag(MY_SCHEDULE_TAG);
+				scheduleFragment = (ScheduleFragment) fragmentManager.findFragmentByTag(SCHEDULE_TAG);
+			}
+
+			if (scheduleFragment == null)
+				Log.d("SUSEConferences", "Couldn't find fragment!");
+			else
+				scheduleFragment.requery();
+
+			if (myScheduleFragment == null)
+				Log.d("SUSEConferences", "Couldn't find myschedule fragment");
+			else
+				myScheduleFragment.setItems();
+		}
+	}
+
+	// Show the keyboard when the user clicks on the search field
+	@Override
+	public boolean onMenuItemActionExpand(MenuItem item) {
+	    final EditText searchText = (EditText) item.getActionView();
+	    searchText.post(new Runnable() {
+	        @Override
+	        public void run() {
+	            searchText.requestFocus();
+	            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+	            imm.showSoftInput(searchText, InputMethodManager.SHOW_IMPLICIT);
+	        }
+	    });
+	    
+	    return true;
+	} 
+	
+	// Collapsing the search field doesn't automatically close the soft keyboard,
+	// so do that manually
+	@Override
+	public boolean onMenuItemActionCollapse(MenuItem item) {
+	    final EditText searchText = (EditText) item.getActionView();
+		searchText.post(new Runnable() {
+	        @Override
+	        public void run() {
+	        	Log.d("SUSEConferences", "Closing keyboard");
+	            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+	            imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+	        }
+	    });
+		
+	    return true;
 	}
 
 }

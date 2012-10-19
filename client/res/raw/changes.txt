@@ -1,5 +1,12 @@
+<u>Version 1.2.0</u>
+<p>
+<b>Search</b><br/>
+You can now search titles and abstracts.<br></br/>
+</p><br>
 <u>Version 1.1.0</u>
 <p>
+<b>Schedule Updates</b><br/>
+You can now check for schedule updates.<br><br/>
 <b>Filters</b><br/>
 Filter the schedule by language and track.  Available from the main menu.<br><br/>
 <b>Multiple Conferences</b><br/>

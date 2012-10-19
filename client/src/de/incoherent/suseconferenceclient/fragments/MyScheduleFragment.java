@@ -104,6 +104,7 @@ public class MyScheduleFragment extends SherlockListFragment {
 				getScheduleItems());
 		setListAdapter(mAdapter);
 	}
+	
 	private List<ScheduleItem> getScheduleItems() {
 		boolean isEmpty = false;
 		boolean conflict = false;

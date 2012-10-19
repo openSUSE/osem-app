@@ -100,6 +100,7 @@ public class ScheduleFragment extends SherlockListFragment {
 
 		return items;
 	}
+	
 	public void onActivityCreated(Bundle savedInstanceState) {
 		super.onActivityCreated(savedInstanceState);
 		getListView().setDrawSelectorOnTop(true);

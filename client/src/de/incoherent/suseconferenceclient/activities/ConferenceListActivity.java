@@ -35,11 +35,11 @@ import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
-
 public class ConferenceListActivity extends Activity implements OnClickListener, ConferenceListListener, CacheConferenceTaskListener {
 	private long mActiveId = -1;
 	private RadioGroup mConferenceGroup;
 	private ProgressDialog mDialog = null;
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +54,14 @@ public class ConferenceListActivity extends Activity implements OnClickListener,
 		okButton.setOnClickListener(this);
 		Button refreshButton = (Button) findViewById(R.id.refreshButton);
 		refreshButton.setOnClickListener(this);
+    }
+    
+    @Override
+    public void onBackPressed() {
+        Intent data = new Intent();
+        data.putExtra("selected_conference", -1);
+        setResult(RESULT_CANCELED, data);
+        finish();
     }
     
     private void showConferences() {

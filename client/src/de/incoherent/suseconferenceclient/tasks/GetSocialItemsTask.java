@@ -1,14 +1,17 @@
-/**
+/*******************************************************************************
+ * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the GNU Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
  * 
- */
+ * Contributors:
+ *     Matt Barringer <matt@incoherent.de> - initial API and implementation
+ ******************************************************************************/
 package de.incoherent.suseconferenceclient.tasks;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-
-import de.incoherent.suseconferenceclient.R;
-import de.incoherent.suseconferenceclient.adapters.SocialItemAdapter;
 import de.incoherent.suseconferenceclient.app.SocialWrapper;
 import de.incoherent.suseconferenceclient.models.SocialItem;
 import android.app.ProgressDialog;
@@ -17,7 +20,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 /*
- * From a UI perspective, this is very clumsy.
+ * From a UI perspective, this is very clumsy, putting a modal progress box up.
  * 
  * TODO: Figure out how to handle the use case where the NewsFeedFragment is paused
  * while the AsyncTask runs in the background.  At the moment, it will result in onPostExecute

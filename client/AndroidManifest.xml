@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.incoherent.suseconferenceclient"
-    android:versionCode="3"
-    android:versionName="1.1.0" >
+    android:versionCode="6"
+    android:versionName="1.2.0" >
 
     <uses-sdk
         android:minSdkVersion="8"
@@ -38,6 +38,11 @@
         </activity>
         <activity
             android:name=".activities.ScheduleActivity"
+              android:theme="@style/AppTheme"
+            android:label="@string/title_activity_home" >
+        </activity>
+        <activity
+            android:name=".activities.SearchResultsActivity"
               android:theme="@style/AppTheme"
             android:label="@string/title_activity_home" >
         </activity>

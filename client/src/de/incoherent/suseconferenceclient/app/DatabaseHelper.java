@@ -11,10 +11,14 @@
 
 package de.incoherent.suseconferenceclient.app;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
@@ -89,19 +93,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			+ "conference_id INTEGER, "
 			+ "room_id INTEGER, "
 			+ "track_id INTEGER, "
-			+ "my_schedule INTEGER, "
+			+ "my_schedule INTEGER DEFAULT 0, "
 			+ "date DATETIME, "
 			+ "length INTEGER, "
 			+ "type VARCHAR, "
 			+ "title VARCHAR, "
 			+ "language VARCHAR, "
 			+ "abstract VARCHAR, "
-			+ "url_list VARCHAR)";
+			+ "url_list VARCHAR,"
+			+ "alert INTEGER DEFAULT 0)";
 	
 	private static final String speakerEventTableCreate = "CREATE TABLE eventSpeakers ("
 			+ "_id INTEGER PRIMARY KEY AUTOINCREMENT, "
 			+ "speaker_id INTEGER, "
 			+ "event_id INTEGER)";
+	
 	public DatabaseHelper(Context context) {
 		super(context, "SUSEConferences", null, DATABASE_VERSION);
 	}
@@ -126,12 +132,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			Log.d("SUSEConferences", "Upgrading database");
 			db.execSQL("ALTER TABLE venues ADD COLUMN offline_map VARCHAR");
 			db.execSQL("ALTER TABLE venues ADD COLUMN offline_map_bounds VARCHAR");
+			db.execSQL("ALTER TABLE venues ADD COLUMN alert INTEGER DEFAULT 0");
 			db.execSQL("ALTER TABLE conferences ADD COLUMN is_cached INTEGER");
 			db.execSQL("ALTER TABLE conferences ADD COLUMN url VARCHAR");
 			db.execSQL("UPDATE conferences SET is_cached=1");
 			db.execSQL("UPDATE conferences SET url=\'\'");
 			db.execSQL("UPDATE venues SET offline_map=\'\'");
 			db.execSQL("UPDATE venues SET offline_map_bounds=\'\'");
+			db.execSQL("UPDATE venues SET alert=0");
 		}
 		
 	}
@@ -145,13 +153,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 		c.close();
 		
+		sql = "SELECT _id FROM events WHERE conference_id=" + conferenceId;
+		List<String> eventList = new ArrayList<String>();
+		c = db.rawQuery(sql, null);
+		if (c.moveToFirst()) {
+			eventList.add(String.valueOf(c.getInt(0)));
+		}
+		c.close();
+
+		String events = TextUtils.join(",", eventList);
+		sql = "SELECT speaker_id FROM eventSpeakers WHERE event_id IN (" + events + ")";
+		List<String> speakerList = new ArrayList<String>();
+		c = db.rawQuery(sql, null);
+		if (c.moveToFirst()) {
+			speakerList.add(String.valueOf(c.getInt(0)));
+		}
+		c.close();
+		String speakers = TextUtils.join(",", speakerList);
+		
+		db.execSQL("DELETE FROM speakers WHERE _id IN (" + speakers +")");
+		db.execSQL("DELETE FROM eventSpeakers WHERE event_id IN (" + events + ")");
 		db.execSQL("DELETE FROM venues WHERE _id=" + venueId);
 		db.execSQL("DELETE FROM points WHERE venue_id="+ venueId);
 		db.execSQL("DELETE FROM mapPolygons WHERE venue_id=" + venueId);
 		db.execSQL("DELETE FROM rooms WHERE venue_id=" + venueId);
 		db.execSQL("DELETE FROM tracks WHERE conference_id=" + conferenceId);
 		db.execSQL("DELETE FROM events WHERE conference_id=" + conferenceId);
-		// TODO Delete speakers and eventSpeakers entries
 	}
 
 }

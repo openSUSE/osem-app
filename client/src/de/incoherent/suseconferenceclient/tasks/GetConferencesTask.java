@@ -64,8 +64,11 @@ public class GetConferencesTask extends AsyncTask<Void, Void, ArrayList<Conferen
 				newCon.setSocialTag(jsonCon.getString("socialtag"));
 				newCon.setIsCached(false);
 				long sqlId = mDb.getConferenceIdFromGuid(newCon.getGuid());
-				if (sqlId == -1)
+				if (sqlId == -1) {
 					sqlId = mDb.addConference(newCon);
+					if (jsonCon.has("revision"))
+						mDb.setLastUpdateValue(sqlId, jsonCon.getInt("revision"));
+				}
 				newCon.setSqlId(sqlId);
 				
 				ret.add(newCon);

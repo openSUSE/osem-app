@@ -10,6 +10,7 @@
  ******************************************************************************/
 package de.incoherent.suseconferenceclient.activities;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -116,17 +117,21 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
 		String endTime = "";
 
 		java.text.DateFormat formatter = DateFormat.getTimeFormat(this);
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE");
+		String dayOfTheWeek = sdf.format(mEvent.getDate());
+		
 		formatter.setTimeZone(mEvent.getTimeZone());
 		startTime = formatter.format(mEvent.getDate());
 		endTime = formatter.format(mEvent.getEndDate());
 
-		String time = String.format("%s, %s - %s",
+		String time = String.format("Room: %s, %s %s - %s",
 				mEvent.getRoomName(),
+				dayOfTheWeek,
 				startTime,
 				endTime);
 		mTitleTime.setText(time);
 		mAbstractView.setText(Html.fromHtml(mEvent.getAbstract()));
-		mTrackView.setText(mEvent.getTrackName());
+		mTrackView.setText("Track: " + mEvent.getTrackName());
 
 		List<Speaker> speakerList = mEvent.getSpeakers();
 		LinearLayout speakerLayout = (LinearLayout) findViewById(R.id.speakersLayout);
@@ -259,11 +264,13 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
 					// Add an alarm to notify the user 5 minutes before the talk
 					PendingIntent pendingIntent = PendingIntent.getBroadcast(this, intent.getStringExtra("intentId").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 					manager.set(AlarmManager.RTC_WAKEUP, mEvent.getDate().getTime() - 300000 , pendingIntent);
+					mDb.toggleEventAlert(mEvent.getSqlId(), 1);
 					Toast.makeText(this, "Alert set", Toast.LENGTH_SHORT).show();
 				} else {
 					PendingIntent pendingIntent = PendingIntent.getBroadcast(this, intent.getStringExtra("intentId").hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 					manager.cancel(pendingIntent);
 					pendingIntent.cancel();
+					mDb.toggleEventAlert(mEvent.getSqlId(), 0);
 					Toast.makeText(this, "Alert canceled", Toast.LENGTH_SHORT).show();
 				}
 			}
@@ -275,19 +282,36 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
     
 	private Intent generateAlarmIntent() {
 		Intent intent = new Intent(ScheduleDetailsActivity.this, AlarmReceiver.class);
+		intent.putExtras(generateAlarmIntentBundle(this, mEvent));
+		return intent;
+	}
+	
+	public static Bundle generateAlarmIntentBundle(Context context, Event event) {
+		Bundle b = new Bundle();
+		String startTime = "";
+		String endTime = "";
+
+		java.text.DateFormat formatter = DateFormat.getTimeFormat(context);
+		formatter.setTimeZone(event.getTimeZone());
+		startTime = formatter.format(event.getDate());
+		endTime = formatter.format(event.getEndDate());
+
+		String time = String.format("%s, %s - %s",
+				event.getRoomName(),
+				startTime,
+				endTime);
+
 		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTime(mEvent.getDate());
+		cal.setTime(event.getDate());
 		
 		// This is used to keep track of the alarm intents, the hashCode() is used as the PendingIntent id
-		String id = mEvent.getTitle() + mEvent.getRoomName() + mTitleTime.getText().toString();
-		Log.d("SUSEConferences", "Generating intent: " + id);
-		Log.d("SUSEConferences", "Alternatively: " + id.hashCode());
-		intent.putExtra("intentId", id);
-		intent.putExtra("title", mEvent.getTitle());
-		intent.putExtra("room", mEvent.getRoomName());
-		intent.putExtra("timetext", mTitleTime.getText().toString());
-		intent.putExtra("milliseconds", cal.getTimeInMillis());
-		return intent;
+		String id = event.getTitle() + event.getRoomName() + event.getGuid() + time;
+		b.putString("intentId", id);
+		b.putString("title", event.getTitle());
+		b.putString("room", event.getRoomName());
+		b.putString("timetext", time);
+		b.putLong("milliseconds", cal.getTimeInMillis());
+		return b;
 	}
 	
 	@TargetApi(14)
