@@ -73,6 +73,7 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 	private ViewPager mPhonePager;
 	private TabAdapter mTabsAdapter = null;
 	private long mConferenceId = -1;
+	private long mVenueId = -1;
 	private ProgressDialog mDialog;
 	private Conference mConference = null;
 
@@ -87,6 +88,7 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 	    	mConferenceId = settings.getLong("active_conference", -1);
 		} else {
 			mConferenceId = savedInstanceState.getLong("conferenceId");
+			mVenueId = savedInstanceState.getLong("venueId");
 		}
 	
 		if (mConferenceId == -1) {
@@ -117,6 +119,7 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 		  super.onSaveInstanceState(savedInstanceState);
 		  Log.d("SUSEConferences", "saving InstanceState");
 		  savedInstanceState.putLong("conferenceId", mConferenceId);
+		  savedInstanceState.putLong("venueId", mVenueId);
 	}
 	
 	@Override
@@ -179,7 +182,7 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 			return true;
 		case R.id.mapsOptionMenuItem:
 			Intent i = new Intent(HomeActivity.this, MapsActivity.class);
-			i.putExtra("venueId", mConferenceId);
+			i.putExtra("venueId", mVenueId);
 			startActivity(i);
 			return true;
 		case R.id.aboutItem:
@@ -226,6 +229,7 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 		showChangeLog();
 		Database db = SUSEConferences.getDatabase();
 		mConference = db.getConference(mConferenceId);
+		mVenueId = db.getConferenceVenue(mConferenceId);
 		getSupportActionBar().setTitle(mConference.getName());
 		Log.d("SUSEConferences", "Conference ID is " + mConferenceId);
 
@@ -481,7 +485,8 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 		} else {
 			ScheduleFragment scheduleFragment = null;
 			MyScheduleFragment myScheduleFragment = null;
-			
+			Database db = SUSEConferences.getDatabase();
+			mVenueId = db.getConferenceVenue(id);
 			if (mPhonePager != null) {
 				myScheduleFragment = (MyScheduleFragment) mTabsAdapter.getItem(0);
 				scheduleFragment = (ScheduleFragment) mTabsAdapter.getItem(1);

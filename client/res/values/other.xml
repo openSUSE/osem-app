@@ -1,4 +1,4 @@
 
     <resources>
-        <item name="showChangelog" type="integer">1</item>
+        <item name="showChangelog" type="integer">0</item>
     </resources>
