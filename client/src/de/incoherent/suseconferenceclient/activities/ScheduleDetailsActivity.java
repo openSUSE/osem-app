@@ -211,9 +211,9 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
     @SuppressLint("NewApi")
 	@Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
-    	switch (menuItem.getItemId()) {
-    	case R.id.actionBarFavorite:
-    		if (menuItem.isChecked()) {
+    	int itemId = menuItem.getItemId();
+		if (itemId == R.id.actionBarFavorite) {
+			if (menuItem.isChecked()) {
     			menuItem.setChecked(false);
     			menuItem.setIcon(R.drawable.favorite_off);
     			mFavoriteCheck = false;
@@ -226,9 +226,9 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
 				mDb.toggleEventInMySchedule(mEvent.getSqlId(), 1);
 				Toast.makeText(this, "Added to My Schedule", Toast.LENGTH_SHORT).show();
     		}
-    		return true;
-    	case R.id.actionBarCalendar:
-    		if (menuItem.isChecked()) {
+			return true;
+		} else if (itemId == R.id.actionBarCalendar) {
+			if (menuItem.isChecked()) {
     			Log.d("SUSEConferences", "Toggle Off");
     			menuItem.setChecked(false);
     			menuItem.setIcon(R.drawable.event_off);
@@ -239,7 +239,6 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
     			menuItem.setIcon(R.drawable.event_on);
     			mCalendarCheck = true;
     		}
-    		
 			if (android.os.Build.VERSION.SDK_INT >=android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
 				if (mCalendarCheck) {
 					Intent intent = new Intent(Intent.ACTION_INSERT);
@@ -274,9 +273,8 @@ public class ScheduleDetailsActivity extends SherlockActivity  {
 					Toast.makeText(this, "Alert canceled", Toast.LENGTH_SHORT).show();
 				}
 			}
-
-    		return true;
-    	}
+			return true;
+		}
     	return super.onOptionsItemSelected(menuItem);
     }
     

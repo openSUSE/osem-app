@@ -1,13 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2012 Matt Barringer <matt@incoherent.de>.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Public License v2.0
- * which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.html
- * 
- * Contributors:
- *     Matt Barringer <matt@incoherent.de> - initial API and implementation
- ******************************************************************************/
 package de.incoherent.suseconferenceclient.fragments;
 
 import java.util.ArrayList;
@@ -161,8 +151,8 @@ public class NewsFeedFragment extends SherlockListFragment implements GetSocialI
 	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem menuItem) {
-		switch (menuItem.getItemId()) {
-		case R.id.socialRefreshItem:
+		int itemId = menuItem.getItemId();
+		if (itemId == R.id.socialRefreshItem) {
 			requery();
 			return true;
 		}

@@ -136,16 +136,16 @@ public class MapsActivity extends SherlockMapActivity {
     
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
-    	switch (menuItem.getItemId()) {
-    	case R.id.downloadMap:
-    		final DownloadMapTask downloader = new DownloadMapTask();
-    		mDownloaderProgressDialog = new ProgressDialog(this);
-    		mDownloaderProgressDialog.setTitle("Downloading Map");
-    		mDownloaderProgressDialog.setMessage("Preparing downloader...");
-    		mDownloaderProgressDialog.setCanceledOnTouchOutside(false);
-    		mDownloaderProgressDialog.setCancelable(false);
-    		mDownloaderProgressDialog.setMax(100);
-    		mDownloaderProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() 
+    	int itemId = menuItem.getItemId();
+		if (itemId == R.id.downloadMap) {
+			final DownloadMapTask downloader = new DownloadMapTask();
+			mDownloaderProgressDialog = new ProgressDialog(this);
+			mDownloaderProgressDialog.setTitle("Downloading Map");
+			mDownloaderProgressDialog.setMessage("Preparing downloader...");
+			mDownloaderProgressDialog.setCanceledOnTouchOutside(false);
+			mDownloaderProgressDialog.setCancelable(false);
+			mDownloaderProgressDialog.setMax(100);
+			mDownloaderProgressDialog.setButton(DialogInterface.BUTTON_NEGATIVE, "Cancel", new DialogInterface.OnClickListener() 
     	    {
     	        public void onClick(DialogInterface dialog, int which) 
     	        {
@@ -155,19 +155,19 @@ public class MapsActivity extends SherlockMapActivity {
     	            return;
     	        }
     	    });
-    		downloader.execute(mOfflineMapUrl, mOfflineMap.getAbsolutePath());
-    		mDownloaderProgressDialog.show();
-            return true;
-    	case R.id.switchToOfflineMap:
-    		useOfflineMaps();
-    		attachMap();
-    		return true;
-    	case R.id.switchToOnlineMap:
-    		useOnlineMaps();
-    		attachMap();
-    		return true;
-    	case R.id.deleteMap:
-    		if (mOfflineMap != null) {
+			downloader.execute(mOfflineMapUrl, mOfflineMap.getAbsolutePath());
+			mDownloaderProgressDialog.show();
+			return true;
+		} else if (itemId == R.id.switchToOfflineMap) {
+			useOfflineMaps();
+			attachMap();
+			return true;
+		} else if (itemId == R.id.switchToOnlineMap) {
+			useOnlineMaps();
+			attachMap();
+			return true;
+		} else if (itemId == R.id.deleteMap) {
+			if (mOfflineMap != null) {
     			AlertDialog.Builder builder = new AlertDialog.Builder(this);
     	        builder.setMessage("Are you sure you want to delete this map?")
     	               .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
@@ -185,8 +185,8 @@ public class MapsActivity extends SherlockMapActivity {
     	        builder.create();
     	        builder.show();
     		}
-    		return true;
-    	}
+			return true;
+		}
     	return super.onOptionsItemSelected(menuItem);
     }
 

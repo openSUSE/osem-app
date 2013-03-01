@@ -171,26 +171,26 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 	
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem menuItem) {
-		switch (menuItem.getItemId()) {
-		case R.id.search:
+		int itemId = menuItem.getItemId();
+		if (itemId == R.id.search) {
 			return true;
-		case R.id.conferenceList:
+		} else if (itemId == R.id.conferenceList) {
 			launchConferenceListActivity();
 			return true;
-		case R.id.checkForUpdates:
+		} else if (itemId == R.id.checkForUpdates) {
 			checkForUpdates();
 			return true;
-		case R.id.mapsOptionMenuItem:
+		} else if (itemId == R.id.mapsOptionMenuItem) {
 			Intent i = new Intent(HomeActivity.this, MapsActivity.class);
 			i.putExtra("venueId", mVenueId);
 			startActivity(i);
 			return true;
-		case R.id.aboutItem:
+		} else if (itemId == R.id.aboutItem) {
 			AboutDialog about = new AboutDialog(this);
 			about.setTitle("About");
 			about.show();
 			return true;
-		case R.id.filterEvents:
+		} else if (itemId == R.id.filterEvents) {
 			if (mConference != null) {
 				FragmentManager fragmentManager = getSupportFragmentManager();
 				FilterDialogFragment newFragment = FilterDialogFragment.newInstance(this.mConferenceId, mConference.getName());
