@@ -26,6 +26,7 @@ import de.incoherent.suseconferenceclient.app.HTTPWrapper;
 import de.incoherent.suseconferenceclient.models.Conference;
 
 import android.os.AsyncTask;
+import android.util.Log;
 
 public class GetConferencesTask extends AsyncTask<Void, Void, ArrayList<Conference>> {
 	public interface ConferenceListListener {
@@ -38,8 +39,9 @@ public class GetConferencesTask extends AsyncTask<Void, Void, ArrayList<Conferen
 
 	public GetConferencesTask(String url, ConferenceListListener listener) {
 		this.mListener = listener;
-		this.mUrl = "/conferences.json";
+		this.mUrl = url + "/conferences.json";
 		this.mDb = SUSEConferences.getDatabase();
+		Log.d("NIKHATZI","Wrapper.get mUrl: " + mUrl);
 	}
 	
 	@Override
@@ -50,6 +52,7 @@ public class GetConferencesTask extends AsyncTask<Void, Void, ArrayList<Conferen
 		try {
 			reply = HTTPWrapper.get(mUrl);
 			JSONArray conferences = reply.getJSONArray("conferences");
+			
 			int len = conferences.length();
 			for (int i = 0; i < len; i++) {
 				JSONObject jsonCon = conferences.getJSONObject(i);
