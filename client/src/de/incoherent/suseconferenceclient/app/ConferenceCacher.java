@@ -63,6 +63,7 @@ public class ConferenceCacher {
 			JSONObject venueReply = HTTPWrapper.get(venueUrl);
 			JSONObject venue = venueReply.getJSONObject("venue");
 			String infoUrl = url + "/" + venue.getString("info_text");
+			Log.d("NIKHATZI","INFO URL: "+infoUrl);
 			String info = HTTPWrapper.getRawText(infoUrl);
 			String venueName = venue.getString("name");
 			String venueAddr =  venue.getString("address");
@@ -134,6 +135,7 @@ public class ConferenceCacher {
 			Log.d("SUSEConferences", "Rooms");
 			publishProgress("rooms");
 			JSONObject roomsReply = HTTPWrapper.get(roomsUrl);
+			Log.d("NIKHATZI","ROOMS URL: "+roomsUrl);
 			JSONArray rooms = roomsReply.getJSONArray("rooms");
 			int roomsLen = rooms.length();
 			for (int i = 0; i < roomsLen; i++) {
