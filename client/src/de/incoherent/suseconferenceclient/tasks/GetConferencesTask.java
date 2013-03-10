@@ -38,7 +38,7 @@ public class GetConferencesTask extends AsyncTask<Void, Void, ArrayList<Conferen
 
 	public GetConferencesTask(String url, ConferenceListListener listener) {
 		this.mListener = listener;
-		this.mUrl = url + "/conferences.json";
+		this.mUrl = "/conferences.json";
 		this.mDb = SUSEConferences.getDatabase();
 	}
 	

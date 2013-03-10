@@ -46,7 +46,7 @@ public class ConferenceCacher {
 	}
 	
 	public long cacheConference(Conference conference, Database db) {
-		String url = conference.getUrl();
+		String url = "http://www.networklab.gr/conferences";
 		String eventsUrl = url + "/events.json";
 		String roomsUrl = url + "/rooms.json";
 		String speakersUrl = url + "/speakers.json";
@@ -148,6 +148,7 @@ public class ConferenceCacher {
 			Log.d("SUSEConferences", "Tracks");
 			publishProgress("tracks");
 			JSONObject tracksReply = HTTPWrapper.get(tracksUrl);
+			Log.d("NIKHATZI","paparia: "+tracksUrl);
 			JSONArray tracks = tracksReply.getJSONArray("tracks");
 			int tracksLen = tracks.length();
 			for (int i = 0; i < tracksLen; i++) {
