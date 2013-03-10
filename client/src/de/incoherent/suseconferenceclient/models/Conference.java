@@ -18,7 +18,7 @@ public class Conference {
 	private String mDescription = "";
 	private int mYear = 2012;
 	private String mDateRange = "";
-	private String mUrl = "www.networklab.gr/conference";
+	private String mUrl = "www.networklab.gr/conferences";
 	private String mSocialTag = "";
 	private boolean mIsCached = false;
 	
