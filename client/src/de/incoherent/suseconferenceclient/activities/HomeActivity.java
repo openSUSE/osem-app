@@ -29,6 +29,7 @@ import de.incoherent.suseconferenceclient.fragments.ChangeLogDialogFragment;
 import de.incoherent.suseconferenceclient.fragments.FilterDialogFragment;
 import de.incoherent.suseconferenceclient.fragments.MyScheduleFragment;
 import de.incoherent.suseconferenceclient.fragments.NewsFeedFragment;
+import de.incoherent.suseconferenceclient.fragments.RssFeedFragment;
 import de.incoherent.suseconferenceclient.fragments.ScheduleFragment;
 import de.incoherent.suseconferenceclient.models.Conference;
 import de.incoherent.suseconferenceclient.tasks.CacheConferenceTask;
@@ -260,9 +261,14 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 						ScheduleFragment.class, args);
 
 				if (hasInternet())
+				{
 					mTabsAdapter.addTab(
 							bar.newTab().setText(getString(R.string.newsFeed)),
 							NewsFeedFragment.class, args);
+					mTabsAdapter.addTab(
+							bar.newTab().setText(getString(R.string.rssFeed)),
+							RssFeedFragment.class,args);
+				}
 			}
 		} else { // Tablet layout
 			FragmentManager fm = getSupportFragmentManager();
