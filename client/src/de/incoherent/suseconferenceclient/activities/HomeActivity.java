@@ -29,7 +29,6 @@ import de.incoherent.suseconferenceclient.fragments.ChangeLogDialogFragment;
 import de.incoherent.suseconferenceclient.fragments.FilterDialogFragment;
 import de.incoherent.suseconferenceclient.fragments.MyScheduleFragment;
 import de.incoherent.suseconferenceclient.fragments.NewsFeedFragment;
-//import de.incoherent.suseconferenceclient.fragments.RssFeedFragment;
 import de.incoherent.suseconferenceclient.fragments.ScheduleFragment;
 import de.incoherent.suseconferenceclient.models.Conference;
 import de.incoherent.suseconferenceclient.tasks.CacheConferenceTask;

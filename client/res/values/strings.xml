@@ -34,5 +34,5 @@
     <string name="conferenceList">Set Conferences</string>
     <string name="whatsNew">What\'s New</string>
     <string name="changelog"></string>
-    <string name="Rss"> RSS Here!</string>
+   <!--   <string name="Rss"> RSS Here!</string> -->
 </resources>

@@ -46,7 +46,8 @@ public class ConferenceCacher {
 	}
 	
 	public long cacheConference(Conference conference, Database db) {
-		String url = "http://www.networklab.gr/conferences";
+		//String url = "http://www.networklab.gr/conferences";
+		String url = conference.getUrl();
 		String eventsUrl = url + "/events.json";
 		String roomsUrl = url + "/rooms.json";
 		String speakersUrl = url + "/speakers.json";
