@@ -18,8 +18,8 @@ import android.os.Parcelable;
 import android.util.Log;
 
 public class SocialItem implements Comparable<SocialItem>, Parcelable {
-	public static final int TWITTER = 1;
-	public static final int GOOGLE = 0;
+	public static final int TWITTER = 0;
+	public static final int GOOGLE = 1;
 	
 	private int mType;
 	private String mUserName;

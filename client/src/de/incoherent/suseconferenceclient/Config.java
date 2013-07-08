@@ -16,7 +16,9 @@ package de.incoherent.suseconferenceclient;
  */
 
 public class Config {
-	public static String MAPS_KEY = "04fPcVba6EsK5DoDqf4l6ZgTMoN7QHm9AuZpWhQ";
+	public static String MAPS_KEY = "0Tp7WsIDiyqoDmSF9LMprvDzte-hj_A6r-qxbow";
+			//
+			//"04fPcVba6EsK5DoDqf4l6ZgTMoN7QHm9AuZpWhQ";
 	public static String TWITTER_KEY = "XYZ";
 	public static String PLUS_KEY = "AIzaSyAZvokqUnIi9BxpohDBCLsPc4bR8IK5mhw";
 	public static String BASE_URL = "http://zoumpis.eu/osc13";
