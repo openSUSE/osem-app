@@ -160,8 +160,8 @@ GetConferencesTask.ConferenceListListener, CacheConferenceTaskListener, CheckFor
 		
 		menu.add(Menu.CATEGORY_SYSTEM, R.id.filterEvents, 10, getString(R.string.filter))
 		.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
-		menu.add(Menu.CATEGORY_SYSTEM, R.id.checkForUpdates, 11, getString(R.string.checkForUpdates))
-		.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+		//menu.add(Menu.CATEGORY_SYSTEM, R.id.checkForUpdates, 11, getString(R.string.checkForUpdates))
+		//.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		menu.add(Menu.CATEGORY_SYSTEM, R.id.conferenceList, 12, getString(R.string.conferenceList))
 		.setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
 		menu.add(Menu.CATEGORY_SYSTEM, R.id.aboutItem, 13, getString(R.string.menu_about))

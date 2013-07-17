@@ -23,7 +23,8 @@ public class Config {
 	
 	public static String TWITTER_KEY = "XYZ";
 	public static String PLUS_KEY = "AIzaSyAZvokqUnIi9BxpohDBCLsPc4bR8IK5mhw";
-	public static String BASE_URL = "http://www.networklab.gr/conferences";
+	public static String BASE_URL = "https://conference.opensuse.org/osem/api/v1/conferences/gRNyOIsTbvCfJY5ENYovBA";
+			//"http://www.networklab.gr/conferences";
 	// The level at which the map only displays the marker for the conference
 	// venue, and not food/drinks/etc.  The greater the number, the more
 	// zoomed in it is.

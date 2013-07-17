@@ -46,8 +46,9 @@ public class ConferenceCacher {
 	}
 	
 	public long cacheConference(Conference conference, Database db) {
-		String url = "http://www.networklab.gr/conferences";
+		//String url = "https://conference.opensuse.org/osem/api/v1/conferences/gRNyOIsTbvCfJY5ENYovBA";
 		//String url = conference.getUrl();
+		String url = "https://conference.opensuse.org/osem/api/v1/conferences/gRNyOIsTbvCfJY5ENYovBA";
 		String eventsUrl = url + "/events.json";
 		String roomsUrl = url + "/rooms.json";
 		String speakersUrl = url + "/speakers.json";
@@ -177,6 +178,8 @@ public class ConferenceCacher {
 						speaker.getString("biography"),
 						"");
 				speakerMap.put(guid, speakerId);
+				
+				
 			}
 
 			Log.d("SUSEConferences", "Events");

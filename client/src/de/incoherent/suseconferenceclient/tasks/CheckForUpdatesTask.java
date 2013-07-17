@@ -64,7 +64,8 @@ public class CheckForUpdatesTask extends AsyncTask<Void, String, Long> {
 
 	@Override
 	protected Long doInBackground(Void... params) {
-		if (mConference.getUrl().length() <= 0)
+		String k = "https://conference.opensuse.org/osem/api/v1/conferences/gRNyOIsTbvCfJY5ENYovBA";
+		if (k.length() <= 0)
 			return 0l;
 		
 		String updatesUrl = mConference.getUrl() + "/updates.json";
@@ -159,6 +160,6 @@ public class CheckForUpdatesTask extends AsyncTask<Void, String, Long> {
 
 	protected void onPostExecute(Long id) {
 		mDialog.dismiss();
-		this.mListener.updatesChecked(id, mErrorMessage);
+		//this.mListener.updatesChecked(id, mErrorMessage);
 	}
 }
