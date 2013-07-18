@@ -41,7 +41,7 @@ public class GetConferencesTask extends AsyncTask<Void, Void, ArrayList<Conferen
 		this.mListener = listener;
 		this.mUrl = url + "/conferences.json";
 		this.mDb = SUSEConferences.getDatabase();
-		Log.d("NIKHATZI","Wrapper.get mUrl: " + mUrl);
+		Log.d("SUSE Conferences","Wrapper.get mUrl: " + mUrl);
 	}
 	
 	@Override

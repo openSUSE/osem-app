@@ -46,7 +46,7 @@ public class ConferenceCacher {
 	}
 	
 	public long cacheConference(Conference conference, Database db) {
-		//String url = "https://conference.opensuse.org/osem/api/v1/conferences/gRNyOIsTbvCfJY5ENYovBA";
+		
 		//String url = conference.getUrl();
 		String url = "https://conference.opensuse.org/osem/api/v1/conferences/gRNyOIsTbvCfJY5ENYovBA";
 		String eventsUrl = url + "/events.json";
